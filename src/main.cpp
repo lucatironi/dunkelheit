@@ -3,8 +3,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "filesystem.hpp"
+#include "level.hpp"
 #include "shader.hpp"
 #include "text_renderer.hpp"
 
@@ -65,6 +67,14 @@ int main()
     textShader.Use();
     textShader.SetMat4("projection", projection);
 
+    Shader defaultShader(FileSystem::GetPath("src/shaders/default.vs"), FileSystem::GetPath("src/shaders/default.fs"));
+    Level level(FileSystem::GetPath("assets/level1.png"));
+    glm::mat4 perspective = glm::perspective(glm::radians(80.0f), static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight), 0.1f, 100.0f);
+    glm::mat4 view = glm::lookAt(level.StartingPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    defaultShader.Use();
+    defaultShader.SetMat4("view", view);
+    defaultShader.SetMat4("projection", perspective);
+    
     // setup OpenGL
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -104,6 +114,9 @@ int main()
 
         // render FPS counter
         DisplayFPS(textRenderer, textShader, fps.str());
+
+        // render the level
+        level.Draw(defaultShader);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
