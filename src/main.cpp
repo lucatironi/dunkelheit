@@ -3,6 +3,12 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+
+#include "filesystem.hpp"
+#include "shader.hpp"
+#include "text_renderer.hpp"
+
 void ProcessInput(GLFWwindow* window);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 
@@ -35,6 +41,10 @@ int main()
     }
     glfwMakeContextCurrent(window);
 
+
+    // disable vsync
+    glfwSwapInterval(0);
+
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
 
     // tell GLFW to capture our mouse
@@ -48,6 +58,14 @@ int main()
         return -1;
     }
 
+    // TextRenderer: compile and setup the shader
+    // ----------------------------
+    TextRenderer textRenderer(FileSystem::GetPath("assets/font.ttf"), 16);
+    Shader textShader(FileSystem::GetPath("src/shaders/text.vs"), FileSystem::GetPath("src/shaders/text.fs"));
+    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(WindowWidth), 0.0f, static_cast<float>(WindowHeight));
+    textShader.Use();
+    textShader.SetMat4("projection", projection);
+
     // setup OpenGL
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -56,8 +74,16 @@ int main()
 
     // render loop
     // -----------
+    GLfloat currentFrame = 0.0f;
+    GLfloat deltaTime    = 0.0f;
+    GLfloat lastFrame    = 0.0f;
+
     while (!glfwWindowShouldClose(window))
     {
+        currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         // input
         // -----
         ProcessInput(window);
@@ -66,6 +92,11 @@ int main()
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // render FPS counter
+        std::stringstream fps;
+        fps << (int)(1 / deltaTime);
+        textRenderer.RenderText(textShader, fps.str(), 2.0f, WindowHeight - 10.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
