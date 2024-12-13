@@ -11,6 +11,7 @@
 
 void ProcessInput(GLFWwindow* window);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
+void DisplayFPS(TextRenderer &textRenderer, Shader &textShader, std::string fps);
 
 // settings
 const unsigned int WindowWidth  = 800;
@@ -75,14 +76,24 @@ int main()
     // render loop
     // -----------
     GLfloat currentFrame = 0.0f;
-    GLfloat deltaTime    = 0.0f;
     GLfloat lastFrame    = 0.0f;
+    GLfloat lastFPSFrame = 0.0f;
+    GLfloat deltaTime    = 0.0f;
+    int fpsCount = 0;
+    std::stringstream fps;
 
     while (!glfwWindowShouldClose(window))
     {
         currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        fpsCount++;
+        if ((currentFrame - lastFPSFrame) >= 1.0f)
+        {
+            fps.str(std::string());
+            fps << fpsCount;
+            fpsCount = 0;
+            lastFPSFrame = currentFrame;
+        }
 
         // input
         // -----
@@ -94,12 +105,11 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // render FPS counter
-        std::stringstream fps;
-        fps << (int)(1 / deltaTime);
-        textRenderer.RenderText(textShader, fps.str(), 2.0f, WindowHeight - 10.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        DisplayFPS(textRenderer, textShader, fps.str());
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
+        lastFrame = currentFrame;
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -128,4 +138,9 @@ void FramebufferSizeCallback(GLFWwindow* /* window */, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+}
+
+void DisplayFPS(TextRenderer &textRenderer, Shader &textShader, std::string fps)
+{
+    textRenderer.RenderText(textShader, fps, 2.0f, WindowHeight - 10.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 }
