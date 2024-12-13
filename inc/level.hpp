@@ -9,13 +9,15 @@
 #include <stb_image.h>
 
 #include "shader.hpp"
+#include "texture2D.hpp"
 
 class Level
 {
 public:
     glm::vec3 StartingPosition;
 
-    Level(const std::string levelPath)
+    Level(const std::string levelPath, Texture2D texture)
+        : texture(texture)
     {
         loadLevel(levelPath);
         initRenderData();
@@ -31,6 +33,10 @@ public:
     {
         shader.Use();
         shader.SetMat4("model", glm::mat4(1.0f));
+        
+        glActiveTexture(GL_TEXTURE0);
+        texture.Bind();
+
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, vertices.size());
         glBindVertexArray(0);
@@ -43,6 +49,7 @@ private:
     int levelWidth, levelDepth;
     unsigned char *levelData;
     GLuint VAO, VBO;
+    Texture2D texture;
     std::vector<GLfloat> vertices;
 
     void loadLevel(const std::string levelPath)

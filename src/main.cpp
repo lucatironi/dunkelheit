@@ -8,6 +8,7 @@
 #include "filesystem.hpp"
 #include "level.hpp"
 #include "shader.hpp"
+#include "texture2D.hpp"
 #include "text_renderer.hpp"
 
 void ProcessInput(GLFWwindow* window);
@@ -68,7 +69,8 @@ int main()
     textShader.SetMat4("projection", projection);
 
     Shader defaultShader(FileSystem::GetPath("src/shaders/default.vs"), FileSystem::GetPath("src/shaders/default.fs"));
-    Level level(FileSystem::GetPath("assets/level1.png"));
+    Texture2D levelTexture(FileSystem::GetPath("assets/tiles.png"), GL_TRUE, GL_CLAMP_TO_EDGE, GL_NEAREST, GL_NEAREST);
+    Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
     glm::mat4 perspective = glm::perspective(glm::radians(80.0f), static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight), 0.1f, 100.0f);
     glm::mat4 view = glm::lookAt(level.StartingPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     defaultShader.Use();
