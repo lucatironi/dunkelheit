@@ -2,6 +2,7 @@
 
 C++ and OpenGL.
 It uses CMake to install and configure dependencies:
+
 - GLFW
 - glad
 - glm
