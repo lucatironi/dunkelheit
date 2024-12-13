@@ -12,6 +12,8 @@ file(GLOB PROJECT_SOURCES src/*.cpp)
 file(GLOB PROJECT_SHADERS src/shaders/*.vs
                           src/shaders/*.fs)
 
+configure_file(config/root_directory.hpp.in config/root_directory.hpp)
+include_directories(${CMAKE_BINARY_DIR}/config)
 
 add_executable(${PROJECT_NAME} ${PROJECT_HEADERS} ${PROJECT_SOURCES} ${PROJECT_SHADERS})
 
