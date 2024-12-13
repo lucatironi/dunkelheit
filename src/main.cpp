@@ -2,7 +2,6 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
 #include <glm/glm.hpp>
 
 #include "filesystem.hpp"
@@ -42,7 +41,6 @@ int main()
     }
     glfwMakeContextCurrent(window);
 
-
     // disable vsync
     glfwSwapInterval(0);
 
@@ -75,10 +73,10 @@ int main()
 
     // render loop
     // -----------
-    GLfloat currentFrame = 0.0f;
-    GLfloat lastFrame    = 0.0f;
-    GLfloat lastFPSFrame = 0.0f;
-    GLfloat deltaTime    = 0.0f;
+    float currentFrame = 0.0f;
+    float lastFrame    = 0.0f;
+    float lastFPSFrame = 0.0f;
+    float deltaTime    = 0.0f;
     int fpsCount = 0;
     std::stringstream fps;
 

@@ -9,10 +9,10 @@
 #include "shader.hpp"
 
 struct Character {
-    unsigned int TextureID; // ID handle of the glyph texture
-    glm::ivec2   Size;      // Size of glyph
-    glm::ivec2   Bearing;   // Offset from baseline to left/top of glyph
-    unsigned int Advance;   // Offset to advance to next glyph
+    GLuint     TextureID; // ID handle of the glyph texture
+    glm::ivec2 Size;      // Size of glyph
+    glm::ivec2 Bearing;   // Offset from baseline to left/top of glyph
+    GLuint     Advance;   // Offset to advance to next glyph
 };
 
 class TextRenderer
@@ -26,17 +26,17 @@ public:
 
     ~TextRenderer()
     {
-        glDeleteVertexArrays(1, &quadVAO);
+        glDeleteVertexArrays(1, &VAO);
         glDeleteBuffers(1, &VBO);
     }
 
-    void RenderText(Shader &shader, std::string text, float x, float y, float scale, glm::vec3 color)
+    void RenderText(Shader &shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color)
     {
         // Activate corresponding render state
         shader.Use();
         shader.SetVec3("textColor", color.x, color.y, color.z);
         glActiveTexture(GL_TEXTURE0);
-        glBindVertexArray(quadVAO);
+        glBindVertexArray(VAO);
 
         // iterate through all characters
         std::string::const_iterator c;
@@ -44,13 +44,13 @@ public:
         {
             Character ch = characters[*c];
 
-            float xpos = x + ch.Bearing.x * scale;
-            float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+            GLfloat xpos = x + ch.Bearing.x * scale;
+            GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
 
-            float w = ch.Size.x * scale;
-            float h = ch.Size.y * scale;
+            GLfloat w = ch.Size.x * scale;
+            GLfloat h = ch.Size.y * scale;
             // update VBO for each character
-            float vertices[6][4] = {
+            GLfloat vertices[6][4] = {
                 { xpos,     ypos + h,   0.0f, 0.0f },
                 { xpos,     ypos,       0.0f, 1.0f },
                 { xpos + w, ypos,       1.0f, 1.0f },
@@ -77,7 +77,7 @@ public:
 
 private:
     std::map<GLchar, Character> characters;
-    unsigned int quadVAO, VBO;
+    GLuint VAO, VBO;
 
     void loadFont(std::string fontPath, int fontSize)
     {
@@ -114,7 +114,7 @@ private:
                     continue;
                 }
                 // generate texture
-                unsigned int texture;
+                GLuint texture;
                 glGenTextures(1, &texture);
                 glBindTexture(GL_TEXTURE_2D, texture);
                 glTexImage2D(
@@ -138,7 +138,7 @@ private:
                     texture,
                     glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
                     glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-                    static_cast<unsigned int>(face->glyph->advance.x)
+                    static_cast<GLuint>(face->glyph->advance.x)
                 };
                 characters.insert(std::pair<char, Character>(c, character));
             }
@@ -152,15 +152,15 @@ private:
     void initRenderData()
     {
         // Configure VAO/VBO for texture quads
-        glGenVertexArrays(1, &quadVAO);
+        glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
-        glBindVertexArray(quadVAO);
+        glBindVertexArray(VAO);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
