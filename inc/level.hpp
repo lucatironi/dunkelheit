@@ -5,8 +5,6 @@
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
 
 #include "shader.hpp"
 #include "texture2D.hpp"
@@ -44,7 +42,7 @@ public:
 
 private:
     const float tileFraction = 16.0f / 1024.0f;
-    const float quadSize = 1.0f;
+    const float quadSize = 3.0f;
 
     int levelWidth, levelDepth;
     unsigned char *levelData;
@@ -66,19 +64,23 @@ private:
                 {
                 case 255: // white, floor
                     addFloor(x * quadSize, z * quadSize);
+                    addCeiling(x * quadSize, z * quadSize);
                     break;
                 case 149: // green, player
-                    StartingPosition = glm::vec3(x, 1.0f, z);
+                    StartingPosition = glm::vec3(x * quadSize, 1.75f, z * quadSize);
                     addFloor(x * quadSize, z * quadSize);
+                    addCeiling(x * quadSize, z * quadSize);
                     break;
                 case 128: // grey, wall
                     addWall(x * quadSize, z * quadSize);
                     break;
                 case 76: // red, enemy spawner
                     addFloor(x * quadSize, z * quadSize);
+                    addCeiling(x * quadSize, z * quadSize);
                     break;
                 case 28: // blue, light
                     addFloor(x * quadSize, z * quadSize);
+                    addCeiling(x * quadSize, z * quadSize);
                     break;
                 default:
                     break;
@@ -113,17 +115,67 @@ private:
 
     void addFloor(GLfloat x, GLfloat z)
     {
-        pushQuad(x, 0.0f, z,
-                 x + quadSize, 0.0f, z,
-                 x, 0.0f, z + quadSize,
-                 x + quadSize, 0.0f, z + quadSize,
+        GLfloat y = 0.0f;
+
+        pushQuad(x, y, z,
+                 x + quadSize, y, z,
+                 x, y, z + quadSize,
+                 x + quadSize, y, z + quadSize,
                  0.0f, 1.0f, 0.0f,
-                 0);
+                 1);
+    }
+
+    void addCeiling(GLfloat x, GLfloat z)
+    {
+        GLfloat y = quadSize;
+    
+        pushQuad(x, y, z,
+                 x, y, z + quadSize,
+                 x + quadSize, y, z,
+                 x + quadSize, y, z + quadSize,
+                 0.0f, -1.0f, 0.0f,
+                 5);
     }
 
     void addWall(GLfloat x, GLfloat z)
     {
+        GLfloat y = quadSize;
 
+        // top
+        pushQuad(x, y, z,
+                x + quadSize, y, z,
+                x, y, z + quadSize,
+                x + quadSize, y, z + quadSize,
+                0.0f, 1.0f, 0.0f,
+                7);
+        // right
+        pushQuad(x + quadSize, y, z + quadSize,
+                x + quadSize, y, z,
+                x + quadSize, 0.0f, z + quadSize,
+                x + quadSize, 0.0f, z,
+                1.0f, 0.0f, 0.0f,
+                8);
+        // front
+        pushQuad(x, y, z + quadSize,
+                x + quadSize, y, z + quadSize,
+                x, 0.0f, z + quadSize,
+                x + quadSize, 0.0f, z + quadSize,
+                0.0f, 0.0f, 1.0f,
+                9);
+        // left
+        pushQuad(x, y, z,
+                x, y, z + quadSize,
+                x, 0.0f, z,
+                x, 0.0f, z + quadSize,
+                -1.0f, 0.0f, 0.0f,
+                10);
+        // back
+        pushQuad(x + quadSize, y, z,
+                x, y, z,
+                x + quadSize, 0.0f, z,
+                x, 0.0f, z,
+                0.0f, 0.0f, -1.0f,
+                11);
     }
 
     void pushQuad(GLfloat x1, GLfloat y1, GLfloat z1,
