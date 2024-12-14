@@ -9,6 +9,13 @@
 #include "shader.hpp"
 #include "texture2D.hpp"
 
+struct Light
+{
+    glm::vec3 position;
+    glm::vec3 color;
+    GLfloat attenuation;
+};
+
 class Level
 {
 public:
@@ -32,7 +39,14 @@ public:
     {
         shader.Use();
         shader.SetMat4("model", glm::mat4(1.0f));
-        
+
+        for (unsigned int i = 0; i < lights.size(); i++)
+        {
+            shader.SetVec3("lights[" + std::to_string(i) + "].position", lights[i].position);
+            shader.SetVec3("lights[" + std::to_string(i) + "].color", lights[i].color);
+            shader.SetFloat("lights[" + std::to_string(i) + "].attenuation", lights[i].attenuation);
+        }
+
         glActiveTexture(GL_TEXTURE0);
         texture.Bind();
 
@@ -58,6 +72,7 @@ private:
     GLuint VAO, VBO;
     Texture2D texture;
     std::vector<GLfloat> vertices;
+    std::vector<Light> lights;
 
     void loadLevel(const std::string levelPath)
     {
@@ -88,6 +103,11 @@ private:
                     addCeiling(x * quadSize, z * quadSize);
                     break;
                 case 28: // blue, light
+                    Light light;
+                    light.position = glm::vec3(x * quadSize, quadSize / 2.0f, z * quadSize);
+                    light.color = glm::vec3(0.0f, 0.1f, 0.7f);
+                    light.attenuation = 0.08f;
+                    lights.push_back(light);
                     addFloor(x * quadSize, z * quadSize);
                     addCeiling(x * quadSize, z * quadSize);
                     break;
