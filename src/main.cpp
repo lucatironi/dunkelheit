@@ -15,7 +15,6 @@
 void ProcessInput(GLFWwindow* window, float deltaTime);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
-void DisplayFPS(TextRenderer &textRenderer, Shader &textShader, std::string fps);
 
 // settings
 const unsigned int WindowWidth  = 800;
@@ -25,7 +24,6 @@ FPSCamera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 float lastX = WindowWidth / 2.0f;
 float lastY = WindowHeight / 2.0f;
 bool firstMouse = true;
-
 
 int main()
 {
@@ -102,6 +100,7 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
+        // calculate deltaTime and FPS
         currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         fpsCount++;
@@ -115,11 +114,21 @@ int main()
 
         // input
         // -----
+        // store current position for collision detection
+        glm::vec3 previousPosition = camera.Position;
         ProcessInput(window, deltaTime);
+
+        // update
+        // ------
+        // simple collision detection
+        glm::vec3 checkPoint = camera.Position + glm::normalize(camera.Front) * 0.5f;
+        int tile = level.TileAt(checkPoint.x, checkPoint.z);
+        if (tile == 0 || tile == 128)
+            camera.Position = previousPosition;
 
         // render
         // ------
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         defaultShader.Use();
@@ -128,9 +137,11 @@ int main()
         // render the level
         level.Draw(defaultShader);
 
-        // render FPS counter
-        DisplayFPS(textRenderer, textShader, fps.str());
-
+        // render Debug Information
+        std::stringstream pos;
+        pos << "x: " << (int)camera.Position.x << ", z: " << (int)camera.Position.z << ", tile: " << level.TileAt(camera.Position.x, camera.Position.z);
+        textRenderer.RenderText(textShader, fps.str(), 2.0f, WindowHeight - 10.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        textRenderer.RenderText(textShader, pos.str(), 2.0f, WindowHeight - 20.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -196,9 +207,4 @@ void MouseCallback(GLFWwindow* /* window */, double xposIn, double yposIn)
     lastY = ypos;
 
     camera.ProcessMouseMovement(xoffset, yoffset);
-}
-
-void DisplayFPS(TextRenderer &textRenderer, Shader &textShader, std::string fps)
-{
-    textRenderer.RenderText(textShader, fps, 2.0f, WindowHeight - 10.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 }

@@ -20,6 +20,7 @@ public:
         loadLevel(levelPath);
         initRenderData();
     }
+
     ~Level()
     {
         stbi_image_free(levelData);
@@ -38,6 +39,14 @@ public:
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, vertices.size());
         glBindVertexArray(0);
+    }
+
+    int TileAt(float x, float z)
+    {
+        int i = x / quadSize;
+        int j = z / quadSize;
+        int pos = levelWidth * j + i;
+        return levelData[pos];
     }
 
 private:
@@ -67,7 +76,7 @@ private:
                     addCeiling(x * quadSize, z * quadSize);
                     break;
                 case 149: // green, player
-                    StartingPosition = glm::vec3(x * quadSize, 1.75f, z * quadSize);
+                    StartingPosition = glm::vec3(x * quadSize, CAMERA_HEAD_HEIGHT, z * quadSize);
                     addFloor(x * quadSize, z * quadSize);
                     addCeiling(x * quadSize, z * quadSize);
                     break;
