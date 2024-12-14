@@ -93,16 +93,39 @@ public:
     // Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void ProcessInputMovement(CameraMovement direction, float deltaTime)
     {
+        if (deltaTime <= 0.0f) return; // Early exit if deltaTime is invalid
+
         float velocity = MovementSpeed * deltaTime;
+        glm::vec3 directionVector = glm::vec3(0.0f);
+
+        glm::vec3 adjustedFront = Front;
+
+        // Ignore the y component of Front for constrained movement
+        if (Constrained)
+        {
+            adjustedFront.y = 0.0f;
+            adjustedFront = glm::normalize(adjustedFront); // Re-normalize after projection
+        }
+
+        // Add movement contributions
         if (direction == CAMERA_FORWARD)
-            Position += Front * velocity;
+            directionVector += adjustedFront;
         if (direction == CAMERA_BACKWARD)
-            Position -= Front * velocity;
+            directionVector -= adjustedFront;
         if (direction == CAMERA_LEFT)
-            Position -= Right * velocity;
+            directionVector -= Right;
         if (direction == CAMERA_RIGHT)
-            Position += Right * velocity;
-        if (Constrained) // keep the camera at the head level (xz plane)
+            directionVector += Right;
+
+        // Normalize direction vector to prevent diagonal speed boost
+        if (glm::length(directionVector) > 0.0f)
+            directionVector = glm::normalize(directionVector);
+
+        // Update position
+        Position += directionVector * velocity;
+
+        // Constrain Y-axis position if needed
+        if (Constrained)
             Position.y = CAMERA_HEAD_HEIGHT;
     }
 
