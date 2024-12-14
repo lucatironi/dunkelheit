@@ -5,19 +5,27 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "fps_camera.hpp"
 #include "filesystem.hpp"
 #include "level.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
 #include "text_renderer.hpp"
 
-void ProcessInput(GLFWwindow* window);
+void ProcessInput(GLFWwindow* window, float deltaTime);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
+void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void DisplayFPS(TextRenderer &textRenderer, Shader &textShader, std::string fps);
 
 // settings
 const unsigned int WindowWidth  = 800;
 const unsigned int WindowHeight = 600;
+
+FPSCamera camera(glm::vec3(0.0f, 0.0f, 0.0f));
+float lastX = WindowWidth / 2.0f;
+float lastY = WindowHeight / 2.0f;
+bool firstMouse = true;
+
 
 int main()
 {
@@ -48,6 +56,7 @@ int main()
     glfwSwapInterval(0);
 
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
+    glfwSetCursorPosCallback(window, MouseCallback);
 
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -71,10 +80,9 @@ int main()
     Shader defaultShader(FileSystem::GetPath("src/shaders/default.vs"), FileSystem::GetPath("src/shaders/default.fs"));
     Texture2D levelTexture(FileSystem::GetPath("assets/tiles.png"), GL_TRUE, GL_CLAMP_TO_EDGE, GL_NEAREST, GL_NEAREST);
     Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
+    camera.Position = level.StartingPosition;
     glm::mat4 perspective = glm::perspective(glm::radians(80.0f), static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight), 0.1f, 100.0f);
-    glm::mat4 view = glm::lookAt(level.StartingPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     defaultShader.Use();
-    defaultShader.SetMat4("view", view);
     defaultShader.SetMat4("projection", perspective);
     
     // setup OpenGL
@@ -107,18 +115,22 @@ int main()
 
         // input
         // -----
-        ProcessInput(window);
+        ProcessInput(window, deltaTime);
 
         // render
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // render FPS counter
-        DisplayFPS(textRenderer, textShader, fps.str());
+        defaultShader.Use();
+        defaultShader.SetMat4("view", camera.GetViewMatrix());
 
         // render the level
         level.Draw(defaultShader);
+
+        // render FPS counter
+        DisplayFPS(textRenderer, textShader, fps.str());
+
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -138,10 +150,20 @@ int main()
 
 /// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void ProcessInput(GLFWwindow* window)
+void ProcessInput(GLFWwindow* window, float deltaTime)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessInputMovement(CAMERA_FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessInputMovement(CAMERA_BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessInputMovement(CAMERA_LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessInputMovement(CAMERA_RIGHT, deltaTime);
+
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -151,6 +173,29 @@ void FramebufferSizeCallback(GLFWwindow* /* window */, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+}
+
+// glfw: whenever the mouse moves, this callback is called
+// -------------------------------------------------------
+void MouseCallback(GLFWwindow* /* window */, double xposIn, double yposIn)
+{
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 void DisplayFPS(TextRenderer &textRenderer, Shader &textShader, std::string fps)
