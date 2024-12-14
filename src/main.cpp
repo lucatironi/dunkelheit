@@ -121,7 +121,7 @@ int main()
         // update
         // ------
         // simple collision detection
-        glm::vec3 checkPoint = camera.Position + glm::normalize(camera.Front) * 0.5f;
+        glm::vec3 checkPoint = camera.Position + camera.Front * 0.75f;
         int tile = level.TileAt(checkPoint.x, checkPoint.z);
         if (tile == 0 || tile == 128)
             camera.Position = previousPosition;
