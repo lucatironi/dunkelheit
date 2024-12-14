@@ -71,17 +71,17 @@ int main()
     // ----------------------------
     TextRenderer textRenderer(FileSystem::GetPath("assets/font.ttf"), 16);
     Shader textShader(FileSystem::GetPath("src/shaders/text.vs"), FileSystem::GetPath("src/shaders/text.fs"));
-    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(WindowWidth), 0.0f, static_cast<float>(WindowHeight));
+    glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(WindowWidth), 0.0f, static_cast<float>(WindowHeight));
     textShader.Use();
-    textShader.SetMat4("projection", projection);
+    textShader.SetMat4("projection", orthoProjection);
 
     Shader defaultShader(FileSystem::GetPath("src/shaders/default.vs"), FileSystem::GetPath("src/shaders/default.fs"));
     Texture2D levelTexture(FileSystem::GetPath("assets/tiles.png"), GL_TRUE, GL_CLAMP_TO_EDGE, GL_NEAREST, GL_NEAREST);
     Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
     camera.Position = level.StartingPosition;
-    glm::mat4 perspective = glm::perspective(glm::radians(80.0f), static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight), 0.1f, 100.0f);
+    glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight), 0.1f, 100.0f);
     defaultShader.Use();
-    defaultShader.SetMat4("projection", perspective);
+    defaultShader.SetMat4("projection", perspectiveProjection);
     
     // setup OpenGL
     glEnable(GL_DEPTH_TEST);
