@@ -17,8 +17,12 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
 // settings
-const unsigned int WindowWidth  = 800;
-const unsigned int WindowHeight = 600;
+std::string WindowTitle = "Dunkelheit";
+int WindowWidth  = 800;
+int WindowHeight = 600;
+int WindowPositionX = 0;
+int WindowPositionY = 0;
+bool FullScreen = true;
 
 FPSCamera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 float lastX = WindowWidth / 2.0f;
@@ -34,6 +38,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GL_FALSE);
@@ -41,7 +46,19 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(WindowWidth, WindowHeight, "Dunkelheit", nullptr, nullptr);
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    GLFWwindow* window = nullptr;
+    if (FullScreen) {
+        const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        window = glfwCreateWindow(mode->width, mode->height, WindowTitle.c_str(), monitor, nullptr);
+        WindowWidth = mode->width;
+        WindowHeight = mode->height;
+    } else {
+        window = glfwCreateWindow(WindowWidth, WindowHeight, WindowTitle.c_str(), nullptr, nullptr);
+        glfwGetWindowSize(window, &WindowWidth, &WindowHeight);
+        glfwGetWindowPos(window, &WindowPositionX, &WindowPositionY);
+    }
+
     if (window == nullptr)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
