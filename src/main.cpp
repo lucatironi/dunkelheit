@@ -93,7 +93,7 @@ int main()
     textShader.SetMat4("projection", orthoProjection);
 
     Shader defaultShader(FileSystem::GetPath("src/shaders/default.vs"), FileSystem::GetPath("src/shaders/default.fs"));
-    Texture2D levelTexture(FileSystem::GetPath("assets/tiles.png"), GL_TRUE, GL_CLAMP_TO_EDGE, GL_NEAREST, GL_NEAREST);
+    Texture2D levelTexture(FileSystem::GetPath("assets/tiles.png"), true);
     Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
     camera.Position = level.StartingPosition;
     glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight), 0.1f, 100.0f);
