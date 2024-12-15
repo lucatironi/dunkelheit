@@ -99,10 +99,11 @@ int main()
     glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight), 0.1f, 100.0f);
     defaultShader.Use();
     defaultShader.SetMat4("projection", perspectiveProjection);
-    defaultShader.SetVec3("lightColor", glm::vec3(0.7f, 0.1f, 0.0f));
-    defaultShader.SetFloat("constantAtt", 0.3f);
-    defaultShader.SetFloat("linearAtt", 0.13f);
-    defaultShader.SetFloat("quadraticAtt", 0.68f);
+    defaultShader.SetInt("numLights", level.NumLights());
+    defaultShader.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.8f));
+    defaultShader.SetFloat("constantAtt", 1.0f);
+    defaultShader.SetFloat("linearAtt", 0.05f);
+    defaultShader.SetFloat("quadraticAtt", 0.01f);
 
 
     // setup OpenGL

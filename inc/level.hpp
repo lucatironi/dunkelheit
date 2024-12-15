@@ -6,6 +6,8 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
+#include "fps_camera.hpp"
+#include "random_generator.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
 
@@ -13,8 +15,19 @@ struct Light
 {
     glm::vec3 position;
     glm::vec3 color;
-    GLfloat attenuation;
 };
+
+enum ColorKey {
+    COLOR_FLOOR  = 255,
+    COLOR_PLAYER = 149,
+    COLOR_WALL   = 128,
+    COLOR_ENEMY  = 76,
+    COLOR_LIGHT  = 28
+};
+
+constexpr float DEFAULT_TILE_FRACTION = 16.0f / 1024.0f;
+constexpr float DEFAULT_QUAD_SIZE = 3.0f;
+constexpr size_t MAX_LIGHTS = 16;
 
 class Level
 {
@@ -24,6 +37,7 @@ public:
     Level(const std::string levelPath, Texture2D texture)
         : texture(texture)
     {
+        initRandom();
         loadLevel(levelPath);
         initRenderData();
     }
@@ -35,37 +49,51 @@ public:
         glDeleteBuffers(1, &VBO);
     }
 
-    void Draw(Shader shader)
+    void Draw(const Shader& shader)
     {
         shader.Use();
         shader.SetMat4("model", glm::mat4(1.0f));
 
-        for (unsigned int i = 0; i < lights.size(); i++)
+        // Upload light data
+        for (size_t i = 0; i < lights.size(); ++i)
         {
             shader.SetVec3("lights[" + std::to_string(i) + "].position", lights[i].position);
             shader.SetVec3("lights[" + std::to_string(i) + "].color", lights[i].color);
-            shader.SetFloat("lights[" + std::to_string(i) + "].attenuation", lights[i].attenuation);
         }
 
         glActiveTexture(GL_TEXTURE0);
         texture.Bind();
 
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+        glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vertices.size() / 8));
         glBindVertexArray(0);
     }
 
-    int TileAt(float x, float z)
+    int TileAt(float x, float z) const
     {
-        int i = x / quadSize;
-        int j = z / quadSize;
-        int pos = levelWidth * j + i;
-        return levelData[pos];
+        if (x < 0 || z < 0 || x >= levelWidth * quadSize || z >= levelDepth * quadSize)
+            return -1; // Return invalid tile for out-of-bounds
+        int i = static_cast<int>(x / quadSize);
+        int j = static_cast<int>(z / quadSize);
+        return levelData[levelWidth * j + i];
+    }
+
+    void AddLight(const glm::vec3& position, const glm::vec3& color)
+    {
+        if (lights.size() < MAX_LIGHTS)
+            lights.push_back({position, color});
+        else
+            std::cerr << "Warning: Maximum number of lights exceeded!" << std::endl;
+    }
+
+    int NumLights() const
+    {
+        return (int)lights.size();
     }
 
 private:
-    const float tileFraction = 16.0f / 1024.0f;
-    const float quadSize = 3.0f;
+    const float tileFraction = DEFAULT_TILE_FRACTION;
+    const float quadSize = DEFAULT_QUAD_SIZE;
 
     int levelWidth, levelDepth;
     unsigned char *levelData;
@@ -73,50 +101,6 @@ private:
     Texture2D texture;
     std::vector<GLfloat> vertices;
     std::vector<Light> lights;
-
-    void loadLevel(const std::string levelPath)
-    {
-        // Load level data from image
-        int channels;
-        levelData = stbi_load(levelPath.c_str(), &levelWidth, &levelDepth, &channels, 1);
-        for (int z = 0; z < levelDepth; z++)
-        {
-            for (int x = 0; x < levelWidth; x++)
-            {
-                int colorKey = levelData[levelWidth * z + x];
-                switch (colorKey)
-                {
-                case 255: // white, floor
-                    addFloor(x * quadSize, z * quadSize);
-                    addCeiling(x * quadSize, z * quadSize);
-                    break;
-                case 149: // green, player
-                    StartingPosition = glm::vec3(x * quadSize, CAMERA_HEAD_HEIGHT, z * quadSize);
-                    addFloor(x * quadSize, z * quadSize);
-                    addCeiling(x * quadSize, z * quadSize);
-                    break;
-                case 128: // grey, wall
-                    addWall(x * quadSize, z * quadSize);
-                    break;
-                case 76: // red, enemy spawner
-                    addFloor(x * quadSize, z * quadSize);
-                    addCeiling(x * quadSize, z * quadSize);
-                    break;
-                case 28: // blue, light
-                    Light light;
-                    light.position = glm::vec3(x * quadSize, quadSize / 2.0f, z * quadSize);
-                    light.color = glm::vec3(0.0f, 0.1f, 0.7f);
-                    light.attenuation = 0.08f;
-                    lights.push_back(light);
-                    addFloor(x * quadSize, z * quadSize);
-                    addCeiling(x * quadSize, z * quadSize);
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
-    }
 
     void initRenderData()
     {
@@ -142,87 +126,141 @@ private:
         glBindVertexArray(0);
     }
 
-    void addFloor(GLfloat x, GLfloat z)
+    void addFloor(int x, int z)
     {
-        GLfloat y = 0.0f;
-
-        pushQuad(x, y, z,
-                 x + quadSize, y, z,
-                 x, y, z + quadSize,
-                 x + quadSize, y, z + quadSize,
-                 0.0f, 1.0f, 0.0f,
-                 1);
+        pushQuad({x * quadSize, 0.0f, z * quadSize},
+                 {(x + 1) * quadSize, 0.0f, z * quadSize},
+                 {x * quadSize, 0.0f, (z + 1) * quadSize},
+                 {(x + 1) * quadSize, 0.0f, (z + 1) * quadSize},
+                 {0.0f, 1.0f, 0.0f}, getRandomInRange(0, 2)); // Upward normal
     }
 
-    void addCeiling(GLfloat x, GLfloat z)
+    void addCeiling(int x, int z)
     {
-        GLfloat y = quadSize;
-    
-        pushQuad(x, y, z,
-                 x, y, z + quadSize,
-                 x + quadSize, y, z,
-                 x + quadSize, y, z + quadSize,
-                 0.0f, -1.0f, 0.0f,
-                 5);
+         pushQuad(
+                  {(x + 1) * quadSize, quadSize, z * quadSize},
+                  {x * quadSize, quadSize, z * quadSize},
+                  {(x + 1) * quadSize, quadSize, (z + 1) * quadSize},
+                  {x * quadSize, quadSize, (z + 1) * quadSize},
+                  {0.0f, -1.0f, 0.0f}, getRandomInRange(4, 6)); // Downward normal
     }
 
-    void addWall(GLfloat x, GLfloat z)
+    void addWall(int x, int z)
     {
-        GLfloat y = quadSize;
+       // Determine if the neighboring tiles should be considered for wall generation
+        bool hasFloorRight = (x + 1 < levelWidth) && (levelData[levelWidth * z + (x + 1)] == COLOR_FLOOR);
+        bool hasFloorLeft  = (x - 1 >= 0) && (levelData[levelWidth * z + (x - 1)] == COLOR_FLOOR);
+        bool hasFloorUp    = (z - 1 >= 0) && (levelData[levelWidth * (z - 1) + x] == COLOR_FLOOR);
+        bool hasFloorDown  = (z + 1 < levelDepth) && (levelData[levelWidth * (z + 1) + x] == COLOR_FLOOR);
 
-        // top
-        pushQuad(x, y, z,
-                x + quadSize, y, z,
-                x, y, z + quadSize,
-                x + quadSize, y, z + quadSize,
-                0.0f, 1.0f, 0.0f,
-                7);
-        // right
-        pushQuad(x + quadSize, y, z + quadSize,
-                x + quadSize, y, z,
-                x + quadSize, 0.0f, z + quadSize,
-                x + quadSize, 0.0f, z,
-                1.0f, 0.0f, 0.0f,
-                8);
-        // front
-        pushQuad(x, y, z + quadSize,
-                x + quadSize, y, z + quadSize,
-                x, 0.0f, z + quadSize,
-                x + quadSize, 0.0f, z + quadSize,
-                0.0f, 0.0f, 1.0f,
-                9);
-        // left
-        pushQuad(x, y, z,
-                x, y, z + quadSize,
-                x, 0.0f, z,
-                x, 0.0f, z + quadSize,
-                -1.0f, 0.0f, 0.0f,
-                10);
-        // back
-        pushQuad(x + quadSize, y, z,
-                x, y, z,
-                x + quadSize, 0.0f, z,
-                x, 0.0f, z,
-                0.0f, 0.0f, -1.0f,
-                11);
+        // Left wall
+        if (hasFloorRight)
+        {
+            pushQuad({(x + 1) * quadSize, quadSize, (z + 1) * quadSize},
+                     {(x + 1) * quadSize, quadSize, z * quadSize},
+                     {(x + 1) * quadSize, 0.0f, (z + 1) * quadSize},
+                     {(x + 1) * quadSize, 0.0f, z * quadSize},
+                     {1.0f, 0.0f, 0.0f}, getRandomInRange(7, 16)); // Rightward normal
+        }
+        // Right wall
+        if (hasFloorLeft)
+        {
+            pushQuad({x * quadSize, quadSize, z * quadSize},
+                     {x * quadSize, quadSize, (z + 1) * quadSize},
+                     {x * quadSize, 0.0f, z * quadSize},
+                     {x * quadSize, 0.0f, (z + 1) * quadSize},
+                     {-1.0f, 0.0f, 0.0f}, getRandomInRange(7, 16));  // Leftward normal
+        }
+        // Forward wall
+        if (hasFloorDown)
+        {
+            pushQuad({x * quadSize, quadSize, (z + 1) * quadSize},
+                     {(x + 1) * quadSize, quadSize, (z + 1) * quadSize},
+                     {x * quadSize, 0.0f, (z + 1) * quadSize},
+                     {(x + 1) * quadSize, 0.0f, (z + 1) * quadSize},
+                     {0.0f, 0.0f, 1.0f}, getRandomInRange(7, 16)); // Backward normal
+        }
+        // Backward wall
+        if (hasFloorUp)
+        {
+            pushQuad({(x + 1) * quadSize, quadSize, z * quadSize},
+                     {x * quadSize, quadSize, z * quadSize},
+                     {(x + 1) * quadSize, 0.0f, z * quadSize},
+                     {x * quadSize, 0.0f, z * quadSize},
+                     {0.0f, 0.0f, -1.0f}, getRandomInRange(7, 16)); // Forward normal
+        }
     }
 
-    void pushQuad(GLfloat x1, GLfloat y1, GLfloat z1,
-                  GLfloat x2, GLfloat y2, GLfloat z2,
-                  GLfloat x3, GLfloat y3, GLfloat z3,
-                  GLfloat x4, GLfloat y4, GLfloat z4,
-                  GLfloat nx, GLfloat ny, GLfloat nz,
-                  GLuint tile)
+    void loadLevel(const std::string& levelPath)
     {
-        GLfloat u = tile * tileFraction;
+        // Load level data from the image
+        int channels;
+        levelData = stbi_load(levelPath.c_str(), &levelWidth, &levelDepth, &channels, 1);
+        if (!levelData)
+        {
+            throw std::runtime_error("Failed to load level: " + levelPath);
+        }
+
+        // Process each tile
+        for (int z = 0; z < levelDepth; ++z)
+        {
+            for (int x = 0; x < levelWidth; ++x)
+            {
+                int colorKey = levelData[levelWidth * z + x];
+                handleTile(colorKey, x, z);
+            }
+        }
+    }
+
+    void handleTile(int colorKey, int x, int z)
+    {
+        glm::vec3 position = glm::vec3(x * quadSize, 0.0f, z * quadSize);
+
+        switch (colorKey)
+        {
+        case COLOR_FLOOR:
+            addFloor(x, z);
+            addCeiling(x, z);
+            break;
+        case COLOR_PLAYER:
+            StartingPosition = glm::vec3(position.x, FPSCamera::DEFAULT_HEAD_HEIGHT, position.z);
+            addFloor(x, z);
+            addCeiling(x, z);
+            break;
+        case COLOR_WALL:
+            addWall(x, z);
+            break;
+        case COLOR_ENEMY:
+            addFloor(x, z);
+            addCeiling(x, z);
+            break;
+        case COLOR_LIGHT:
+            AddLight(position + glm::vec3(0.0f, quadSize / 2.0f, 0.0f), glm::vec3(0.0f, 0.1f, 0.7f));
+            addFloor(x, z);
+            addCeiling(x, z);
+            break;
+        default:
+            break;
+        }
+    }
+
+    void pushQuad(const glm::vec3& v1, const glm::vec3& v2,
+                  const glm::vec3& v3, const glm::vec3& v4,
+                  const glm::vec3& normal, GLuint tile)
+    {
+        float u = tile * tileFraction;
+        float u1 = u + tileFraction;
 
         std::vector<GLfloat> newVertices = {
-            x3, y3, z3, nx, ny, nz, u, 1.0f,
-            x2, y2, z2, nx, ny, nz, u + tileFraction, 0.0f,
-            x1, y1, z1, nx, ny, nz, u, 0.0f,
-            x2, y2, z2, nx, ny, nz, u + tileFraction, 0.0f,
-            x3, y3, z3, nx, ny, nz, u, 1.0f,
-            x4, y4, z4, nx, ny, nz, u + tileFraction, 1.0f};
-        vertices.insert(end(vertices), begin(newVertices), end(newVertices));
+            // Vertex positions, normals, and texture coordinates
+            v3.x, v3.y, v3.z, normal.x, normal.y, normal.z, u,  1.0f,
+            v2.x, v2.y, v2.z, normal.x, normal.y, normal.z, u1, 0.0f,
+            v1.x, v1.y, v1.z, normal.x, normal.y, normal.z, u,  0.0f,
+            v2.x, v2.y, v2.z, normal.x, normal.y, normal.z, u1, 0.0f,
+            v3.x, v3.y, v3.z, normal.x, normal.y, normal.z, u,  1.0f,
+            v4.x, v4.y, v4.z, normal.x, normal.y, normal.z, u1, 1.0f
+        };
+
+        vertices.insert(vertices.end(), newVertices.begin(), newVertices.end());
     }
 };
