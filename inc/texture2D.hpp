@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <iostream>
 
 #include <glad/glad.h>
 #define STB_IMAGE_IMPLEMENTATION
@@ -18,7 +19,17 @@ public:
     GLuint FilterMin;
     GLuint FilterMax;
 
-    Texture2D(const std::string imagePath, GLboolean alpha, GLuint wrap, GLuint filterMin, GLuint filterMax)
+    struct TextureParams
+    {
+        GLuint wrapS = GL_CLAMP_TO_EDGE;
+        GLuint wrapT = GL_CLAMP_TO_EDGE;
+        GLuint filterMin = GL_NEAREST_MIPMAP_NEAREST;
+        GLuint filterMax = GL_NEAREST;
+    };
+
+    Texture2D(const std::string& imagePath, bool alpha = false, const TextureParams& params = {})
+        : WrapS(params.wrapS), WrapT(params.wrapT),
+          FilterMin(params.filterMin), FilterMax(params.filterMax)
     {
         glGenTextures(1, &ID);
         if (alpha)
@@ -26,22 +37,47 @@ public:
             InternalFormat = GL_RGBA;
             ImageFormat = GL_RGBA;
         }
-        WrapS = wrap;
-        WrapT = wrap;
-        FilterMin = filterMin;
-        FilterMax = filterMax;
+        else
+        {
+            InternalFormat = GL_RGB;
+            ImageFormat = GL_RGB;
+        }
+
         // Load image
         int width, height, channels;
-        unsigned char* image = stbi_load(imagePath.c_str(), &width, &height, &channels, 0);
-        // Now generate texture
-        Generate(width, height, image);
-        stbi_image_free(image);
+        unsigned char* image = loadImage(imagePath.c_str());
+        if (image)
+        {
+            generate(Width, Height, image);
+            stbi_image_free(image); // Free after texture generation
+        }
+        else
+        {
+            std::cerr << "Failed to load texture: " << imagePath << std::endl;
+        }
     }
 
-    void Generate(GLuint width, GLuint height, unsigned char* data)
+    void Bind() const
     {
-        Width = width;
-        Height = height;
+        glBindTexture(GL_TEXTURE_2D, ID);
+    }
+
+private:
+    // Helper function to load the image data
+    unsigned char* loadImage(const char* imagePath)
+    {
+        int width, height, channels;
+        unsigned char* image = stbi_load(imagePath, &width, &height, &channels, 0);
+        if (image)
+        {
+            Width = width;
+            Height = height;
+        }
+        return image;
+    }
+
+    void generate(GLuint width, GLuint height, unsigned char* data)
+    {
         // Create Texture
         glBindTexture(GL_TEXTURE_2D, ID);
         glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat, width, height, 0, ImageFormat, GL_UNSIGNED_BYTE, data);
@@ -53,10 +89,5 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, FilterMax);
         // Unbind texture
         glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    void Bind() const
-    {
-        glBindTexture(GL_TEXTURE_2D, ID);
     }
 };
