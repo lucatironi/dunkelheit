@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/constants.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 /// Enumerates camera movement directions.
 enum CameraMovement
@@ -50,7 +51,7 @@ public:
     float Zoom;
     bool Constrained;
 
-    /// Constructor
+    // Constructor
     FPSCamera(glm::vec3 position = DEFAULT_POSITION,
               glm::vec3 up = DEFAULT_UP,
               float yaw = DEFAULT_YAW,
@@ -63,13 +64,18 @@ public:
         updateCameraVectors();
     }
 
-    /// Returns the view matrix using Euler angles and the LookAt matrix.
+    // Returns the view matrix using Euler angles and the LookAt matrix.
     glm::mat4 GetViewMatrix() const
     {
         return glm::lookAt(Position, Position + Front, Up);
     }
 
-    /// Processes keyboard-like input for camera movement.
+    // Return a quaternion that represents the camera's rotation
+    glm::quat GetRotation() const {
+        return glm::quatLookAt(Front, Up);
+    }
+
+    // Processes keyboard-like input for camera movement.
     void ProcessInputMovement(CameraMovement direction, float deltaTime)
     {
         if (deltaTime <= 0.0f)
@@ -112,7 +118,7 @@ public:
             Position.y = DEFAULT_HEAD_HEIGHT;
     }
 
-    /// Processes mouse input for camera rotation.
+    // Processes mouse input for camera rotation.
     void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true)
     {
         xoffset *= MouseSensitivity;
@@ -127,14 +133,14 @@ public:
         updateCameraVectors();
     }
 
-    /// Processes input from a mouse scroll-wheel to adjust zoom.
+    // Processes input from a mouse scroll-wheel to adjust zoom.
     void ProcessMouseZoom(float yoffset)
     {
         Zoom = glm::clamp(Zoom - yoffset, 1.0f, 45.0f);
     }
 
 private:
-    /// Updates the camera's vectors based on the current yaw and pitch angles.
+    // Updates the camera's vectors based on the current yaw and pitch angles.
     void updateCameraVectors()
     {
         glm::vec3 front;
