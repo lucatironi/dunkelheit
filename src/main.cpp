@@ -11,6 +11,7 @@
 #include "shader.hpp"
 #include "text_renderer.hpp"
 #include "texture2D.hpp"
+#include "weapon.hpp"
 
 void ProcessInput(GLFWwindow* window, float deltaTime);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -104,6 +105,11 @@ int main()
     defaultShader.SetFloat("lightRadius", 15.0f);
     camera.Position = level.StartingPosition;
 
+    // load Weapon
+    Weapon weapon;
+    Shader weaponShader(FileSystem::GetPath("src/shaders/weapon.vs"), FileSystem::GetPath("src/shaders/weapon.fs"));
+    weaponShader.Use();
+    weaponShader.SetMat4("projection", perspectiveProjection);
 
     // setup OpenGL
     glEnable(GL_DEPTH_TEST);
@@ -148,17 +154,26 @@ int main()
         if (tile == 0 || tile == 128)
             camera.Position = previousPosition;
 
+        weapon.Update(camera);
+
         // render
         // ------
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // render the level
+        glEnable(GL_DEPTH_TEST);
         defaultShader.Use();
         defaultShader.SetVec3("cameraPos", camera.Position);
         defaultShader.SetFloat("time", currentFrame);
         defaultShader.SetMat4("view", camera.GetViewMatrix());
         level.Draw(defaultShader);
+
+        // render the weapon
+        glDisable(GL_DEPTH_TEST);
+        weaponShader.Use();
+        weaponShader.SetMat4("view", camera.GetViewMatrix());
+        weapon.Draw(weaponShader);
 
         // render Debug Information
         std::stringstream pos;
