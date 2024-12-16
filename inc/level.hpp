@@ -45,8 +45,8 @@ public:
     ~Level()
     {
         stbi_image_free(levelData);
-        glDeleteVertexArrays(1, &VAO);
-        glDeleteBuffers(1, &VBO);
+        if (VAO != 0) glDeleteVertexArrays(1, &VAO);
+        if (VBO != 0) glDeleteBuffers(1, &VBO);
     }
 
     void Draw(const Shader& shader)
