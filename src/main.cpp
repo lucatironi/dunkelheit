@@ -9,6 +9,7 @@
 
 #include "fps_camera.hpp"
 #include "file_system.hpp"
+#include "footsteps_system.hpp"
 #include "level.hpp"
 #include "random_generator.hpp"
 #include "shader.hpp"
@@ -127,6 +128,10 @@ int main()
     weaponShader.Use();
     weaponShader.SetMat4("projection", perspectiveProjection);
 
+    // Initialize player state and footstep system
+    PlayerState player = {camera.Position, camera.Position, false};
+    FootstepSystem footsteps(SoundEngine);
+
     // setup OpenGL
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -174,6 +179,9 @@ int main()
             camera.Position = previousPosition;
 
         weapon.Update(camera);
+
+        player.position = camera.Position;
+        footsteps.Update(currentTime, player);
 
         // render
         // ------
