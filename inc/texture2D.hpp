@@ -7,6 +7,14 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+struct TextureParams
+{
+    GLuint wrapS = GL_CLAMP_TO_EDGE;
+    GLuint wrapT = GL_CLAMP_TO_EDGE;
+    GLuint filterMin = GL_NEAREST_MIPMAP_NEAREST;
+    GLuint filterMax = GL_NEAREST;
+};
+
 class Texture2D
 {
 public:
@@ -18,14 +26,6 @@ public:
     GLuint WrapT;
     GLuint FilterMin;
     GLuint FilterMax;
-
-    struct TextureParams
-    {
-        GLuint wrapS = GL_CLAMP_TO_EDGE;
-        GLuint wrapT = GL_CLAMP_TO_EDGE;
-        GLuint filterMin = GL_NEAREST_MIPMAP_NEAREST;
-        GLuint filterMax = GL_NEAREST;
-    };
 
     Texture2D(const std::string& imagePath, bool alpha = false, const TextureParams& params = {})
         : WrapS(params.wrapS), WrapT(params.wrapT),
