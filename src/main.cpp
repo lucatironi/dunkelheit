@@ -123,25 +123,25 @@ int main()
 
     // render loop
     // -----------
-    float currentFrame = 0.0f;
-    float lastFrame    = 0.0f;
-    float lastFPSFrame = 0.0f;
-    float deltaTime    = 0.0f;
+    float currentTime = 0.0f;
+    float lastTime    = 0.0f;
+    float lastFPSTime = 0.0f;
+    float deltaTime   = 0.0f;
     int fpsCount = 0;
     std::stringstream fps;
 
     while (!glfwWindowShouldClose(window))
     {
         // calculate deltaTime and FPS
-        currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
+        currentTime = glfwGetTime();
+        deltaTime = currentTime - lastTime;
         fpsCount++;
-        if ((currentFrame - lastFPSFrame) >= 1.0f)
+        if ((currentTime - lastFPSTime) >= 1.0f)
         {
             fps.str(std::string());
             fps << fpsCount;
             fpsCount = 0;
-            lastFPSFrame = currentFrame;
+            lastFPSTime = currentTime;
         }
 
         // input
@@ -169,7 +169,7 @@ int main()
         glEnable(GL_DEPTH_TEST);
         defaultShader.Use();
         defaultShader.SetVec3("cameraPos", camera.Position);
-        defaultShader.SetFloat("time", currentFrame);
+        defaultShader.SetFloat("time", currentTime);
         defaultShader.SetMat4("view", camera.GetViewMatrix());
         level.Draw(defaultShader);
 
@@ -187,7 +187,7 @@ int main()
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-        lastFrame = currentFrame;
+        lastTime = currentTime;
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
