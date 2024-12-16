@@ -8,6 +8,7 @@
 #include "fps_camera.hpp"
 #include "file_system.hpp"
 #include "level.hpp"
+#include "random_generator.hpp"
 #include "shader.hpp"
 #include "text_renderer.hpp"
 #include "texture2D.hpp"
@@ -84,6 +85,9 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
+    // seed random generator
+    initRandom();
 
     // load TexRenderer
     TextRenderer textRenderer(FileSystem::GetPath("assets/font.ttf"), 16);

@@ -7,7 +7,6 @@
 #include <glm/glm.hpp>
 
 #include "fps_camera.hpp"
-#include "random_generator.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
 
@@ -37,7 +36,6 @@ public:
     Level(const std::string levelPath, Texture2D texture)
         : texture(texture)
     {
-        initRandom();
         loadLevel(levelPath);
         setupBuffers();
     }
