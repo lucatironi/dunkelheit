@@ -1,31 +1,55 @@
 #version 330 core
 
-in vec3 FragColor;  // Color from the vertex shader (lighting)
-in vec2 TexCoords;  // Texture coordinates from the vertex shader
+in vec3 FragPos;
+in vec3 Normal;
+in vec2 TexCoord;
 
-out vec4 color;  // Final color to output
+out vec4 FragColor;
 
-uniform sampler2D image;  // Texture for the object
+uniform vec3 cameraPos;       // Camera/torch position
+uniform vec3 lightColor;      // Base color of the torchlight
+uniform sampler2D texture1;   // Object texture
+uniform float lightRadius;    // Radius of the torchlight's effective area
+uniform float time;           // Time for flickering effect
 
-// Constants for smoothstep-based distance falloff
-uniform float smoothstepEdge0; // Inner boundary of the smoothstep function
-uniform float smoothstepEdge1; // Outer boundary of the smoothstep function
+// Define a Light struct to mirror the C++ structure
+struct Light {
+    vec3 position;
+    vec3 color;
+};
+
+#define MAX_LIGHTS 10
+uniform Light lights[MAX_LIGHTS];
+uniform int numLights;
 
 void main()
 {
-    // Sample the texture at the given coordinates
-    vec3 texColor = texture(image, TexCoords).rgb;
+    vec3 texColor = texture(texture1, TexCoord).rgb;
 
-    // Calculate the linear depth from the depth buffer
-    float distance = gl_FragCoord.z / gl_FragCoord.w;
+    // Flicker calculation
+    float flicker = 0.8 + 0.2 * sin(time * 10.0) * sin(time * 3.0);
 
-    // Smoothstep to fade color based on distance
-    // As distance increases, the color fades to black
-    float fadeFactor = smoothstep(20.0, 0.1, distance);
+    // Torchlight contribution
+    vec3 norm = normalize(Normal);
+    vec3 torchDir = normalize(cameraPos - FragPos);
+    float distanceToTorch = length(FragPos - cameraPos);
+    float torchAttenuation = 1.0 - clamp(distanceToTorch / lightRadius, 0.0, 1.0);
+    float torchDiffuse = max(dot(norm, torchDir), 0.0);
+    vec3 torchLight = (0.2 * texColor + torchDiffuse * lightColor * texColor) * torchAttenuation;
 
-    // Apply the light intensity to the texture color
-    vec3 finalColor = texColor * FragColor * fadeFactor;
+    // Static lights contribution
+    vec3 staticLight = vec3(0.0);
+    for (int i = 0; i < numLights; i++) {
+        vec3 lightDir = normalize(lights[i].position - FragPos);
+        float distance = length(lights[i].position - FragPos);
+        float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance); // Quadratic attenuation
 
-    // Output the final color
-    color = vec4(finalColor, 1.0);
+        float diffuse = max(dot(norm, lightDir), 0.0);
+        staticLight += (0.2 * texColor + diffuse * lights[i].color * texColor) * attenuation * flicker;
+    }
+
+    // Combine torchlight and static lights
+    vec3 result = torchLight + staticLight;
+
+    FragColor = vec4(result, 1.0);
 }
