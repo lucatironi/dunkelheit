@@ -63,7 +63,7 @@ int main()
 
     if (window == nullptr)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
+        std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
@@ -82,7 +82,7 @@ int main()
     // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        std::cout << "Failed to initialize GLAD" << std::endl;
+        std::cerr << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
 
@@ -216,7 +216,6 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
         camera.ProcessInputMovement(CAMERA_LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessInputMovement(CAMERA_RIGHT, deltaTime);
-
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
