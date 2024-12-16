@@ -54,13 +54,6 @@ public:
         shader.Use();
         shader.SetMat4("model", glm::mat4(1.0f));
 
-        // Upload light data
-        for (size_t i = 0; i < lights.size(); ++i)
-        {
-            shader.SetVec3("lights[" + std::to_string(i) + "].position", lights[i].position);
-            shader.SetVec3("lights[" + std::to_string(i) + "].color", lights[i].color);
-        }
-
         glActiveTexture(GL_TEXTURE0);
         texture.Bind();
 
@@ -91,6 +84,17 @@ public:
         return (int)lights.size();
     }
 
+    void SetLights(const Shader& shader)
+    {
+        shader.Use();
+        for (size_t i = 0; i < lights.size(); ++i)
+        {
+            shader.SetVec3("lights[" + std::to_string(i) + "].position", lights[i].position);
+            shader.SetVec3("lights[" + std::to_string(i) + "].color", lights[i].color);
+        }
+        shader.SetInt("numLights", (int)lights.size());
+    }
+
 private:
     const float tileFraction = DEFAULT_TILE_FRACTION;
     const float quadSize = DEFAULT_QUAD_SIZE;
@@ -104,7 +108,6 @@ private:
 
     void setupBuffers()
     {
-        // Configure VAO/VBO
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
         glBindVertexArray(VAO);
