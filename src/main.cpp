@@ -9,8 +9,8 @@
 #include "filesystem.hpp"
 #include "level.hpp"
 #include "shader.hpp"
-#include "texture2D.hpp"
 #include "text_renderer.hpp"
+#include "texture2D.hpp"
 
 void ProcessInput(GLFWwindow* window, float deltaTime);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -84,26 +84,25 @@ int main()
         return -1;
     }
 
-    // TextRenderer: compile and setup the shader
-    // ----------------------------
+    // load TexRenderer
     TextRenderer textRenderer(FileSystem::GetPath("assets/font.ttf"), 16);
     Shader textShader(FileSystem::GetPath("src/shaders/text.vs"), FileSystem::GetPath("src/shaders/text.fs"));
     glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(WindowWidth), 0.0f, static_cast<float>(WindowHeight));
     textShader.Use();
     textShader.SetMat4("projection", orthoProjection);
 
-    Shader defaultShader(FileSystem::GetPath("src/shaders/default.vs"), FileSystem::GetPath("src/shaders/default.fs"));
-    Texture2D levelTexture(FileSystem::GetPath("assets/tiles.png"), true);
-    Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
-    camera.Position = level.StartingPosition;
     glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight), 0.1f, 100.0f);
+
+    // load Level
+    Texture2D levelTexture(FileSystem::GetPath("assets/texture_05.png"), false);
+    Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
+    Shader defaultShader(FileSystem::GetPath("src/shaders/default.vs"), FileSystem::GetPath("src/shaders/default.fs"));
     defaultShader.Use();
+    level.SetLights(defaultShader);
     defaultShader.SetMat4("projection", perspectiveProjection);
-    defaultShader.SetInt("numLights", level.NumLights());
     defaultShader.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.8f));
-    defaultShader.SetFloat("constantAtt", 1.0f);
-    defaultShader.SetFloat("linearAtt", 0.05f);
-    defaultShader.SetFloat("quadraticAtt", 0.01f);
+    defaultShader.SetFloat("lightRadius", 15.0f);
+    camera.Position = level.StartingPosition;
 
 
     // setup OpenGL
@@ -154,12 +153,11 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        defaultShader.Use();
-        defaultShader.SetMat4("view", camera.GetViewMatrix());
-        glm::vec3 torchPos = camera.Position + glm::normalize(glm::vec3(-0.5f, 1.0f, -0.75f)) * 0.5f;
-        defaultShader.SetVec3("cameraPos", torchPos);
-
         // render the level
+        defaultShader.Use();
+        defaultShader.SetVec3("cameraPos", camera.Position);
+        defaultShader.SetFloat("time", currentFrame);
+        defaultShader.SetMat4("view", camera.GetViewMatrix());
         level.Draw(defaultShader);
 
         // render Debug Information
