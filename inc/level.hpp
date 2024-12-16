@@ -25,7 +25,7 @@ enum ColorKey {
     COLOR_LIGHT  = 28
 };
 
-constexpr float DEFAULT_TILE_FRACTION = 16.0f / 1024.0f;
+constexpr float DEFAULT_TILE_FRACTION = 1.0f;
 constexpr float DEFAULT_QUAD_SIZE = 3.0f;
 constexpr size_t MAX_LIGHTS = 16;
 
@@ -135,7 +135,7 @@ private:
                  {(x + 1) * quadSize, 0.0f, z * quadSize},
                  {x * quadSize, 0.0f, (z + 1) * quadSize},
                  {(x + 1) * quadSize, 0.0f, (z + 1) * quadSize},
-                 {0.0f, 1.0f, 0.0f}, getRandomInRange(0, 2)); // Upward normal
+                 {0.0f, 1.0f, 0.0f}, 0); // Upward normal
     }
 
     void addCeiling(int x, int z)
@@ -145,7 +145,7 @@ private:
                   {x * quadSize, quadSize, z * quadSize},
                   {(x + 1) * quadSize, quadSize, (z + 1) * quadSize},
                   {x * quadSize, quadSize, (z + 1) * quadSize},
-                  {0.0f, -1.0f, 0.0f}, getRandomInRange(4, 6)); // Downward normal
+                  {0.0f, -1.0f, 0.0f}, 0); // Downward normal
     }
 
     void addWall(int x, int z)
@@ -163,7 +163,7 @@ private:
                      {(x + 1) * quadSize, quadSize, z * quadSize},
                      {(x + 1) * quadSize, 0.0f, (z + 1) * quadSize},
                      {(x + 1) * quadSize, 0.0f, z * quadSize},
-                     {1.0f, 0.0f, 0.0f}, getRandomInRange(7, 16)); // Rightward normal
+                     {1.0f, 0.0f, 0.0f}, 0); // Rightward normal
         }
         // Right wall
         if (hasFloorLeft)
@@ -172,7 +172,7 @@ private:
                      {x * quadSize, quadSize, (z + 1) * quadSize},
                      {x * quadSize, 0.0f, z * quadSize},
                      {x * quadSize, 0.0f, (z + 1) * quadSize},
-                     {-1.0f, 0.0f, 0.0f}, getRandomInRange(7, 16));  // Leftward normal
+                     {-1.0f, 0.0f, 0.0f}, 0);  // Leftward normal
         }
         // Forward wall
         if (hasFloorDown)
@@ -181,7 +181,7 @@ private:
                      {(x + 1) * quadSize, quadSize, (z + 1) * quadSize},
                      {x * quadSize, 0.0f, (z + 1) * quadSize},
                      {(x + 1) * quadSize, 0.0f, (z + 1) * quadSize},
-                     {0.0f, 0.0f, 1.0f}, getRandomInRange(7, 16)); // Backward normal
+                     {0.0f, 0.0f, 1.0f}, 0); // Backward normal
         }
         // Backward wall
         if (hasFloorUp)
@@ -190,7 +190,7 @@ private:
                      {x * quadSize, quadSize, z * quadSize},
                      {(x + 1) * quadSize, 0.0f, z * quadSize},
                      {x * quadSize, 0.0f, z * quadSize},
-                     {0.0f, 0.0f, -1.0f}, getRandomInRange(7, 16)); // Forward normal
+                     {0.0f, 0.0f, -1.0f}, 0); // Forward normal
         }
     }
 
