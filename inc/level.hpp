@@ -235,7 +235,7 @@ private:
             addCeiling(x, z);
             break;
         case COLOR_LIGHT:
-            AddLight(position + glm::vec3(0.0f, quadSize / 2.0f, 0.0f), glm::vec3(0.0f, 0.1f, 0.7f));
+            AddLight(position + (quadSize / 2.0f), glm::vec3(0.0f, 0.1f, 0.7f));
             addFloor(x, z);
             addCeiling(x, z);
             break;
