@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <irrKlang.h>
+
 #include "fps_camera.hpp"
 #include "file_system.hpp"
 #include "level.hpp"
@@ -30,6 +32,8 @@ FPSCamera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 float lastX = WindowWidth / 2.0f;
 float lastY = WindowHeight / 2.0f;
 bool firstMouse = true;
+
+irrklang::ISoundEngine* SoundEngine;
 
 int main()
 {
@@ -86,6 +90,14 @@ int main()
         return -1;
     }
 
+    // irrklang: initalize sound engine
+    SoundEngine = irrklang::createIrrKlangDevice();
+    if (!SoundEngine)
+    {
+        std::cerr << "Could not initialize irrklang sound engine" << std::endl;
+        return -1;
+    }
+
     // seed random generator
     initRandom();
 
@@ -129,6 +141,9 @@ int main()
     float deltaTime   = 0.0f;
     int fpsCount = 0;
     std::stringstream fps;
+
+    // Play a sound file
+    SoundEngine->play2D(FileSystem::GetPath("assets/music.mp3").c_str(), true);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -194,6 +209,7 @@ int main()
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
+    SoundEngine->drop();
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
