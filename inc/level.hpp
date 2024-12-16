@@ -39,7 +39,7 @@ public:
     {
         initRandom();
         loadLevel(levelPath);
-        initRenderData();
+        setupBuffers();
     }
 
     ~Level()
@@ -102,7 +102,7 @@ private:
     std::vector<GLfloat> vertices;
     std::vector<Light> lights;
 
-    void initRenderData()
+    void setupBuffers()
     {
         // Configure VAO/VBO
         glGenVertexArrays(1, &VAO);
