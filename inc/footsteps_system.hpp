@@ -54,7 +54,7 @@ private:
     std::vector<std::string> footstepSounds;
     float lastStepTime;
     float stepInterval; // Time between steps
-    const float movementThreshold = 0.001f; // Tunable threshold for detecting movement
+    const float movementThreshold = 0.002f; // Tunable threshold for detecting movement
 
     void playFootstepSound()
     {
