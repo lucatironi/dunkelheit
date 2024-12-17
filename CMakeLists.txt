@@ -1,58 +1,89 @@
 cmake_minimum_required(VERSION 3.16)
 
+# Project Setup
+project(dunkelheit LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project(dunkelheit)
-
+# Include Dependencies
 add_subdirectory(deps)
-include_directories(inc)
 
-file(GLOB PROJECT_HEADERS inc/*.hpp)
-file(GLOB PROJECT_SOURCES src/*.cpp)
-file(GLOB PROJECT_SHADERS src/shaders/*.vs
-                          src/shaders/*.fs)
+set(SOURCE_FILES
+    src/main.cpp
+)
 
-configure_file(config/root_directory.hpp.in config/root_directory.hpp)
-include_directories(${CMAKE_BINARY_DIR}/config)
+set(HEADER_FILES
+    inc/cube_model.hpp
+    inc/file_system.hpp
+    inc/footsteps_system.hpp
+    inc/fps_camera.hpp
+    inc/level.hpp
+    inc/mesh.hpp
+    inc/model.hpp
+    inc/object.hpp
+    inc/random_generator.hpp
+    inc/shader.hpp
+    inc/text_renderer.hpp
+    inc/texture2D.hpp
+    inc/weapon.hpp
+)
 
-add_executable(${PROJECT_NAME} ${PROJECT_HEADERS} ${PROJECT_SOURCES} ${PROJECT_SHADERS})
+set(SHADER_FILES
+    src/shaders/default.vs
+    src/shaders/default.fs
+    src/shaders/text.vs
+    src/shaders/text.fs
+    src/shaders/weapon.vs
+    src/shaders/weapon.fs
+)
 
+# Configure Root Directory Header
+configure_file(config/root_directory.hpp.in ${CMAKE_BINARY_DIR}/config/root_directory.hpp)
+
+# Add Executable First
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+
+# Include Directories
+target_include_directories(${PROJECT_NAME} PUBLIC
+    ${CMAKE_SOURCE_DIR}/inc
+    ${CMAKE_BINARY_DIR}/config
+)
+
+# Link External Libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw glad glm assimp stb freetype)
 
-# Include the IrrKlang headers
+# Set the IrrKlang variables
 set(IRRKLANG_DIR ${CMAKE_SOURCE_DIR}/deps/irrklang)
-
 if (WIN32)
-    set(ARCH_DIR /Winx64-visualStudio)
+    set(ARCH_DIR /winx64)
     set(ARCH_LIB_EXT dll)
     set(IRRKLANG_LIB_NAME irrklang)
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/Winx64-visualStudio/irrKlang.lib)
+    # Link IrrKlang Library
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/winx64/irrKlang.lib)
 elseif(APPLE)
-    set(ARCH_DIR /macosx-gcc)
+    set(ARCH_DIR /macosx)
     set(ARCH_LIB_EXT dylib)
     set(IRRKLANG_LIB_NAME libirrklang)
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/bin/macosx-gcc/libirrKlang.dylib)
+    # Link IrrKlang Library
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/macosx/libirrKlang.dylib)
 endif()
 
-include_directories(${IRRKLANG_DIR}/include)
-
+# Include the IrrKlang headers
 target_include_directories(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/include)
 
-add_custom_command(
-    TARGET ${PROJECT_NAME}
-    POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${IRRKLANG_DIR}/bin${ARCH_DIR}/${IRRKLANG_LIB_NAME}.${ARCH_LIB_EXT}
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>/${IRRKLANG_LIB_NAME}.${ARCH_LIB_EXT}
+set(IRRKLANG_LIBS
+    ${IRRKLANG_LIB_NAME}.${ARCH_LIB_EXT}
+    ikpFlac.${ARCH_LIB_EXT}
+    ikpMP3.${ARCH_LIB_EXT}
 )
-add_custom_command(
-    TARGET ${PROJECT_NAME}
-    POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${IRRKLANG_DIR}/bin${ARCH_DIR}/ikpFlac.${ARCH_LIB_EXT}
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>/ikpFlac.${ARCH_LIB_EXT}
+
+foreach(IRRKLANG_LIB ${IRRKLANG_LIBS})
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${IRRKLANG_DIR}/bin${ARCH_DIR}/${IRRKLANG_LIB}
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/${IRRKLANG_LIB}
 )
-add_custom_command(
-    TARGET ${PROJECT_NAME}
-    POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${IRRKLANG_DIR}/bin${ARCH_DIR}/ikpMP3.${ARCH_LIB_EXT}
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>/ikpMP3.${ARCH_LIB_EXT}
-)
+endforeach()
+
+# Final Output Message
+message(STATUS "Building project ${PROJECT_NAME}")
