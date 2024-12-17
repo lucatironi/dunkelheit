@@ -22,27 +22,37 @@ target_link_libraries(${PROJECT_NAME} PRIVATE glfw glad glm assimp stb freetype)
 # Include the IrrKlang headers
 set(IRRKLANG_DIR ${CMAKE_SOURCE_DIR}/deps/irrklang)
 
-include_directories(${IRRKLANG_DIR}/include)
+if (WIN32)
+    set(ARCH_DIR /Winx64-visualStudio)
+    set(ARCH_LIB_EXT dll)
+    set(IRRKLANG_LIB_NAME irrklang)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/Winx64-visualStudio/irrKlang.lib)
+elseif(APPLE)
+    set(ARCH_DIR /macosx-gcc)
+    set(ARCH_LIB_EXT dylib)
+    set(IRRKLANG_LIB_NAME libirrklang)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/bin/macosx-gcc/libirrKlang.dylib)
+endif()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/Winx64-visualStudio/irrKlang.lib)
+include_directories(${IRRKLANG_DIR}/include)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/include)
 
 add_custom_command(
     TARGET ${PROJECT_NAME}
     POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${IRRKLANG_DIR}/bin/Winx64-visualStudio/irrKlang.dll
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>/irrKlang.dll
+    ${IRRKLANG_DIR}/bin${ARCH_DIR}/${IRRKLANG_LIB_NAME}.${ARCH_LIB_EXT}
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/${IRRKLANG_LIB_NAME}.${ARCH_LIB_EXT}
 )
 add_custom_command(
     TARGET ${PROJECT_NAME}
     POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${IRRKLANG_DIR}/bin/Winx64-visualStudio/ikpFlac.dll
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>/ikpFlac.dll
+    ${IRRKLANG_DIR}/bin${ARCH_DIR}/ikpFlac.${ARCH_LIB_EXT}
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/ikpFlac.${ARCH_LIB_EXT}
 )
 add_custom_command(
     TARGET ${PROJECT_NAME}
     POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${IRRKLANG_DIR}/bin/Winx64-visualStudio/ikpMP3.dll
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>/ikpMP3.dll
+    ${IRRKLANG_DIR}/bin${ARCH_DIR}/ikpMP3.${ARCH_LIB_EXT}
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/ikpMP3.${ARCH_LIB_EXT}
 )
