@@ -20,8 +20,8 @@ public:
 private:
     static std::string const& getRoot()
     {
-        static char const* envRoot = getenv("LOGL_ROOT_PATH");
-        static char const* givenRoot = (envRoot != nullptr ? envRoot : logl_root);
+        static char const* envRoot = getenv("GAME_ROOT_PATH");
+        static char const* givenRoot = (envRoot != nullptr ? envRoot : game_root);
         static std::string root = (givenRoot != nullptr ? givenRoot : "");
         return root;
     }
@@ -41,6 +41,6 @@ private:
 
     static std::string getPathRelativeBinary(const std::string& path)
     {
-        return "../../../" + path;
+        return path;
     }
 };

@@ -28,25 +28,35 @@ set(HEADER_FILES
     inc/weapon.hpp
 )
 
-set(SHADER_FILES
-    src/shaders/default.vs
-    src/shaders/default.fs
-    src/shaders/text.vs
-    src/shaders/text.fs
-    src/shaders/weapon.vs
-    src/shaders/weapon.fs
-)
-
 # Configure Root Directory Header
 configure_file(config/root_directory.hpp.in ${CMAKE_BINARY_DIR}/config/root_directory.hpp)
 
 # Add Executable First
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
+if (WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        LINK_FLAGS "/ENTRY:mainCRTStartup /SUBSYSTEM:WINDOWS")
+endif(WIN32)
+
 # Include Directories
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_SOURCE_DIR}/inc
     ${CMAKE_BINARY_DIR}/config
+)
+
+# Copy Shaders to Output Directory
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders
+)
+
+# Copy Assets to Output Directory
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+    ${CMAKE_CURRENT_SOURCE_DIR}/assets
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets
 )
 
 # Link External Libraries
@@ -66,7 +76,7 @@ elseif(APPLE)
     set(IRRKLANG_LIB_NAME libirrklang)
     # Link IrrKlang Library
     target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/macosx/libirrKlang.dylib)
-endif()
+endif(WIN32)
 
 # Include the IrrKlang headers
 target_include_directories(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/include)
