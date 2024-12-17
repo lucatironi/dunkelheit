@@ -104,7 +104,7 @@ int main()
 
     // load TexRenderer
     TextRenderer textRenderer(FileSystem::GetPath("assets/font.ttf"), 16);
-    Shader textShader(FileSystem::GetPath("src/shaders/text.vs"), FileSystem::GetPath("src/shaders/text.fs"));
+    Shader textShader(FileSystem::GetPath("shaders/text.vs"), FileSystem::GetPath("shaders/text.fs"));
     glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(WindowWidth), 0.0f, static_cast<float>(WindowHeight));
     textShader.Use();
     textShader.SetMat4("projection", orthoProjection);
@@ -114,7 +114,7 @@ int main()
     // load Level
     Texture2D levelTexture(FileSystem::GetPath("assets/texture_05.png"), false);
     Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
-    Shader defaultShader(FileSystem::GetPath("src/shaders/default.vs"), FileSystem::GetPath("src/shaders/default.fs"));
+    Shader defaultShader(FileSystem::GetPath("shaders/default.vs"), FileSystem::GetPath("shaders/default.fs"));
     defaultShader.Use();
     level.SetLights(defaultShader);
     defaultShader.SetMat4("projection", perspectiveProjection);
@@ -124,7 +124,7 @@ int main()
 
     // load Weapon
     Weapon weapon;
-    Shader weaponShader(FileSystem::GetPath("src/shaders/weapon.vs"), FileSystem::GetPath("src/shaders/weapon.fs"));
+    Shader weaponShader(FileSystem::GetPath("shaders/weapon.vs"), FileSystem::GetPath("shaders/weapon.fs"));
     weaponShader.Use();
     weaponShader.SetMat4("projection", perspectiveProjection);
 
@@ -138,7 +138,10 @@ int main()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // render loop
+    // play ambient music
+    SoundEngine->play2D(FileSystem::GetPath("assets/music.mp3").c_str(), true);
+
+    // game loop
     // -----------
     float currentTime = 0.0f;
     float lastTime    = 0.0f;
@@ -146,9 +149,6 @@ int main()
     float deltaTime   = 0.0f;
     int fpsCount = 0;
     std::stringstream fps;
-
-    // Play a sound file
-    SoundEngine->play2D(FileSystem::GetPath("assets/music.mp3").c_str(), true);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -198,9 +198,7 @@ int main()
 
         // render the weapon
         glDisable(GL_DEPTH_TEST);
-        weaponShader.Use();
-        weaponShader.SetMat4("view", camera.GetViewMatrix());
-        weapon.Draw(weaponShader);
+        weapon.Draw(defaultShader);
 
         // render Debug Information
         std::stringstream pos;
