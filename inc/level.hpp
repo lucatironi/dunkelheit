@@ -127,69 +127,60 @@ private:
         glBindVertexArray(0);
     }
 
-    void addFloor(int x, int z)
+    void addBlock(int x, int z)
     {
-        pushQuad({x * quadSize, 0.0f, z * quadSize},
-                 {(x + 1) * quadSize, 0.0f, z * quadSize},
-                 {x * quadSize, 0.0f, (z + 1) * quadSize},
-                 {(x + 1) * quadSize, 0.0f, (z + 1) * quadSize},
-                 {0.0f, 1.0f, 0.0f}, 0); // Upward normal
-    }
-
-    void addCeiling(int x, int z)
-    {
-         pushQuad(
-                  {(x + 1) * quadSize, quadSize, z * quadSize},
-                  {x * quadSize, quadSize, z * quadSize},
-                  {(x + 1) * quadSize, quadSize, (z + 1) * quadSize},
-                  {x * quadSize, quadSize, (z + 1) * quadSize},
-                  {0.0f, -1.0f, 0.0f}, 0); // Downward normal
+        // Floor
+        pushQuad({ x * quadSize, 0.0f, (z + 1) * quadSize },       // 0, 0, 1 E
+                 { (x + 1) * quadSize, 0.0f, (z + 1) * quadSize }, // 1, 0, 1 F
+                 { (x + 1) * quadSize, 0.0f, z * quadSize },       // 1, 0, 0 B
+                 { x * quadSize, 0.0f, z * quadSize },             // 0, 0, 0 A
+                 { 0.0f, 1.0f, 0.0f }, 0); // Upward normal
+        // Ceiling
+        pushQuad({ x * quadSize, quadSize, z * quadSize },             // 0, 1, 0 D
+                 { (x + 1) * quadSize, quadSize, z * quadSize },       // 1, 1, 0 C
+                 { (x + 1) * quadSize, quadSize, (z + 1) * quadSize }, // 1, 1, 1 G
+                 { x * quadSize, quadSize, (z + 1) * quadSize },       // 0, 1, 1 H
+                 { 0.0f, -1.0f, 0.0f }, 0); // Downward normal
     }
 
     void addWall(int x, int z)
     {
-       // Determine if the neighboring tiles should be considered for wall generation
-        bool hasFloorRight = (x + 1 < levelWidth) && (levelData[levelWidth * z + (x + 1)] == COLOR_FLOOR);
-        bool hasFloorLeft  = (x - 1 >= 0) && (levelData[levelWidth * z + (x - 1)] == COLOR_FLOOR);
-        bool hasFloorUp    = (z - 1 >= 0) && (levelData[levelWidth * (z - 1) + x] == COLOR_FLOOR);
-        bool hasFloorDown  = (z + 1 < levelDepth) && (levelData[levelWidth * (z + 1) + x] == COLOR_FLOOR);
+        // Positions
+        glm::vec3 pA = { x * quadSize, 0.0f, z * quadSize };                 // 0, 0, 0 A
+        glm::vec3 pB = { (x + 1) * quadSize, 0.0f, z * quadSize };           // 1, 0, 0 B
+        glm::vec3 pC = { (x + 1) * quadSize, quadSize, z * quadSize };       // 1, 1, 0 C
+        glm::vec3 pD = { x * quadSize, quadSize, z * quadSize };             // 0, 1, 0 D
+        glm::vec3 pE = { x * quadSize, 0.0f, (z + 1) * quadSize };           // 0, 0, 1 E
+        glm::vec3 pF = { (x + 1) * quadSize, 0.0f, (z + 1) * quadSize };     // 1, 0, 1 F
+        glm::vec3 pG = { (x + 1) * quadSize, quadSize, (z + 1) * quadSize }; // 1, 1, 1 G
+        glm::vec3 pH = { x * quadSize, quadSize, (z + 1) * quadSize };       // 0, 1, 1 H
 
-        // Left wall
-        if (hasFloorRight)
-        {
-            pushQuad({(x + 1) * quadSize, quadSize, (z + 1) * quadSize},
-                     {(x + 1) * quadSize, quadSize, z * quadSize},
-                     {(x + 1) * quadSize, 0.0f, (z + 1) * quadSize},
-                     {(x + 1) * quadSize, 0.0f, z * quadSize},
-                     {1.0f, 0.0f, 0.0f}, 0); // Rightward normal
-        }
+        // Normals
+        glm::vec3 nF = {  0.0f,  0.0f, -1.0f }; // Front
+        glm::vec3 nB = {  0.0f,  0.0f,  1.0f }; // Back
+        glm::vec3 nL = { -1.0f,  0.0f,  0.0f }; // Left
+        glm::vec3 nR = {  1.0f,  0.0f,  0.0f }; // Right
+        glm::vec3 nU = {  0.0f,  1.0f,  0.0f }; // Up
+        glm::vec3 nD = {  0.0f, -1.0f,  0.0f }; // Down
+
+        // Determine if the neighboring tiles should be considered for wall generation
+        bool hasFloorFront = (z - 1 >= 0) && (levelData[levelWidth * (z - 1) + x] == COLOR_FLOOR);
+        bool hasFloorBack  = (z + 1 < levelDepth) && (levelData[levelWidth * (z + 1) + x] == COLOR_FLOOR);
+        bool hasFloorLeft  = (x - 1 >= 0) && (levelData[levelWidth * z + (x - 1)] == COLOR_FLOOR);
+        bool hasFloorRight = (x + 1 < levelWidth) && (levelData[levelWidth * z + (x + 1)] == COLOR_FLOOR);
+
+        // Backward wall
+        if (hasFloorFront)
+            pushQuad(pB, pA, pD, pC, nF, 0);
+        // Forward wall
+        if (hasFloorBack)
+            pushQuad(pE, pF, pG, pH, nB, 0);
         // Right wall
         if (hasFloorLeft)
-        {
-            pushQuad({x * quadSize, quadSize, z * quadSize},
-                     {x * quadSize, quadSize, (z + 1) * quadSize},
-                     {x * quadSize, 0.0f, z * quadSize},
-                     {x * quadSize, 0.0f, (z + 1) * quadSize},
-                     {-1.0f, 0.0f, 0.0f}, 0);  // Leftward normal
-        }
-        // Forward wall
-        if (hasFloorDown)
-        {
-            pushQuad({x * quadSize, quadSize, (z + 1) * quadSize},
-                     {(x + 1) * quadSize, quadSize, (z + 1) * quadSize},
-                     {x * quadSize, 0.0f, (z + 1) * quadSize},
-                     {(x + 1) * quadSize, 0.0f, (z + 1) * quadSize},
-                     {0.0f, 0.0f, 1.0f}, 0); // Backward normal
-        }
-        // Backward wall
-        if (hasFloorUp)
-        {
-            pushQuad({(x + 1) * quadSize, quadSize, z * quadSize},
-                     {x * quadSize, quadSize, z * quadSize},
-                     {(x + 1) * quadSize, 0.0f, z * quadSize},
-                     {x * quadSize, 0.0f, z * quadSize},
-                     {0.0f, 0.0f, -1.0f}, 0); // Forward normal
-        }
+            pushQuad(pA, pE, pH, pD, nL, 0);
+        // Left wall
+        if (hasFloorRight)
+            pushQuad(pF, pB, pC, pG, nR, 0);
     }
 
     void loadLevel(const std::string& levelPath)
@@ -220,33 +211,28 @@ private:
         switch (colorKey)
         {
         case COLOR_FLOOR:
-            addFloor(x, z);
-            addCeiling(x, z);
+            addBlock(x, z);
             break;
         case COLOR_PLAYER:
             StartingPosition = glm::vec3(position.x, FPSCamera::DEFAULT_HEAD_HEIGHT, position.z);
-            addFloor(x, z);
-            addCeiling(x, z);
+            addBlock(x, z);
             break;
         case COLOR_WALL:
             addWall(x, z);
             break;
         case COLOR_ENEMY:
-            addFloor(x, z);
-            addCeiling(x, z);
+            addBlock(x, z);
             break;
         case COLOR_LIGHT:
             AddLight(position + (quadSize / 2.0f), glm::vec3(0.0f, 0.1f, 0.7f));
-            addFloor(x, z);
-            addCeiling(x, z);
+            addBlock(x, z);
             break;
         default:
             break;
         }
     }
 
-    void pushQuad(const glm::vec3& v1, const glm::vec3& v2,
-                  const glm::vec3& v3, const glm::vec3& v4,
+    void pushQuad(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3,
                   const glm::vec3& normal, GLuint tile)
     {
         float u = tile * tileFraction;
@@ -254,12 +240,12 @@ private:
 
         std::vector<GLfloat> newVertices = {
             // Vertex positions, normals, and texture coordinates
-            v3.x, v3.y, v3.z, normal.x, normal.y, normal.z, u,  1.0f,
+            v0.x, v0.y, v0.z, normal.x, normal.y, normal.z, u,  1.0f,
+            v1.x, v1.y, v1.z, normal.x, normal.y, normal.z, u1, 1.0f,
             v2.x, v2.y, v2.z, normal.x, normal.y, normal.z, u1, 0.0f,
-            v1.x, v1.y, v1.z, normal.x, normal.y, normal.z, u,  0.0f,
             v2.x, v2.y, v2.z, normal.x, normal.y, normal.z, u1, 0.0f,
-            v3.x, v3.y, v3.z, normal.x, normal.y, normal.z, u,  1.0f,
-            v4.x, v4.y, v4.z, normal.x, normal.y, normal.z, u1, 1.0f
+            v3.x, v3.y, v3.z, normal.x, normal.y, normal.z, u,  0.0f,
+            v0.x, v0.y, v0.z, normal.x, normal.y, normal.z, u,  1.0f
         };
 
         vertices.insert(vertices.end(), newVertices.begin(), newVertices.end());
