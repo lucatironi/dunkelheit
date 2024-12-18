@@ -5,7 +5,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-#include "texture2d.hpp"
+#include "texture2D.hpp"
 
 struct Vertex
 {
@@ -36,7 +36,7 @@ public:
     // Draw the mesh
     void Draw()
     {
-        // bindTextures();
+        bindTextures();
         glBindVertexArray(VAO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
