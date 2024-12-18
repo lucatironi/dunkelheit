@@ -13,6 +13,7 @@
 #include "file_system.hpp"
 #include "mesh.hpp"
 #include "shader.hpp"
+#include "texture2D.hpp"
 
 class Model
 {
@@ -27,9 +28,15 @@ public:
     void Draw()
     {
         for (auto mesh : meshes)
-        {
             mesh.Draw();
-        }
+    }
+
+    void TextureOverride(const std::string& texturePath)
+    {
+        Texture2D texture2D(FileSystem::GetPath(texturePath));
+        Texture texture({texture2D, "texture_diffuse", texturePath});
+        for (auto& mesh : meshes)
+            mesh.AddTexture(texture);
     }
 
 private:

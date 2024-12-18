@@ -24,12 +24,8 @@ class Mesh
 {
 public:
     Mesh(const std::vector<Vertex>& _vertices, const std::vector<GLuint>& _indices, const std::vector<Texture>& _textures)
-        : VAO(0), VBO(0), EBO(0)
+        : vertices(_vertices), indices(_indices), textures(_textures), VAO(0), VBO(0), EBO(0)
     {
-        vertices = _vertices;
-        indices = _indices;
-        textures = _textures;
-
         setupBuffers();
     }
 
@@ -43,8 +39,13 @@ public:
         glBindVertexArray(0);
     }
 
+    void AddTexture(Texture texture)
+    {
+        textures.push_back(texture);
+    }
+
 private:
-    GLuint VAO, VBO, EBO;  // Vertex Array Object, Vertex Buffer Object, Element Buffer Object
+    GLuint VAO, VBO, EBO; // Vertex Array Object, Vertex Buffer Object, Element Buffer Object
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     std::vector<Texture> textures;
