@@ -60,7 +60,9 @@ int main()
         window = glfwCreateWindow(mode->width, mode->height, WindowTitle.c_str(), monitor, nullptr);
         WindowWidth = mode->width;
         WindowHeight = mode->height;
-    } else {
+    }
+    else
+    {
         window = glfwCreateWindow(WindowWidth, WindowHeight, WindowTitle.c_str(), nullptr, nullptr);
         glfwGetWindowSize(window, &WindowWidth, &WindowHeight);
         glfwGetWindowPos(window, &WindowPositionX, &WindowPositionY);
