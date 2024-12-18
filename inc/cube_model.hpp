@@ -17,9 +17,7 @@ public:
     void Draw()
     {
         for (auto mesh : meshes)
-        {
             mesh.Draw();
-        }
     }
 
 private:
