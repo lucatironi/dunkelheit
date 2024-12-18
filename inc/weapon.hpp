@@ -14,11 +14,11 @@ public:
     Weapon()
     {
         weaponModel = new Model(FileSystem::GetPath("assets/r_hard_open.fbx"));
-        weaponModel->TextureOverride("assets/hard_open_AO.png");
+        weaponModel->TextureOverride("assets/hard_open_AO.png", true);
 
         // Default position and rotation offsets relative to the camera
-        positionOffset = glm::vec3(1.0f, -1.0f, 1.2f);
-        rotationOffset = glm::vec3(-50.0f, -90.0f, 0.0f);
+        positionOffset = glm::vec3(1.2f, -1.0f, 1.4f);
+        rotationOffset = glm::vec3(-45.0f, 170.0f, 0.0f);
         scale = glm::vec3(4.0f);
         scaleMatrix    = glm::scale(glm::mat4(1.0f), scale);
         rotationMatrix = glm::mat4(1.0f); // Initialize with identity matrix

@@ -31,9 +31,9 @@ public:
             mesh.Draw();
     }
 
-    void TextureOverride(const std::string& texturePath)
+    void TextureOverride(const std::string& texturePath, const bool alpha = false)
     {
-        Texture2D texture2D(FileSystem::GetPath(texturePath));
+        Texture2D texture2D(FileSystem::GetPath(texturePath), alpha);
         Texture texture({texture2D, "texture_diffuse", texturePath});
         for (auto& mesh : meshes)
             mesh.AddTexture(texture);
@@ -48,7 +48,7 @@ private:
     {
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(path,
-            aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
+           aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_FlipUVs);
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
