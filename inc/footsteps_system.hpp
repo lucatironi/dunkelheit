@@ -22,14 +22,17 @@ class FootstepSystem
 {
 public:
     FootstepSystem(irrklang::ISoundEngine* engine)
-        : soundEngine(engine), lastStepTime(0.0f), stepInterval(0.5f)
+        : soundEngine(engine), lastStepTime(0.0f), stepInterval(0.6f)
     {
         // Add footstep sounds to the list
-        footstepSounds = {
+        std::vector<std::string> footstepSoundPaths = {
             "assets/footstep1.wav",
             "assets/footstep2.wav",
             "assets/footstep3.wav"
         };
+
+        for (const auto& path : footstepSoundPaths)
+            footstepSounds.push_back(soundEngine->addSoundSourceFromFile(FileSystem::GetPath(path).c_str()));
     }
 
     void Update(float elapsedTime, PlayerState& player)
@@ -51,7 +54,7 @@ public:
 
 private:
     irrklang::ISoundEngine* soundEngine;
-    std::vector<std::string> footstepSounds;
+    std::vector<irrklang::ISoundSource*> footstepSounds;
     float lastStepTime;
     float stepInterval; // Time between steps
     const float movementThreshold = 0.002f; // Tunable threshold for detecting movement
@@ -60,7 +63,8 @@ private:
     {
         // Randomly select a footstep sound
         int randomIndex = getRandomInRange(0, 2);
-        irrklang::ISound* footstepSound = soundEngine->play2D(FileSystem::GetPath(footstepSounds[randomIndex]).c_str(), false, false, true);
-        footstepSound->setVolume(static_cast<irrklang::ik_f32>(getRandomInRange(4, 9) / 10.0));
+        irrklang::ISoundSource* sound = footstepSounds[randomIndex];
+        sound->setDefaultVolume(static_cast<irrklang::ik_f32>(getRandomInRange(3, 6) / 10.f));
+        soundEngine->play2D(sound);
     }
 };
