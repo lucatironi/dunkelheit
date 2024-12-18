@@ -60,6 +60,7 @@ private:
     {
         // Randomly select a footstep sound
         int randomIndex = getRandomInRange(0, 2);
-        soundEngine->play2D(FileSystem::GetPath(footstepSounds[randomIndex]).c_str());
+        irrklang::ISound* footstepSound = soundEngine->play2D(FileSystem::GetPath(footstepSounds[randomIndex]).c_str(), false, false, true);
+        footstepSound->setVolume(static_cast<irrklang::ik_f32>(getRandomInRange(4, 9) / 10.0));
     }
 };
