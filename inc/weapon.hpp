@@ -14,6 +14,8 @@ public:
     Weapon()
     {
         weaponModel = new Model(FileSystem::GetPath("assets/r_hard_open.fbx"));
+        weaponModel->TextureOverride("assets/hard_open_AO.png");
+
         // Default position and rotation offsets relative to the camera
         positionOffset = glm::vec3(1.0f, -1.0f, 1.2f);
         rotationOffset = glm::vec3(-50.0f, -90.0f, 0.0f);
