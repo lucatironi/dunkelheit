@@ -19,8 +19,7 @@ public:
         // Default position and rotation offsets relative to the camera
         positionOffset = glm::vec3(1.2f, -1.0f, 1.4f);
         rotationOffset = glm::vec3(-45.0f, 170.0f, 0.0f);
-        scale = glm::vec3(4.0f);
-        scaleMatrix    = glm::scale(glm::mat4(1.0f), scale);
+        scaleMatrix    = glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
         rotationMatrix = glm::mat4(1.0f); // Initialize with identity matrix
     }
 
@@ -28,9 +27,9 @@ public:
     void Update(const FPSCamera& camera)
     {
         // Calculate the weapon's position based on the camera's position and forward direction
-        position = camera.Position + camera.Front * positionOffset.z
-                                   + camera.Up * positionOffset.y
-                                   + camera.Right * positionOffset.x;
+        glm::vec3 position = camera.Position + camera.Front * positionOffset.z
+                                             + camera.Up * positionOffset.y
+                                             + camera.Right * positionOffset.x;
 
         translationMatrix = glm::translate(glm::mat4(1.0f), position);
         rotationMatrix = glm::mat4_cast(camera.GetRotation());
@@ -55,9 +54,6 @@ public:
 
 private:
     Model* weaponModel;
-    glm::vec3 position;
-    glm::vec3 rotation;
-    glm::vec3 scale;
     glm::vec3 positionOffset;
     glm::vec3 rotationOffset;
     glm::mat4 translationMatrix;

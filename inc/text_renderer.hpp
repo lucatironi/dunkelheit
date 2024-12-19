@@ -19,7 +19,7 @@ struct Character {
 class TextRenderer
 {
 public:
-    TextRenderer(std::string fontPath, int fontSize)
+    TextRenderer(const std::string fontPath, const int fontSize)
     {
         loadFont(fontPath, fontSize);
         initRenderData();
@@ -29,9 +29,7 @@ public:
     {
         // Proper cleanup for all resources
         for (auto& pair : characters)
-        {
             glDeleteTextures(1, &pair.second.TextureID);
-        }
         glDeleteVertexArrays(1, &VAO);
         glDeleteBuffers(1, &VBO);
     }
@@ -43,7 +41,7 @@ public:
         shader.SetVec3("textColor", color);
 
         glBindVertexArray(VAO);
-        
+
         // Iterate through each character of the text
         for (auto c = text.begin(); c != text.end(); ++c)
         {
@@ -67,7 +65,7 @@ public:
 
             // Render glyph texture over quad
             glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-            
+
             // Update content of VBO memory
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
@@ -89,7 +87,7 @@ private:
     std::map<GLchar, Character> characters;
     GLuint VAO, VBO;
 
-    void loadFont(const std::string& fontPath, int fontSize)
+    void loadFont(const std::string& fontPath, const int fontSize)
     {
         FT_Library ft;
         if (FT_Init_FreeType(&ft))

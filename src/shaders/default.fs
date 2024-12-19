@@ -8,9 +8,9 @@ out vec4 FragColor;
 
 uniform vec3 cameraPos;       // Camera/torch position
 uniform vec3 lightColor;      // Base color of the torchlight
-uniform sampler2D texture1;   // Object texture
 uniform float lightRadius;    // Radius of the torchlight's effective area
 uniform float time;           // Time for flickering effect
+uniform sampler2D texture1;   // Object texture
 
 // Define a Light struct to mirror the C++ structure
 struct Light {
