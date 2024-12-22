@@ -70,7 +70,7 @@ int main()
 
     if (window == nullptr)
     {
-        std::cerr << "Failed to create GLFW window" << std::endl;
+        std::cerr << "ERROR::GLFW: Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
@@ -89,7 +89,7 @@ int main()
     // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
+        std::cerr << "ERROR::GLAD: Failed to initialize GLAD" << std::endl;
         return -1;
     }
 
@@ -97,7 +97,7 @@ int main()
     SoundEngine = irrklang::createIrrKlangDevice();
     if (!SoundEngine)
     {
-        std::cerr << "Could not initialize irrklang sound engine" << std::endl;
+        std::cerr << "ERROR::IRRKLANG: Could not initialize irrklang sound engine" << std::endl;
         return -1;
     }
 

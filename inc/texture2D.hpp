@@ -53,7 +53,7 @@ public:
         }
         else
         {
-            std::cerr << "Failed to load texture: " << imagePath << std::endl;
+            std::cerr << "ERROR::TEXTURE2D: Failed to load texture: " << imagePath << std::endl;
         }
     }
 
