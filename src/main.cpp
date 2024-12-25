@@ -7,9 +7,9 @@
 
 #include <irrKlang.h>
 
-#include "fps_camera.hpp"
 #include "file_system.hpp"
 #include "footsteps_system.hpp"
+#include "fps_camera.hpp"
 #include "level.hpp"
 #include "random_generator.hpp"
 #include "shader.hpp"
@@ -30,9 +30,9 @@ int WindowPositionY = 0;
 bool FullScreen = true;
 
 FPSCamera camera(glm::vec3(0.0f, 0.0f, 0.0f));
-float lastX = WindowWidth / 2.0f;
-float lastY = WindowHeight / 2.0f;
-bool firstMouse = true;
+float LastX = WindowWidth / 2.0f;
+float LastY = WindowHeight / 2.0f;
+bool FirstMouse = true;
 
 irrklang::ISoundEngine* SoundEngine;
 
@@ -258,18 +258,18 @@ void MouseCallback(GLFWwindow* /* window */, double xposIn, double yposIn)
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
-    if (firstMouse)
+    if (FirstMouse)
     {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
+        LastX = xpos;
+        LastY = ypos;
+        FirstMouse = false;
     }
 
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+    float xoffset = xpos - LastX;
+    float yoffset = LastY - ypos; // reversed since y-coordinates go from bottom to top
 
-    lastX = xpos;
-    lastY = ypos;
+    LastX = xpos;
+    LastY = ypos;
 
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
