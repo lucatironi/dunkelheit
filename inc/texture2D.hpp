@@ -44,11 +44,10 @@ public:
         }
 
         // Load image
-        int width, height, channels;
         unsigned char* image = loadImage(imagePath.c_str());
         if (image)
         {
-            generate(Width, Height, image);
+            generate(image);
             stbi_image_free(image); // Free after texture generation
         }
         else
@@ -76,11 +75,11 @@ private:
         return image;
     }
 
-    void generate(GLuint width, GLuint height, unsigned char* data)
+    void generate(unsigned char* data)
     {
         // Create Texture
         glBindTexture(GL_TEXTURE_2D, ID);
-        glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat, width, height, 0, ImageFormat, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat, Width, Height, 0, ImageFormat, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
         // Set Texture wrap and filter modes
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrapS);
