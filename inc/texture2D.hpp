@@ -20,12 +20,9 @@ class Texture2D
 public:
     GLuint ID;
     GLuint Width, Height;
-    GLuint InternalFormat;
-    GLuint ImageFormat;
-    GLuint WrapS;
-    GLuint WrapT;
-    GLuint FilterMin;
-    GLuint FilterMax;
+    GLuint InternalFormat, ImageFormat;
+    GLuint WrapS, WrapT;
+    GLuint FilterMin, FilterMax;
 
     Texture2D(const std::string& imagePath, bool alpha = false, const TextureParams& params = {})
         : WrapS(params.wrapS), WrapT(params.wrapT),

@@ -49,7 +49,7 @@ private:
         glm::vec2 tBL = { 0.0f, 1.0f }; // Bottom Left
         glm::vec2 tBR = { 1.0f, 1.0f }; // Bottom Right
 
-
+        // Cube vertices
         std::vector<Vertex> vertices = {
             // Front face
             { pB, nF, tBL }, //  0 Bottom-left B
@@ -104,6 +104,7 @@ private:
             20, 21, 22, 22, 23, 20
         };
 
+        // Cube textures
         std::vector<Texture> textures = {
             { Texture2D(FileSystem::GetPath("assets/crate.png"), false), "texture_diffuse", "assets/crate.png" }
         };
