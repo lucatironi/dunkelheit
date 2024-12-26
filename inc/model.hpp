@@ -18,13 +18,11 @@
 class Model
 {
 public:
-    // Constructor
     Model(const std::string& path)
     {
         loadModel(path);
     }
 
-    // Render the model
     void Draw()
     {
         for (auto mesh : meshes)

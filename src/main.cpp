@@ -94,6 +94,7 @@ int main()
     }
 
     // irrklang: initalize sound engine
+    // ---------------------------------------
     SoundEngine = irrklang::createIrrKlangDevice();
     if (!SoundEngine)
     {

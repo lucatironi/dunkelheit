@@ -10,7 +10,6 @@
 class Weapon
 {
 public:
-    // Constructor
     Weapon()
     {
         weaponModel = new Model(FileSystem::GetPath("assets/r_hard_open.fbx"));
@@ -35,7 +34,6 @@ public:
         rotationMatrix = glm::mat4_cast(camera.GetRotation());
     }
 
-    // Draw the weapon
     void Draw(const Shader& shader)
     {
         // Apply the stored rotation matrix

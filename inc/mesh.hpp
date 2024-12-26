@@ -29,7 +29,6 @@ public:
         setupBuffers();
     }
 
-    // Draw the mesh
     void Draw()
     {
         bindTextures();

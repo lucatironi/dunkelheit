@@ -8,7 +8,7 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-/// Enumerates camera movement directions.
+// Enumerates camera movement directions.
 enum CameraMovement
 {
     CAMERA_FORWARD,
@@ -19,11 +19,10 @@ enum CameraMovement
     CAMERA_DOWN
 };
 
-/// FPS Camera class that handles view matrix calculation and movement logic.
 class FPSCamera
 {
 public:
-    /// Default camera values.
+    // Default camera values.
     static constexpr float DEFAULT_YAW = -90.0f;
     static constexpr float DEFAULT_PITCH = 0.0f;
     static constexpr float DEFAULT_SPEED = 5.0f;
@@ -57,7 +56,8 @@ public:
               float yaw = DEFAULT_YAW,
               float pitch = DEFAULT_PITCH,
               bool constrained = true)
-        : Position(position), WorldUp(up), Yaw(yaw), Pitch(pitch), Constrained(constrained),
+        : Position(position), WorldUp(up),
+          Yaw(yaw), Pitch(pitch), Constrained(constrained),
           Front(DEFAULT_FRONT), MovementSpeed(DEFAULT_SPEED),
           MouseSensitivity(DEFAULT_SENSITIVITY), Zoom(DEFAULT_ZOOM)
     {
@@ -71,7 +71,8 @@ public:
     }
 
     // Return a quaternion that represents the camera's rotation
-    glm::quat GetRotation() const {
+    glm::quat GetRotation() const
+    {
         return glm::quatLookAt(Front, Up);
     }
 

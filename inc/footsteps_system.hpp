@@ -64,7 +64,7 @@ private:
         // Randomly select a footstep sound
         int randomIndex = getRandomInRange(0, 2);
         irrklang::ISoundSource* sound = footstepSounds[randomIndex];
-        sound->setDefaultVolume(static_cast<irrklang::ik_f32>(getRandomInRange(3, 6) / 10.f));
+        sound->setDefaultVolume(static_cast<irrklang::ik_f32>(getRandomInRange(3, 6) / 10.f)); // Randomize footsteps volume
         soundEngine->play2D(sound);
     }
 };

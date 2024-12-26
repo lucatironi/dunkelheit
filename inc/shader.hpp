@@ -15,7 +15,6 @@ class Shader
 public:
     GLuint ID;
 
-    // Constructor now accepts an optional geometry shader path
     Shader(const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath = "")
     {
         std::string vertexCode, fragmentCode, geometryCode;
