@@ -127,9 +127,6 @@ int main()
 
     // load Weapon
     Weapon weapon;
-    Shader weaponShader(FileSystem::GetPath("shaders/weapon.vs"), FileSystem::GetPath("shaders/weapon.fs"));
-    weaponShader.Use();
-    weaponShader.SetMat4("projection", perspectiveProjection);
 
     // Initialize player state and footstep system
     PlayerState player = {camera.Position, camera.Position, false};
@@ -192,7 +189,6 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // render the level
-        glEnable(GL_DEPTH_TEST);
         defaultShader.Use();
         defaultShader.SetVec3("cameraPos", camera.Position);
         defaultShader.SetFloat("time", currentTime);
@@ -200,7 +196,7 @@ int main()
         level.Draw(defaultShader);
 
         // render the weapon
-        glDisable(GL_DEPTH_TEST);
+        glClear(GL_DEPTH_BUFFER_BIT);
         weapon.Draw(defaultShader);
 
         // render Debug Information
