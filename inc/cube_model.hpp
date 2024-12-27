@@ -14,14 +14,13 @@ public:
         loadMesh();
     }
 
-    void Draw()
+    void Draw() const
     {
-        for (auto mesh : meshes)
-            mesh.Draw();
+        mesh->Draw();
     }
 
 private:
-    std::vector<Mesh> meshes;
+    Mesh* mesh;
 
     void loadMesh()
     {
@@ -109,6 +108,6 @@ private:
             { Texture2D(FileSystem::GetPath("assets/crate.png"), false), "texture_diffuse", "assets/crate.png" }
         };
 
-        meshes.push_back(Mesh(vertices, indices, textures));
+        mesh = new Mesh(vertices, indices, textures);
     }
 };

@@ -29,7 +29,7 @@ public:
         setupBuffers();
     }
 
-    void Draw()
+    void Draw() const
     {
         bindTextures();
         glBindVertexArray(VAO);
