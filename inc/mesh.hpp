@@ -5,6 +5,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
+#include "shader.hpp"
 #include "texture2D.hpp"
 
 struct Vertex
@@ -29,13 +30,14 @@ public:
         setupBuffers();
     }
 
-    void Draw() const
+    void Draw(const Shader& shader) const
     {
-        bindTextures();
+        shader.Use();
+        bindTextures(shader);
         glBindVertexArray(VAO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+        glActiveTexture(GL_TEXTURE0);
     }
 
     void AddTexture(Texture texture)
@@ -51,6 +53,7 @@ private:
 
     void setupBuffers()
     {
+        // Generate buffers and arrays
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
         glGenBuffers(1, &EBO);
@@ -58,39 +61,47 @@ private:
         // Bind VAO
         glBindVertexArray(VAO);
 
-        // Bind and set VBO (vertex buffer object)
+        // Vertex Buffer Object
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
-        // Bind and set EBO (element buffer object)
+        // Element Buffer Object
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
-        // vertex position
+        // Vertex attributes
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-        // vertex normals
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Position));
+
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
-        // vertex texture coords
+
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
 
-        // Unbind the buffers
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-        // Unbind VAO
+        // Unbind VAO to prevent accidental modifications
         glBindVertexArray(0);
     }
 
-    void bindTextures() const
+    void bindTextures(const Shader& shader) const
     {
-        for (size_t i = 0; i < textures.size(); i++)
+        GLuint diffuseCount = 0;
+        GLuint specularCount = 0;
+
+        for (size_t i = 0; i < textures.size(); ++i)
         {
-            glActiveTexture(GL_TEXTURE0 + i);
+            glActiveTexture(GL_TEXTURE0 + static_cast<GLenum>(i));
+            // Determine the uniform name based on the type
+            std::string uniformName;
+            if (textures[i].type == "texture_diffuse")
+                uniformName = "texture_diffuse" + std::to_string(diffuseCount++);
+            else if (textures[i].type == "texture_specular")
+                uniformName = "texture_specular" + std::to_string(specularCount++);
+            else
+                uniformName = textures[i].type; // Fallback for custom types
+
+            shader.SetInt(uniformName, static_cast<int>(i));
             textures[i].texture.Bind();
         }
-        glActiveTexture(GL_TEXTURE0);
     }
 };

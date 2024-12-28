@@ -47,7 +47,7 @@ public:
         shader.Use();
         shader.SetMat4("model", modelMatrix);
 
-        weaponModel->Draw();
+        weaponModel->Draw(shader);
     }
 
 private:

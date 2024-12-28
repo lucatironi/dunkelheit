@@ -24,10 +24,10 @@ public:
         loadModel(path);
     }
 
-    void Draw() const
+    void Draw(const Shader& shader) const
     {
         for (const auto& mesh : meshes)
-            mesh.Draw();
+            mesh.Draw(shader);
     }
 
     void TextureOverride(const std::string& texturePath, bool alpha = false)

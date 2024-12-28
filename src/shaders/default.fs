@@ -10,7 +10,9 @@ uniform vec3 cameraPos;       // Camera/torch position
 uniform vec3 lightColor;      // Base color of the torchlight
 uniform float lightRadius;    // Radius of the torchlight's effective area
 uniform float time;           // Time for flickering effect
-uniform sampler2D texture1;   // Object texture
+
+uniform sampler2D texture_diffuse0;
+uniform sampler2D texture_specular0;
 
 // Define a Light struct to mirror the C++ structure
 struct Light {
@@ -24,7 +26,7 @@ uniform int numLights;
 
 void main()
 {
-    vec3 texColor = texture(texture1, TexCoord).rgb;
+    vec3 texColor = texture(texture_diffuse0, TexCoord).rgb;
 
     // Flicker calculation
     float flicker = 0.8 + 0.2 * sin(time * 10.0) * sin(time * 3.0);
