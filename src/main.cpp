@@ -112,24 +112,25 @@ int main()
     textShader.Use();
     textShader.SetMat4("projection", orthoProjection);
 
-    glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight), 0.1f, 100.0f);
+    GLfloat aspectRatio = static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight);
+    glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), aspectRatio, 0.1f, 100.0f);
 
     // load Level
     Texture2D levelTexture(FileSystem::GetPath("assets/texture_05.png"), false);
     Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
+    camera.Position = level.StartingPosition;
     Shader defaultShader(FileSystem::GetPath("shaders/default.vs"), FileSystem::GetPath("shaders/default.fs"));
     defaultShader.Use();
     level.SetLights(defaultShader);
     defaultShader.SetMat4("projection", perspectiveProjection);
     defaultShader.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.8f));
     defaultShader.SetFloat("lightRadius", 15.0f);
-    camera.Position = level.StartingPosition;
 
     // load Weapon
     Weapon weapon;
 
     // Initialize player state and footstep system
-    PlayerState player = {camera.Position, camera.Position, false};
+    PlayerState player = { camera.Position, camera.Position, false };
     FootstepSystem footsteps(SoundEngine);
 
     // setup OpenGL
