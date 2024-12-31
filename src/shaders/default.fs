@@ -2,7 +2,7 @@
 
 in vec3 FragPos;
 in vec3 Normal;
-in vec2 TexCoord;
+in vec2 TexCoords;
 
 out vec4 FragColor;
 
@@ -26,7 +26,7 @@ uniform int numLights;
 
 void main()
 {
-    vec3 texColor = texture(texture_diffuse0, TexCoord).rgb;
+    vec3 Albedo = texture(texture_diffuse0, TexCoords).rgb;
 
     // Flicker calculation
     float flicker = 0.8 + 0.2 * sin(time * 10.0) * sin(time * 3.0);
@@ -34,24 +34,26 @@ void main()
     // Torchlight contribution
     vec3 norm = normalize(Normal);
     vec3 torchDir = normalize(cameraPos - FragPos);
-    float distanceToTorch = length(FragPos - cameraPos);
+    float distanceToTorch = length(cameraPos - FragPos);
     float torchAttenuation = 1.0 - clamp(distanceToTorch / lightRadius, 0.0, 1.0);
+
     float torchDiffuse = max(dot(norm, torchDir), 0.0);
-    vec3 torchLight = (0.2 * texColor + torchDiffuse * lightColor * texColor) * torchAttenuation;
+    vec3 torchLight = (0.2 * Albedo + torchDiffuse * lightColor * Albedo) * torchAttenuation;
 
     // Static lights contribution
-    vec3 staticLight = vec3(0.0);
-    for (int i = 0; i < numLights; i++) {
+    vec3 staticLights = vec3(0.0);
+    for (int i = 0; i < numLights; i++)
+    {
         vec3 lightDir = normalize(lights[i].position - FragPos);
         float distance = length(lights[i].position - FragPos);
         float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance); // Quadratic attenuation
 
         float diffuse = max(dot(norm, lightDir), 0.0);
-        staticLight += (0.2 * texColor + diffuse * lights[i].color * texColor) * attenuation * flicker;
+        staticLights += (0.2 * Albedo + diffuse * lights[i].color * Albedo) * attenuation * flicker;
     }
 
     // Combine torchlight and static lights
-    vec3 result = torchLight + staticLight;
+    vec3 result = torchLight + staticLights;
 
     FragColor = vec4(result, 1.0);
 }
