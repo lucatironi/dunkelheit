@@ -18,7 +18,7 @@ public:
     {
         shader.Use();
         shader.SetMat4("model", glm::translate(glm::mat4(1.0f), position));
-        model.Draw();
+        model.Draw(shader);
     }
 
 private:

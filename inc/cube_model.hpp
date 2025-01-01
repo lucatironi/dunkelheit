@@ -73,7 +73,7 @@ private:
 
         // Texture setup
         std::vector<Texture> textures = {
-            { Texture2D("assets/crate.png", false), "texture_diffuse", "assets/crate.png" }
+            { Texture2D("assets/texture_05.png", false), "texture_diffuse", "assets/texture_05.png" }
         };
 
         // Create the mesh
