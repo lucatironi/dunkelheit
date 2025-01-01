@@ -119,12 +119,13 @@ int main()
     Texture2D levelTexture(FileSystem::GetPath("assets/texture_05.png"), false);
     Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
     camera.Position = level.StartingPosition;
+
     Shader defaultShader(FileSystem::GetPath("shaders/default.vs"), FileSystem::GetPath("shaders/default.fs"));
     defaultShader.Use();
     level.SetLights(defaultShader);
     defaultShader.SetMat4("projection", perspectiveProjection);
     defaultShader.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.8f));
-    defaultShader.SetFloat("lightRadius", 15.0f);
+    defaultShader.SetFloat("lightRadius", 12.0f);
 
     // load Weapon
     Weapon weapon;
@@ -136,8 +137,6 @@ int main()
     // setup OpenGL
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // play ambient music
     SoundEngine->play2D(FileSystem::GetPath("assets/music.mp3").c_str(), true);
@@ -201,10 +200,27 @@ int main()
         weapon.Draw(defaultShader);
 
         // render Debug Information
+        // Save current blending state
+        GLboolean blendEnabled = glIsEnabled(GL_BLEND);
+        GLint srcAlphaFunc, dstAlphaFunc;
+        glGetIntegerv(GL_BLEND_SRC_ALPHA, &srcAlphaFunc);
+        glGetIntegerv(GL_BLEND_DST_ALPHA, &dstAlphaFunc);
+
+        // Enable alpha blending and set blend function
+        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         std::stringstream pos;
         pos << "x: " << (int)camera.Position.x << ", z: " << (int)camera.Position.z << ", tile: " << level.TileAt(camera.Position.x, camera.Position.z);
         textRenderer.RenderText(textShader, fps.str(), 4.0f, WindowHeight - 20.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         textRenderer.RenderText(textShader, pos.str(), 4.0f, WindowHeight - 40.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+        // // Restore previous blending state
+        glBlendFunc(srcAlphaFunc, dstAlphaFunc);
+        if (!blendEnabled)
+            glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
