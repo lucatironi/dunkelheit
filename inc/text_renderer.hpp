@@ -40,6 +40,7 @@ public:
         shader.Use();
         shader.SetVec3("textColor", color);
 
+        glActiveTexture(GL_TEXTURE0);
         glBindVertexArray(VAO);
 
         // Iterate through each character of the text
