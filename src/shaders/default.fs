@@ -28,17 +28,30 @@ void main()
 {
     vec3 Albedo = texture(texture_diffuse0, TexCoords).rgb;
 
+    float ambient = 0.5;
+    float specularShininess = 4.0;
+    float specularIntensity = 0.1;
+
     // Flicker calculation
     float flicker = 0.8 + 0.2 * sin(time * 10.0) * sin(time * 3.0);
 
     // Torchlight contribution
     vec3 norm = normalize(Normal);
+    vec3 viewDir = normalize(cameraPos - FragPos);
     vec3 torchDir = normalize(cameraPos - FragPos);
     float distanceToTorch = length(cameraPos - FragPos);
     float torchAttenuation = 1.0 - clamp(distanceToTorch / lightRadius, 0.0, 1.0);
 
+    // Diffuse
     float torchDiffuse = max(dot(norm, torchDir), 0.0);
-    vec3 torchLight = (0.2 * Albedo + torchDiffuse * lightColor * Albedo) * torchAttenuation;
+
+    // Specular
+    vec3 torchReflectDir = reflect(-torchDir, norm);
+    float torchSpec = pow(max(dot(viewDir, torchReflectDir), 0.0), specularShininess); // Shininess factor
+
+    vec3 torchLight = (ambient * Albedo +
+                       torchDiffuse * lightColor * Albedo +
+                       torchSpec * lightColor * specularIntensity) * torchAttenuation;
 
     // Static lights contribution
     vec3 staticLights = vec3(0.0);
@@ -46,10 +59,18 @@ void main()
     {
         vec3 lightDir = normalize(lights[i].position - FragPos);
         float distance = length(lights[i].position - FragPos);
-        float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance); // Quadratic attenuation
+        float lightAttenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance); // Quadratic attenuation
 
-        float diffuse = max(dot(norm, lightDir), 0.0);
-        staticLights += (0.2 * Albedo + diffuse * lights[i].color * Albedo) * attenuation * flicker;
+        // Diffuse
+        float lightDiffuse = max(dot(norm, lightDir), 0.0);
+
+        // Specular
+        vec3 reflectDir = reflect(-lightDir, norm);
+        float lightSpec = pow(max(dot(viewDir, reflectDir), 0.0), specularShininess); // Shininess factor
+
+        staticLights += (ambient * Albedo +
+                         lightDiffuse * lights[i].color * Albedo +
+                         lightSpec * lights[i].color * specularIntensity) * lightAttenuation * flicker;
     }
 
     // Combine torchlight and static lights
