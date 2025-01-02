@@ -4,7 +4,7 @@ in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
 
-out vec4 FragColor;
+layout(location = 0) out vec4 FragColor;
 
 uniform vec3 cameraPos;       // Camera/torch position
 uniform vec3 lightColor;      // Base color of the torchlight
