@@ -50,8 +50,8 @@ int WindowWidth  = 800;
 int WindowHeight = 600;
 int WindowPositionX = 0;
 int WindowPositionY = 0;
-bool FullScreen = false;
-bool useDeferredShading = false;
+bool FullScreen = true;
+bool useDeferredShading = true;
 
 FPSCamera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 float LastX = WindowWidth / 2.0f;
@@ -155,6 +155,9 @@ int main()
     defaultShader.SetMat4("projection", perspectiveProjection);
     defaultShader.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.8f));
     defaultShader.SetFloat("lightRadius", 12.0f);
+    defaultShader.SetFloat("ambient", 0.5f);
+    defaultShader.SetFloat("specularShininess", 4.0f);
+    defaultShader.SetFloat("specularIntensity", 0.1f);
 
     // load Weapon
     Weapon weapon;
@@ -430,4 +433,7 @@ void setupShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::m
     shaderLightingPass.SetInt("ssao", 3);
     shaderLightingPass.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.8f));
     shaderLightingPass.SetFloat("lightRadius", 12.0f);
+    shaderLightingPass.SetFloat("ambient", 0.5f);
+    shaderLightingPass.SetFloat("specularShininess", 4.0f);
+    shaderLightingPass.SetFloat("specularIntensity", 0.1f);
 }

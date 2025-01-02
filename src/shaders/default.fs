@@ -10,6 +10,9 @@ uniform vec3 cameraPos;       // Camera/torch position
 uniform vec3 lightColor;      // Base color of the torchlight
 uniform float lightRadius;    // Radius of the torchlight's effective area
 uniform float time;           // Time for flickering effect
+uniform float ambient = 0.5;
+uniform float specularShininess = 4.0;
+uniform float specularIntensity = 0.1;
 
 uniform sampler2D texture_diffuse0;
 uniform sampler2D texture_specular0;
@@ -27,10 +30,6 @@ uniform int numLights;
 void main()
 {
     vec3 Albedo = texture(texture_diffuse0, TexCoords).rgb;
-
-    float ambient = 0.5;
-    float specularShininess = 4.0;
-    float specularIntensity = 0.1;
 
     // Flicker calculation
     float flicker = 0.8 + 0.2 * sin(time * 10.0) * sin(time * 3.0);
