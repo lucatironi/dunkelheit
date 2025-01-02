@@ -7,9 +7,7 @@ layout(location = 0) out vec4 FragColor;
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
-uniform sampler2D ssao;
 
-uniform mat4 inverseView;  // Inverse view matrix
 uniform vec3 cameraPos;    // Camera/torch position
 uniform vec3 lightColor;   // Base color of the torchlight
 uniform float lightRadius; // Radius of the torchlight's effective area
@@ -28,13 +26,9 @@ uniform int numLights;
 void main()
 {
     // retrieve data from gbuffer
-    vec3 FragPos = texture(gPosition, TexCoords).rgb;
+    vec3 FragWorldPos = texture(gPosition, TexCoords).rgb;
     vec3 Normal = texture(gNormal, TexCoords).rgb;
     vec3 Albedo = texture(gAlbedo, TexCoords).rgb;
-    float AmbientOcclusion = texture(ssao, TexCoords).r;
-
-    vec3 FragWorldPos = (inverseView * vec4(FragPos, 1.0)).xyz;
-
     float ambient = 0.5;
     float specularShininess = 4.0;
     float specularIntensity = 0.1;
@@ -56,7 +50,7 @@ void main()
     vec3 torchReflectDir = reflect(-torchDir, norm);
     float torchSpec = pow(max(dot(viewDir, torchReflectDir), 0.0), specularShininess); // Shininess factor
 
-    vec3 torchLight = (ambient * AmbientOcclusion * Albedo +
+    vec3 torchLight = (ambient * Albedo +
                        torchDiffuse * lightColor * Albedo +
                        torchSpec * lightColor * specularIntensity) * torchAttenuation;
 
@@ -75,7 +69,7 @@ void main()
         vec3 reflectDir = reflect(-lightDir, norm);
         float lightSpec = pow(max(dot(viewDir, reflectDir), 0.0), specularShininess); // Shininess factor
 
-        staticLights += (ambient * AmbientOcclusion * Albedo +
+        staticLights += (ambient * Albedo +
                          lightDiffuse * lights[i].color * Albedo +
                          lightSpec * lights[i].color * specularIntensity) * lightAttenuation * flicker;
     }

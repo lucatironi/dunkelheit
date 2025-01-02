@@ -42,9 +42,7 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
 GBuffer setupGBuffer(int width, int height);
-SSAO setupSSAO(int width, int height);
-void setupSSAOKernelAndNoise(std::vector<glm::vec3>& ssaoKernel, unsigned int& noiseTexture);
-void setupShaders(Shader& shaderGeometryPass, Shader& shaderSSAO, Shader& shaderSSAOBlur, Shader& shaderLightingPass, glm::mat4 projection);
+void setupShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection);
 
 // settings
 std::string WindowTitle = "Dunkelheit";
@@ -171,18 +169,11 @@ int main()
     // SSAO
     Quad quad;
     GBuffer gBuffer = setupGBuffer(WindowWidth, WindowHeight);
-    SSAO ssao = setupSSAO(WindowWidth, WindowHeight);
-
-    std::vector<glm::vec3> ssaoKernel;
-    unsigned int noiseTexture;
-    setupSSAOKernelAndNoise(ssaoKernel, noiseTexture);
 
     // build and compile shaders
     Shader shaderGeometryPass(FileSystem::GetPath("shaders/geometry_pass.vs"), FileSystem::GetPath("shaders/geometry_pass.fs"));
-    Shader shaderSSAO(FileSystem::GetPath("shaders/ssao.vs"), FileSystem::GetPath("shaders/ssao.fs"));
-    Shader shaderSSAOBlur(FileSystem::GetPath("shaders/ssao.vs"), FileSystem::GetPath("shaders/ssao_blur.fs"));
-    Shader shaderLightingPass(FileSystem::GetPath("shaders/ssao.vs"), FileSystem::GetPath("shaders/lighting_pass.fs"));
-    setupShaders(shaderGeometryPass, shaderSSAO, shaderSSAOBlur, shaderLightingPass, perspectiveProjection);
+    Shader shaderLightingPass(FileSystem::GetPath("shaders/render_to_quad.vs"), FileSystem::GetPath("shaders/lighting_pass.fs"));
+    setupShaders(shaderGeometryPass, shaderLightingPass, perspectiveProjection);
     level.SetLights(shaderLightingPass);
 
     // setup OpenGL
@@ -241,8 +232,8 @@ int main()
 
         if (useDeferredShading)
         {
+            // deferred shading
             // 1. geometry pass: render scene's geometry/color data into gbuffer
-            // -----------------------------------------------------------------
             glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.FBO);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 shaderGeometryPass.Use();
@@ -253,39 +244,8 @@ int main()
                 weapon.Draw(shaderGeometryPass);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-            // 2. generate SSAO texture
-            // ------------------------
-            glBindFramebuffer(GL_FRAMEBUFFER, ssao.FBO);
-                glClear(GL_COLOR_BUFFER_BIT);
-                shaderSSAO.Use();
-                shaderSSAO.SetMat4("view", camera.GetViewMatrix());
-                shaderSSAO.SetMat4("inverseView", glm::inverse(camera.GetViewMatrix()));
-                // Send kernel + rotation
-                for (unsigned int i = 0; i < 64; ++i)
-                    shaderSSAO.SetVec3("samples[" + std::to_string(i) + "]", ssaoKernel[i]);
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, gBuffer.gPosition);
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D, gBuffer.gNormal);
-                glActiveTexture(GL_TEXTURE2);
-                glBindTexture(GL_TEXTURE_2D, noiseTexture);
-                quad.Draw();
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-            // 3. blur SSAO texture to remove noise
-            // ------------------------------------
-            glBindFramebuffer(GL_FRAMEBUFFER, ssao.BlurFBO);
-                glClear(GL_COLOR_BUFFER_BIT);
-                shaderSSAOBlur.Use();
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, ssao.ColorBuffer);
-                quad.Draw();
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-            // 4. lighting pass: traditional deferred Blinn-Phong lighting with added screen-space ambient occlusion
-            // -----------------------------------------------------------------------------------------------------
+            // 2. lighting pass: traditional deferred Blinn-Phong lighting
             shaderLightingPass.Use();
-            shaderLightingPass.SetMat4("inverseView", glm::inverse(camera.GetViewMatrix()));
             shaderLightingPass.SetVec3("cameraPos", camera.Position);
             shaderLightingPass.SetFloat("time", currentTime);
             glActiveTexture(GL_TEXTURE0);
@@ -294,21 +254,17 @@ int main()
             glBindTexture(GL_TEXTURE_2D, gBuffer.gNormal);
             glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D, gBuffer.gAlbedo);
-            glActiveTexture(GL_TEXTURE3); // add extra SSAO texture to lighting pass
-            glBindTexture(GL_TEXTURE_2D, ssao.ColorBufferBlur);
             quad.Draw();
         }
         else
         {
-            // render the level
+            // forward shading
             defaultShader.Use();
+            defaultShader.SetMat4("view", camera.GetViewMatrix());
             defaultShader.SetVec3("cameraPos", camera.Position);
             defaultShader.SetFloat("time", currentTime);
-            defaultShader.SetMat4("view", camera.GetViewMatrix());
             level.Draw(defaultShader);
             testCube.Draw(defaultShader);
-
-            // render the weapon
             glClear(GL_DEPTH_BUFFER_BIT);
             weapon.Draw(defaultShader);
         }
@@ -325,10 +281,14 @@ int main()
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+        std::stringstream fpsText;
+        fpsText << "FPS: " << fps.str();
+        textRenderer.RenderText(textShader, fpsText.str(), 4.0f, WindowHeight - 20.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         std::stringstream pos;
         pos << "x: " << (int)camera.Position.x << ", z: " << (int)camera.Position.z << ", tile: " << level.TileAt(camera.Position.x, camera.Position.z);
-        textRenderer.RenderText(textShader, fps.str(), 4.0f, WindowHeight - 20.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         textRenderer.RenderText(textShader, pos.str(), 4.0f, WindowHeight - 40.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        std::string shadingMode = useDeferredShading ? "Deferred" : "Forward";
+        textRenderer.RenderText(textShader, shadingMode, 4.0f, WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
         // Restore previous blending state
         glBlendFunc(srcAlphaFunc, dstAlphaFunc);
@@ -359,6 +319,12 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    if (!useDeferredShading && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+        useDeferredShading = true;
+
+    if (useDeferredShading && glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+        useDeferredShading = false;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessInputMovement(CAMERA_FORWARD, deltaTime);
@@ -452,88 +418,10 @@ GBuffer setupGBuffer(int width, int height)
     return gBuffer;
 }
 
-SSAO setupSSAO(int width, int height)
-{
-    SSAO ssao;
-
-    glGenFramebuffers(1, &ssao.FBO);
-    glGenFramebuffers(1, &ssao.BlurFBO);
-
-    // SSAO color buffer
-    glBindFramebuffer(GL_FRAMEBUFFER, ssao.FBO);
-    glGenTextures(1, &ssao.ColorBuffer);
-    glBindTexture(GL_TEXTURE_2D, ssao.ColorBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssao.ColorBuffer, 0);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cerr << "ERROR::SSAO: Framebuffer not complete!" << std::endl;
-    // SSAO blur stage
-    glBindFramebuffer(GL_FRAMEBUFFER, ssao.BlurFBO);
-    glGenTextures(1, &ssao.ColorBufferBlur);
-    glBindTexture(GL_TEXTURE_2D, ssao.ColorBufferBlur);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssao.ColorBufferBlur, 0);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cerr << "ERROR::SSAO: Blur Framebuffer not complete!" << std::endl;
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    return ssao;
-}
-
-void setupSSAOKernelAndNoise(std::vector<glm::vec3>& ssaoKernel, unsigned int& noiseTexture)
-{
-    std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0);
-    std::default_random_engine generator;
-
-    // Generate SSAO kernel samples
-    for (unsigned int i = 0; i < 64; ++i)
-    {
-        glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
-        sample = glm::normalize(sample);
-        sample *= randomFloats(generator);
-        float scale = float(i) / 64.0f;
-
-        // scale samples s.t. they're more aligned to center of kernel
-        scale = ourLerp(0.1f, 1.0f, scale * scale);
-        sample *= scale;
-        ssaoKernel.push_back(sample);
-    }
-
-    // Generate SSAO noise texture
-    std::vector<glm::vec3> ssaoNoise;
-    for (unsigned int i = 0; i < 16; i++)
-    {
-        glm::vec3 noise(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, 0.0f);
-        ssaoNoise.push_back(noise);
-    }
-
-    glGenTextures(1, &noiseTexture);
-    glBindTexture(GL_TEXTURE_2D, noiseTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-}
-
-void setupShaders(Shader& shaderGeometryPass, Shader& shaderSSAO, Shader& shaderSSAOBlur, Shader& shaderLightingPass, glm::mat4 projection)
+void setupShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection)
 {
     shaderGeometryPass.Use();
     shaderGeometryPass.SetMat4("projection", projection);
-
-    shaderSSAO.Use();
-    shaderSSAO.SetMat4("projection", projection);
-    shaderSSAO.SetInt("gPosition", 0);
-    shaderSSAO.SetInt("gNormal", 1);
-    shaderSSAO.SetInt("texNoise", 2);
-
-    shaderSSAOBlur.Use();
-    shaderSSAOBlur.SetInt("ssaoInput", 0);
 
     shaderLightingPass.Use();
     shaderLightingPass.SetInt("gPosition", 0);
