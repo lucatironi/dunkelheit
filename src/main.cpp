@@ -1,4 +1,3 @@
-#include <_stdio.h>
 #include <iostream>
 #include <random>
 
