@@ -59,6 +59,12 @@ float LastX = WindowWidth / 2.0f;
 float LastY = WindowHeight / 2.0f;
 bool FirstMouse = true;
 
+glm::vec3 LightColor = { 1.0f, 1.0f, 0.8f };
+float LightRadius = 5.0;
+float AmbientLight = 0.01f;
+float SpecularShininess = 4.0f;
+float SpecularIntensity = 0.1f;
+
 irrklang::ISoundEngine* SoundEngine;
 
 float ourLerp(float a, float b, float f)
@@ -432,20 +438,20 @@ void setupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass
     shaderLightingPass.SetInt("gPosition", 0);
     shaderLightingPass.SetInt("gNormal", 1);
     shaderLightingPass.SetInt("gAlbedo", 2);
-    shaderLightingPass.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.8f));
-    shaderLightingPass.SetFloat("lightRadius", 12.0f);
-    shaderLightingPass.SetFloat("ambient", 0.5f);
-    shaderLightingPass.SetFloat("specularShininess", 4.0f);
-    shaderLightingPass.SetFloat("specularIntensity", 0.1f);
+    shaderLightingPass.SetFloat("ambient", AmbientLight);
+    shaderLightingPass.SetFloat("specularShininess", SpecularShininess);
+    shaderLightingPass.SetFloat("specularIntensity", SpecularIntensity);
+    shaderLightingPass.SetFloat("lightRadius", LightRadius);
+    shaderLightingPass.SetVec3("lightColor", LightColor);
 }
 
 void setupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection)
 {
     shaderSinglePass.Use();
     shaderSinglePass.SetMat4("projection", projection);
-    shaderSinglePass.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.8f));
-    shaderSinglePass.SetFloat("lightRadius", 12.0f);
-    shaderSinglePass.SetFloat("ambient", 0.5f);
-    shaderSinglePass.SetFloat("specularShininess", 4.0f);
-    shaderSinglePass.SetFloat("specularIntensity", 0.1f);
+    shaderSinglePass.SetFloat("ambient", AmbientLight);
+    shaderSinglePass.SetFloat("specularShininess", SpecularShininess);
+    shaderSinglePass.SetFloat("specularIntensity", SpecularIntensity);
+    shaderSinglePass.SetFloat("lightRadius", LightRadius);
+    shaderSinglePass.SetVec3("lightColor", LightColor);
 }
