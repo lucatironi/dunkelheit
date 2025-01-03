@@ -147,6 +147,11 @@ int main()
     Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
     camera.Position = level.StartingPosition;
 
+    // load Weapons
+    Weapon leftWeapon(FileSystem::GetPath("assets/left_hand.glb"), FileSystem::GetPath("assets/base_texture.png"),
+        glm::vec3(-1.0f, -1.2f, 1.2f), glm::vec3(-60.0f, 30.0f, 0.0f), glm::vec3(1.0f));
+    Weapon rightWeapon(FileSystem::GetPath("assets/blasterI.glb"), FileSystem::GetPath("assets/base_texture.png"),
+        glm::vec3(1.4f, -1.0f, 1.8f), glm::vec3(5.0f, 185.0f, 0.0f), glm::vec3(2.0f));
 
     // load test cube
     Object testCube(glm::vec3(42.0f, 0.5f, 167.0f));
@@ -215,7 +220,8 @@ int main()
         if (tile == 0 || tile == 128)
             camera.Position = previousPosition;
 
-        weapon.Update(camera);
+        leftWeapon.Update(camera);
+        rightWeapon.Update(camera);
 
         player.position = camera.Position;
         footsteps.Update(currentTime, player);
@@ -235,7 +241,8 @@ int main()
                 level.Draw(shaderGeometryPass);
                 testCube.Draw(shaderGeometryPass);
                 glClear(GL_DEPTH_BUFFER_BIT);
-                weapon.Draw(shaderGeometryPass);
+                leftWeapon.Draw(shaderGeometryPass);
+                rightWeapon.Draw(shaderGeometryPass);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
             // 2. lighting pass: traditional deferred Blinn-Phong lighting
@@ -260,7 +267,8 @@ int main()
             level.Draw(defaultShader);
             testCube.Draw(defaultShader);
             glClear(GL_DEPTH_BUFFER_BIT);
-            weapon.Draw(defaultShader);
+            leftWeapon.Draw(defaultShader);
+            rightWeapon.Draw(defaultShader);
         }
 
         // render Debug Information

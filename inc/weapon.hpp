@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,15 +12,15 @@
 class Weapon
 {
 public:
-    Weapon()
+    Weapon(const std::string& modelPath, const std::string& texturePath,
+        const glm::vec3 posOffset, const glm::vec3 rotOffset, const glm::vec3 scaleFactor)
+        : positionOffset(posOffset), rotationOffset(rotOffset)
     {
-        weaponModel = new Model(FileSystem::GetPath("assets/r_hard_open.fbx"));
-        weaponModel->TextureOverride("assets/hard_open_AO.png", true);
+        weaponModel = new Model(modelPath);
+        if (texturePath != "")
+            weaponModel->TextureOverride(texturePath, true);
 
-        // Default position and rotation offsets relative to the camera
-        positionOffset = glm::vec3(1.2f, -1.0f, 1.4f);
-        rotationOffset = glm::vec3(-45.0f, 170.0f, 0.0f);
-        scaleMatrix    = glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
+        scaleMatrix    = glm::scale(glm::mat4(1.0f), scaleFactor);
         rotationMatrix = glm::mat4(1.0f); // Initialize with identity matrix
     }
 

@@ -9,3 +9,6 @@ It uses CMake to install and configure dependencies:
 - assimp
 - stb
 - freetype
+
+Credits:
+"Low Poly Hand - 3D Model" (https://skfb.ly/prZXT) by ronildo.facanha is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
