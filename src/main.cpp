@@ -42,7 +42,8 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
 GBuffer setupGBuffer(int width, int height);
-void setupShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection);
+void setupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection);
+void setupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection);
 
 // settings
 std::string WindowTitle = "Dunkelheit";
@@ -141,43 +142,34 @@ int main()
     textShader.Use();
     textShader.SetMat4("projection", orthoProjection);
 
-    GLfloat aspectRatio = static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight);
-    glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), aspectRatio, 0.1f, 100.0f);
-
     // load Level
     Texture2D levelTexture(FileSystem::GetPath("assets/texture_05.png"), false);
     Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
     camera.Position = level.StartingPosition;
 
-    Shader defaultShader(FileSystem::GetPath("shaders/default.vs"), FileSystem::GetPath("shaders/default.fs"));
-    defaultShader.Use();
-    level.SetLights(defaultShader);
-    defaultShader.SetMat4("projection", perspectiveProjection);
-    defaultShader.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.8f));
-    defaultShader.SetFloat("lightRadius", 12.0f);
-    defaultShader.SetFloat("ambient", 0.5f);
-    defaultShader.SetFloat("specularShininess", 4.0f);
-    defaultShader.SetFloat("specularIntensity", 0.1f);
 
-    // load Weapon
-    Weapon weapon;
+    // load test cube
+    Object testCube(glm::vec3(42.0f, 0.5f, 167.0f));
 
     // Initialize player state and footstep system
     PlayerState player = { camera.Position, camera.Position, false };
     FootstepSystem footsteps(SoundEngine);
 
-    // test cube
-    Object testCube(glm::vec3(42.0f, 0.5f, 167.0f));
+    GLfloat aspectRatio = static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight);
+    glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), aspectRatio, 0.1f, 100.0f);
 
-    // SSAO
+    // deferred shading setup
     Quad quad;
     GBuffer gBuffer = setupGBuffer(WindowWidth, WindowHeight);
-
-    // build and compile shaders
     Shader shaderGeometryPass(FileSystem::GetPath("shaders/geometry_pass.vs"), FileSystem::GetPath("shaders/geometry_pass.fs"));
     Shader shaderLightingPass(FileSystem::GetPath("shaders/render_to_quad.vs"), FileSystem::GetPath("shaders/lighting_pass.fs"));
-    setupShaders(shaderGeometryPass, shaderLightingPass, perspectiveProjection);
+    setupDeferredShaders(shaderGeometryPass, shaderLightingPass, perspectiveProjection);
     level.SetLights(shaderLightingPass);
+
+    // forward shading setup
+    Shader defaultShader(FileSystem::GetPath("shaders/default.vs"), FileSystem::GetPath("shaders/default.fs"));
+    setupForwardShaders(defaultShader, perspectiveProjection);
+    level.SetLights(defaultShader);
 
     // setup OpenGL
     glEnable(GL_DEPTH_TEST);
@@ -238,7 +230,6 @@ int main()
             // deferred shading
             // 1. geometry pass: render scene's geometry/color data into gbuffer
             glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.FBO);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 shaderGeometryPass.Use();
                 shaderGeometryPass.SetMat4("view", camera.GetViewMatrix());
                 level.Draw(shaderGeometryPass);
@@ -273,13 +264,13 @@ int main()
         }
 
         // render Debug Information
-        // Save current blending state
+        // save current blending state
         GLboolean blendEnabled = glIsEnabled(GL_BLEND);
         GLint srcAlphaFunc, dstAlphaFunc;
         glGetIntegerv(GL_BLEND_SRC_ALPHA, &srcAlphaFunc);
         glGetIntegerv(GL_BLEND_DST_ALPHA, &dstAlphaFunc);
 
-        // Enable alpha blending and set blend function
+        // enable alpha blending and set blend function
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -293,7 +284,7 @@ int main()
         std::string shadingMode = useDeferredShading ? "Deferred" : "Forward";
         textRenderer.RenderText(textShader, shadingMode, 4.0f, WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
-        // Restore previous blending state
+        // restore previous blending state
         glBlendFunc(srcAlphaFunc, dstAlphaFunc);
         if (!blendEnabled)
             glDisable(GL_BLEND);
@@ -421,7 +412,7 @@ GBuffer setupGBuffer(int width, int height)
     return gBuffer;
 }
 
-void setupShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection)
+void setupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection)
 {
     shaderGeometryPass.Use();
     shaderGeometryPass.SetMat4("projection", projection);
@@ -430,10 +421,20 @@ void setupShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::m
     shaderLightingPass.SetInt("gPosition", 0);
     shaderLightingPass.SetInt("gNormal", 1);
     shaderLightingPass.SetInt("gAlbedo", 2);
-    shaderLightingPass.SetInt("ssao", 3);
     shaderLightingPass.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.8f));
     shaderLightingPass.SetFloat("lightRadius", 12.0f);
     shaderLightingPass.SetFloat("ambient", 0.5f);
     shaderLightingPass.SetFloat("specularShininess", 4.0f);
     shaderLightingPass.SetFloat("specularIntensity", 0.1f);
+}
+
+void setupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection)
+{
+    shaderSinglePass.Use();
+    shaderSinglePass.SetMat4("projection", projection);
+    shaderSinglePass.SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.8f));
+    shaderSinglePass.SetFloat("lightRadius", 12.0f);
+    shaderSinglePass.SetFloat("ambient", 0.5f);
+    shaderSinglePass.SetFloat("specularShininess", 4.0f);
+    shaderSinglePass.SetFloat("specularIntensity", 0.1f);
 }
