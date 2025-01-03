@@ -11,7 +11,6 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "file_system.hpp"
 #include "mesh.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
@@ -32,7 +31,7 @@ public:
 
     void TextureOverride(const std::string& texturePath, bool alpha = false)
     {
-        Texture2D texture2D(FileSystem::GetPath(texturePath), alpha);
+        Texture2D texture2D(texturePath, alpha);
         Texture texture({ texture2D, "texture_diffuse", texturePath });
 
         for (auto& mesh : meshes)
