@@ -19,7 +19,7 @@ struct Character {
 class TextRenderer
 {
 public:
-    TextRenderer(const std::string fontPath, const int fontSize)
+    TextRenderer(const std::string& fontPath, const int fontSize)
     {
         loadFont(fontPath, fontSize);
         initRenderData();
