@@ -149,7 +149,7 @@ int main()
     textShader.SetMat4("projection", orthoProjection);
 
     // load Level
-    Texture2D levelTexture(FileSystem::GetPath("assets/texture_05.png"), false);
+    Texture2D levelTexture(FileSystem::GetPath("assets/level_textures_02.png"), true);
     Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
     Camera.Position = level.StartingPosition;
 

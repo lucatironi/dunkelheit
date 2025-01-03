@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 
 #include "fps_camera.hpp"
+#include "random_generator.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
 
@@ -24,7 +25,7 @@ enum ColorKey {
     COLOR_LIGHT  = 28
 };
 
-constexpr float DEFAULT_TILE_FRACTION = 1.0f;
+constexpr float DEFAULT_TILE_FRACTION = 128.0f / 512.0f; // tile size / tilemap size
 constexpr float DEFAULT_QUAD_SIZE = 3.0f;
 constexpr size_t MAX_LIGHTS = 16;
 
@@ -134,7 +135,7 @@ private:
                  { (x + 1) * quadSize, 0.0f, (z + 1) * quadSize }, // 1, 0, 1 F
                  { (x + 1) * quadSize, 0.0f, z * quadSize },       // 1, 0, 0 B
                  { x * quadSize, 0.0f, z * quadSize },             // 0, 0, 0 A
-                 { 0.0f, 1.0f, 0.0f }, 0); // Upward normal
+                 { 0.0f, 1.0f, 0.0f }, getWeightedRandomInRange(0, 3)); // Upward normal
         // Ceiling
         pushQuad({ x * quadSize, quadSize, z * quadSize },             // 0, 1, 0 D
                  { (x + 1) * quadSize, quadSize, z * quadSize },       // 1, 1, 0 C
@@ -171,16 +172,16 @@ private:
 
         // Backward wall
         if (hasFloorFront)
-            pushQuad(pB, pA, pD, pC, nF, 0);
+            pushQuad(pB, pA, pD, pC, nF, getWeightedRandomInRange(8, 9));
         // Forward wall
         if (hasFloorBack)
-            pushQuad(pE, pF, pG, pH, nB, 0);
+            pushQuad(pE, pF, pG, pH, nB, getWeightedRandomInRange(8, 9));
         // Right wall
         if (hasFloorLeft)
-            pushQuad(pA, pE, pH, pD, nL, 0);
+            pushQuad(pA, pE, pH, pD, nL, getWeightedRandomInRange(8, 9));
         // Left wall
         if (hasFloorRight)
-            pushQuad(pF, pB, pC, pG, nR, 0);
+            pushQuad(pF, pB, pC, pG, nR, getWeightedRandomInRange(8, 9));
     }
 
     void loadLevel(const std::string& levelPath)
@@ -232,20 +233,26 @@ private:
         }
     }
 
-    void pushQuad(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3,
-                  const glm::vec3& normal, GLuint tile)
+    void pushQuad(const glm::vec3& ver0, const glm::vec3& ver1,
+                  const glm::vec3& ver2, const glm::vec3& ver3,
+                  const glm::vec3& normal, const int tile)
     {
-        float u = tile * tileFraction;
-        float u1 = u + tileFraction;
+        int row = tile / 4;    // Compute the row (0-3)
+        int column = tile % 4; // Compute the column (0-3)
+
+        float u0 = column * tileFraction; // Left edge of the tile
+        float v0 = row * tileFraction;    // Bottom edge of the tile
+        float u1 = u0 + tileFraction;     // Right edge of the tile
+        float v1 = v0 + tileFraction;     // Top edge of the tile
 
         std::vector<GLfloat> newVertices = {
             // Vertex positions, normals, and texture coordinates
-            v0.x, v0.y, v0.z, normal.x, normal.y, normal.z, u,  1.0f,
-            v1.x, v1.y, v1.z, normal.x, normal.y, normal.z, u1, 1.0f,
-            v2.x, v2.y, v2.z, normal.x, normal.y, normal.z, u1, 0.0f,
-            v2.x, v2.y, v2.z, normal.x, normal.y, normal.z, u1, 0.0f,
-            v3.x, v3.y, v3.z, normal.x, normal.y, normal.z, u,  0.0f,
-            v0.x, v0.y, v0.z, normal.x, normal.y, normal.z, u,  1.0f
+            ver0.x, ver0.y, ver0.z, normal.x, normal.y, normal.z, u0, v1, // 0, 1
+            ver1.x, ver1.y, ver1.z, normal.x, normal.y, normal.z, u1, v1, // 1, 1
+            ver2.x, ver2.y, ver2.z, normal.x, normal.y, normal.z, u1, v0, // 1, 0
+            ver2.x, ver2.y, ver2.z, normal.x, normal.y, normal.z, u1, v0, // 1, 0
+            ver3.x, ver3.y, ver3.z, normal.x, normal.y, normal.z, u0, v0, // 0, 0
+            ver0.x, ver0.y, ver0.z, normal.x, normal.y, normal.z, u0, v1  // 0, 1
         };
 
         vertices.insert(vertices.end(), newVertices.begin(), newVertices.end());
