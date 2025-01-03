@@ -52,9 +52,9 @@ int WindowHeight = 600;
 int WindowPositionX = 0;
 int WindowPositionY = 0;
 bool FullScreen = true;
-bool useDeferredShading = true;
+bool UseDeferredShading = true;
 
-FPSCamera camera(glm::vec3(0.0f, 0.0f, 0.0f));
+FPSCamera Camera(glm::vec3(0.0f, 0.0f, 0.0f));
 float LastX = WindowWidth / 2.0f;
 float LastY = WindowHeight / 2.0f;
 bool FirstMouse = true;
@@ -145,7 +145,7 @@ int main()
     // load Level
     Texture2D levelTexture(FileSystem::GetPath("assets/texture_05.png"), false);
     Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
-    camera.Position = level.StartingPosition;
+    Camera.Position = level.StartingPosition;
 
     // load Weapons
     Weapon leftWeapon(FileSystem::GetPath("assets/left_hand.glb"), FileSystem::GetPath("assets/base_texture.png"),
@@ -157,7 +157,7 @@ int main()
     Object testCube(glm::vec3(42.0f, 0.5f, 167.0f));
 
     // Initialize player state and footstep system
-    PlayerState player = { camera.Position, camera.Position, false };
+    PlayerState player = { Camera.Position, Camera.Position, false };
     FootstepSystem footsteps(SoundEngine);
 
     GLfloat aspectRatio = static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight);
@@ -209,21 +209,21 @@ int main()
         // input
         // -----
         // store current position for collision detection
-        glm::vec3 previousPosition = camera.Position;
+        glm::vec3 previousPosition = Camera.Position;
         ProcessInput(window, deltaTime);
 
         // update
         // ------
         // simple collision detection
-        glm::vec3 checkPoint = camera.Position + camera.Front * 0.75f;
+        glm::vec3 checkPoint = Camera.Position + Camera.Front * 0.75f;
         int tile = level.TileAt(checkPoint.x, checkPoint.z);
         if (tile == 0 || tile == 128)
-            camera.Position = previousPosition;
+            Camera.Position = previousPosition;
 
-        leftWeapon.Update(camera);
-        rightWeapon.Update(camera);
+        leftWeapon.Update(Camera);
+        rightWeapon.Update(Camera);
 
-        player.position = camera.Position;
+        player.position = Camera.Position;
         footsteps.Update(currentTime, player);
 
         // render
@@ -231,13 +231,13 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (useDeferredShading)
+        if (UseDeferredShading)
         {
             // deferred shading
             // 1. geometry pass: render scene's geometry/color data into gbuffer
             glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.FBO);
                 shaderGeometryPass.Use();
-                shaderGeometryPass.SetMat4("view", camera.GetViewMatrix());
+                shaderGeometryPass.SetMat4("view", Camera.GetViewMatrix());
                 level.Draw(shaderGeometryPass);
                 testCube.Draw(shaderGeometryPass);
                 glClear(GL_DEPTH_BUFFER_BIT);
@@ -247,7 +247,7 @@ int main()
 
             // 2. lighting pass: traditional deferred Blinn-Phong lighting
             shaderLightingPass.Use();
-            shaderLightingPass.SetVec3("cameraPos", camera.Position);
+            shaderLightingPass.SetVec3("cameraPos", Camera.Position);
             shaderLightingPass.SetFloat("time", currentTime);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, gBuffer.gPosition);
@@ -261,8 +261,8 @@ int main()
         {
             // forward shading
             defaultShader.Use();
-            defaultShader.SetMat4("view", camera.GetViewMatrix());
-            defaultShader.SetVec3("cameraPos", camera.Position);
+            defaultShader.SetMat4("view", Camera.GetViewMatrix());
+            defaultShader.SetVec3("cameraPos", Camera.Position);
             defaultShader.SetFloat("time", currentTime);
             level.Draw(defaultShader);
             testCube.Draw(defaultShader);
@@ -289,10 +289,10 @@ int main()
         std::stringstream windowSize;
         windowSize << WindowWidth << "x" << WindowHeight;
         textRenderer.RenderText(textShader, windowSize.str(), 4.0f, WindowHeight - 40.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-        std::string shadingMode = useDeferredShading ? "Deferred" : "Forward";
+        std::string shadingMode = UseDeferredShading ? "Deferred" : "Forward";
         textRenderer.RenderText(textShader, shadingMode, 4.0f, WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         std::stringstream pos;
-        pos << "pos x: " << (int)camera.Position.x << ", z: " << (int)camera.Position.z << ", tile: " << level.TileAt(camera.Position.x, camera.Position.z);
+        pos << "pos x: " << (int)Camera.Position.x << ", z: " << (int)Camera.Position.z << ", tile: " << level.TileAt(Camera.Position.x, Camera.Position.z);
         textRenderer.RenderText(textShader, pos.str(), 4.0f, WindowHeight - 80.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
         // restore previous blending state
@@ -325,20 +325,20 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if (!useDeferredShading && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-        useDeferredShading = true;
+    if (!UseDeferredShading && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+        UseDeferredShading = true;
 
-    if (useDeferredShading && glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-        useDeferredShading = false;
+    if (UseDeferredShading && glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+        UseDeferredShading = false;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessInputMovement(CAMERA_FORWARD, deltaTime);
+        Camera.ProcessInputMovement(CAMERA_FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessInputMovement(CAMERA_BACKWARD, deltaTime);
+        Camera.ProcessInputMovement(CAMERA_BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessInputMovement(CAMERA_LEFT, deltaTime);
+        Camera.ProcessInputMovement(CAMERA_LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessInputMovement(CAMERA_RIGHT, deltaTime);
+        Camera.ProcessInputMovement(CAMERA_RIGHT, deltaTime);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -370,7 +370,7 @@ void MouseCallback(GLFWwindow* /* window */, double xposIn, double yposIn)
     LastX = xpos;
     LastY = ypos;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    Camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 GBuffer setupGBuffer(int width, int height)
