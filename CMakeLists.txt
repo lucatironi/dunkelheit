@@ -13,6 +13,7 @@ set(SOURCE_FILES
 )
 
 set(HEADER_FILES
+    inc/config.hpp
     inc/cube_model.hpp
     inc/file_system.hpp
     inc/footsteps_system.hpp
@@ -36,8 +37,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
 if (WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
-    LINK_FLAGS_RELEASE "/ENTRY:mainCRTStartup /SUBSYSTEM:WINDOWS"
-)
+    LINK_FLAGS_RELEASE "/ENTRY:mainCRTStartup /SUBSYSTEM:WINDOWS")
 endif()
 
 # Include Directories
@@ -61,7 +61,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 )
 
 # Link External Libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw glad glm assimp stb freetype)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw glad glm assimp stb freetype nlohmann_json::nlohmann_json)
 
 # Set the IrrKlang variables
 set(IRRKLANG_DIR ${CMAKE_SOURCE_DIR}/deps/irrklang)
