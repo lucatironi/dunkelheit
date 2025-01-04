@@ -9,6 +9,7 @@
 
 #include <irrKlang.h>
 
+#include "config.hpp"
 #include "file_system.hpp"
 #include "footsteps_system.hpp"
 #include "fps_camera.hpp"
@@ -38,29 +39,85 @@ void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection);
 
 // settings
 std::string WindowTitle = "Dunkelheit";
-int WindowWidth  = 800;
-int WindowHeight = 600;
-int WindowPositionX = 0;
-int WindowPositionY = 0;
-bool FullScreen = true;
-bool UseDeferredShading = true;
+int WindowWidth, WindowHeight;
+int WindowPositionX, WindowPositionY = 0;
+bool FullScreen, UseDeferredShading;
 
 FPSCamera Camera(glm::vec3(0.0f, 0.0f, 0.0f));
-float LastX = WindowWidth / 2.0f;
-float LastY = WindowHeight / 2.0f;
 bool FirstMouse = true;
+float LastX;
+float LastY;
 
-glm::vec3 LightColor = { 1.0f, 1.0f, 0.8f };
-float LightRadius = 7.5;
-float AmbientLight = 0.001f;
-float SpecularShininess = 8.0f;
-float SpecularIntensity = 0.2f;
+std::string fontFile;
+int fontSize;
+
+glm::vec3 TorchColor;
+float TorchRadius;
+glm::vec3 AmbientColor;
+float AmbientIntensity;
+float SpecularShininess;
+float SpecularIntensity;
+
+std::string levelMapFile, levelTextureFile;
+
+std::string leftWeaponModelFile, leftWeaponTextureFile;
+glm::vec3 leftWeaponPositionOffset, leftWeaponRotationOffset, leftWeaponScale;
+std::string rightWeaponModelFile, rightWeaponTextureFile;
+glm::vec3 rightWeaponPositionOffset, rightWeaponRotationOffset, rightWeaponScale;
 
 irrklang::ISoundEngine* SoundEngine;
-
+std::string ambientMusicFile;
 
 int main()
 {
+    // config: load from file
+    // ----------------------
+    try
+    {
+        // Load the configuration file
+        Config& config = Config::GetInstance();
+        config.LoadFromFile("config.json");
+
+        // Access individual configuration values
+        WindowWidth = config.GetNested<int>("window.width");
+        WindowHeight = config.GetNested<int>("window.height");
+        FullScreen = config.GetNested<bool>("window.fullScreen");
+        LastX = WindowWidth / 2.0f;
+        LastY = WindowHeight / 2.0f;
+
+        UseDeferredShading = config.GetNested<bool>("renderer.useDeferredShading");
+
+        fontFile = config.GetNested<std::string>("textRenderer.fontFile");
+        fontSize = config.GetNested<int>("textRenderer.fontSize");
+
+        levelMapFile = config.GetNested<std::string>("level.mapFile");
+        levelTextureFile = config.GetNested<std::string>("level.textureFile");
+
+        leftWeaponModelFile = config.GetNested<std::string>("weapons.left.modelFile");
+        leftWeaponTextureFile = config.GetNested<std::string>("weapons.left.textureFile");
+        leftWeaponPositionOffset = config.GetNested<glm::vec3>("weapons.left.positionOffset");
+        leftWeaponRotationOffset = config.GetNested<glm::vec3>("weapons.left.rotationOffset");
+        leftWeaponScale = config.GetNested<glm::vec3>("weapons.left.scale");
+        rightWeaponModelFile = config.GetNested<std::string>("weapons.right.modelFile");
+        rightWeaponTextureFile = config.GetNested<std::string>("weapons.right.textureFile");
+        rightWeaponPositionOffset = config.GetNested<glm::vec3>("weapons.right.positionOffset");
+        rightWeaponRotationOffset = config.GetNested<glm::vec3>("weapons.right.rotationOffset");
+        rightWeaponScale = config.GetNested<glm::vec3>("weapons.right.scale");
+
+        TorchColor = config.GetNested<glm::vec3>("lighting.torch.color");
+        TorchRadius = config.GetNested<float>("lighting.torch.radius");
+        AmbientColor = config.GetNested<glm::vec3>("lighting.ambient.color");
+        AmbientIntensity = config.GetNested<float>("lighting.ambient.intensity");
+        SpecularShininess = config.GetNested<float>("lighting.specular.shininess");
+        SpecularIntensity = config.GetNested<float>("lighting.specular.intensity");
+
+        ambientMusicFile = config.GetNested<std::string>("audio.ambientMusicFile");
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << "\n";
+    }
+
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -130,22 +187,22 @@ int main()
     random.SetSeed(1337);
 
     // load TexRenderer
-    TextRenderer textRenderer(FileSystem::GetPath("assets/font.ttf"), 16);
+    TextRenderer textRenderer(FileSystem::GetPath(fontFile), fontSize);
     Shader textShader(FileSystem::GetPath("shaders/text.vs"), FileSystem::GetPath("shaders/text.fs"));
     glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(WindowWidth), 0.0f, static_cast<float>(WindowHeight));
     textShader.Use();
     textShader.SetMat4("projection", orthoProjection);
 
     // load Level
-    Texture2D levelTexture(FileSystem::GetPath("assets/level_textures_02.png"), true);
-    Level level(FileSystem::GetPath("assets/level1.png"), levelTexture);
+    Texture2D levelTexture(FileSystem::GetPath(levelTextureFile), true);
+    Level level(FileSystem::GetPath(levelMapFile), levelTexture);
     Camera.Position = level.StartingPosition;
 
     // load Weapons
-    Weapon leftWeapon(FileSystem::GetPath("assets/left_hand.glb"), FileSystem::GetPath("assets/base_texture.png"),
-        glm::vec3(-1.0f, -1.2f, 1.2f), glm::vec3(-60.0f, 30.0f, 0.0f), glm::vec3(1.0f));
-    Weapon rightWeapon(FileSystem::GetPath("assets/blasterI.glb"), FileSystem::GetPath("assets/base_texture.png"),
-        glm::vec3(1.4f, -1.0f, 1.8f), glm::vec3(5.0f, 185.0f, 0.0f), glm::vec3(2.0f));
+    Weapon leftWeapon(FileSystem::GetPath(leftWeaponModelFile), FileSystem::GetPath(leftWeaponTextureFile),
+        leftWeaponPositionOffset, leftWeaponRotationOffset, leftWeaponScale);
+    Weapon rightWeapon(FileSystem::GetPath(rightWeaponModelFile), FileSystem::GetPath(rightWeaponTextureFile),
+        rightWeaponPositionOffset, rightWeaponRotationOffset, rightWeaponScale);
 
     // Initialize player state and footstep system
     PlayerState player = { Camera.Position, Camera.Position, false };
@@ -172,7 +229,7 @@ int main()
     glEnable(GL_CULL_FACE);
 
     // play ambient music
-    SoundEngine->play2D(FileSystem::GetPath("assets/music.mp3").c_str(), true);
+    SoundEngine->play2D(FileSystem::GetPath(ambientMusicFile).c_str(), true);
 
     // game loop
     // -----------
@@ -421,20 +478,22 @@ void SetupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass
     shaderLightingPass.SetInt("gPosition", 0);
     shaderLightingPass.SetInt("gNormal", 1);
     shaderLightingPass.SetInt("gAlbedo", 2);
-    shaderLightingPass.SetFloat("ambient", AmbientLight);
+    shaderLightingPass.SetVec3("torchColor", TorchColor);
+    shaderLightingPass.SetFloat("torchRadius", TorchRadius);
+    shaderLightingPass.SetVec3("ambientColor", AmbientColor);
+    shaderLightingPass.SetFloat("ambientIntensity", AmbientIntensity);
     shaderLightingPass.SetFloat("specularShininess", SpecularShininess);
     shaderLightingPass.SetFloat("specularIntensity", SpecularIntensity);
-    shaderLightingPass.SetFloat("lightRadius", LightRadius);
-    shaderLightingPass.SetVec3("lightColor", LightColor);
 }
 
 void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection)
 {
     shaderSinglePass.Use();
     shaderSinglePass.SetMat4("projection", projection);
-    shaderSinglePass.SetFloat("ambient", AmbientLight);
+    shaderSinglePass.SetVec3("torchColor", TorchColor);
+    shaderSinglePass.SetFloat("torchRadius", TorchRadius);
+    shaderSinglePass.SetVec3("ambientColor", AmbientColor);
+    shaderSinglePass.SetFloat("ambientIntensity", AmbientIntensity);
     shaderSinglePass.SetFloat("specularShininess", SpecularShininess);
     shaderSinglePass.SetFloat("specularIntensity", SpecularIntensity);
-    shaderSinglePass.SetFloat("lightRadius", LightRadius);
-    shaderSinglePass.SetVec3("lightColor", LightColor);
 }
