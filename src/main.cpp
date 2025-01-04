@@ -138,7 +138,8 @@ int main()
     }
 
     // seed random generator
-    initRandom();
+    RandomGenerator& random = RandomGenerator::GetInstance();
+    random.SetSeed(1337);
 
     // load TexRenderer
     TextRenderer textRenderer(FileSystem::GetPath("assets/font.ttf"), 16);

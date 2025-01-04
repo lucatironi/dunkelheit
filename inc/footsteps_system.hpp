@@ -58,13 +58,14 @@ private:
     float lastStepTime;
     float stepInterval; // Time between steps
     const float movementThreshold = 0.002f; // Tunable threshold for detecting movement
+    RandomGenerator& random = RandomGenerator::GetInstance();
 
     void playFootstepSound()
     {
         // Randomly select a footstep sound
-        int randomIndex = getRandomInRange(0, 2);
+        int randomIndex = random.GetRandomInRange(0, 2);
         irrklang::ISoundSource* sound = footstepSounds[randomIndex];
-        sound->setDefaultVolume(static_cast<irrklang::ik_f32>(getRandomInRange(3, 6) / 10.f)); // Randomize footsteps volume
+        sound->setDefaultVolume(static_cast<irrklang::ik_f32>(random.GetRandomInRange(3, 6) / 10.f)); // Randomize footsteps volume
         soundEngine->play2D(sound);
     }
 };

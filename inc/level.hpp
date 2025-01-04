@@ -105,6 +105,8 @@ private:
     std::vector<GLfloat> vertices;
     std::vector<Light> lights;
 
+    RandomGenerator& random = RandomGenerator::GetInstance();
+
     void setupBuffers()
     {
         glGenVertexArrays(1, &VAO);
@@ -135,13 +137,13 @@ private:
                  { (x + 1) * quadSize, 0.0f, (z + 1) * quadSize }, // 1, 0, 1 F
                  { (x + 1) * quadSize, 0.0f, z * quadSize },       // 1, 0, 0 B
                  { x * quadSize, 0.0f, z * quadSize },             // 0, 0, 0 A
-                 { 0.0f, 1.0f, 0.0f }, getWeightedRandomInRange(0, 3)); // Upward normal
+                 { 0.0f, 1.0f, 0.0f }, random.GetWeightedRandomInRange(0, 3)); // Upward normal
         // Ceiling
         pushQuad({ x * quadSize, quadSize, z * quadSize },             // 0, 1, 0 D
                  { (x + 1) * quadSize, quadSize, z * quadSize },       // 1, 1, 0 C
                  { (x + 1) * quadSize, quadSize, (z + 1) * quadSize }, // 1, 1, 1 G
                  { x * quadSize, quadSize, (z + 1) * quadSize },       // 0, 1, 1 H
-                 { 0.0f, -1.0f, 0.0f }, 0); // Downward normal
+                 { 0.0f, -1.0f, 0.0f }, random.GetWeightedRandomInRange(4, 7)); // Downward normal
     }
 
     void addWall(int x, int z)
@@ -172,16 +174,16 @@ private:
 
         // Backward wall
         if (hasFloorFront)
-            pushQuad(pB, pA, pD, pC, nF, getWeightedRandomInRange(8, 9));
+            pushQuad(pB, pA, pD, pC, nF, random.GetWeightedRandomInRange(8, 11));
         // Forward wall
         if (hasFloorBack)
-            pushQuad(pE, pF, pG, pH, nB, getWeightedRandomInRange(8, 9));
+            pushQuad(pE, pF, pG, pH, nB, random.GetWeightedRandomInRange(8, 11));
         // Right wall
         if (hasFloorLeft)
-            pushQuad(pA, pE, pH, pD, nL, getWeightedRandomInRange(8, 9));
+            pushQuad(pA, pE, pH, pD, nL, random.GetWeightedRandomInRange(8, 11));
         // Left wall
         if (hasFloorRight)
-            pushQuad(pF, pB, pC, pG, nR, getWeightedRandomInRange(8, 9));
+            pushQuad(pF, pB, pC, pG, nR, random.GetWeightedRandomInRange(8, 11));
     }
 
     void loadLevel(const std::string& levelPath)
