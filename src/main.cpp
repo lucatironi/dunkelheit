@@ -1,9 +1,10 @@
 #include <iostream>
-#include <random>
+#include <string>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/matrix.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <irrKlang.h>
@@ -11,7 +12,6 @@
 #include "file_system.hpp"
 #include "footsteps_system.hpp"
 #include "fps_camera.hpp"
-#include "glm/matrix.hpp"
 #include "level.hpp"
 #include "quad.hpp"
 #include "random_generator.hpp"
@@ -26,14 +26,6 @@ struct GBuffer
     GLuint gPosition;
     GLuint gNormal;
     GLuint gAlbedo;
-};
-
-struct SSAO
-{
-    GLuint FBO;
-    GLuint BlurFBO;
-    GLuint ColorBuffer;
-    GLuint ColorBufferBlur;
 };
 
 void ProcessInput(GLFWwindow* window, float deltaTime);
@@ -66,10 +58,6 @@ float SpecularIntensity = 0.2f;
 
 irrklang::ISoundEngine* SoundEngine;
 
-float ourLerp(float a, float b, float f)
-{
-    return a + f * (b - a);
-}
 
 int main()
 {
