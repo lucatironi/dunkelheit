@@ -38,18 +38,18 @@ void SetupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass
 void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection);
 
 // settings
-std::string WindowTitle = "Dunkelheit";
+std::string WindowTitle;
 int WindowWidth, WindowHeight;
 int WindowPositionX, WindowPositionY = 0;
 bool FullScreen, UseDeferredShading;
 
-FPSCamera Camera(glm::vec3(0.0f, 0.0f, 0.0f));
+FPSCamera Camera(glm::vec3(0.0f));
 bool FirstMouse = true;
 float LastX;
 float LastY;
 
-std::string fontFile;
-int fontSize;
+std::string FontFile;
+int FontSize;
 
 glm::vec3 TorchColor;
 float TorchRadius;
@@ -58,12 +58,12 @@ float AmbientIntensity;
 float SpecularShininess;
 float SpecularIntensity;
 
-std::string levelMapFile, levelTextureFile;
+std::string LevelMapFile, LevelTextureFile;
 
-std::string leftWeaponModelFile, leftWeaponTextureFile;
-glm::vec3 leftWeaponPositionOffset, leftWeaponRotationOffset, leftWeaponScale;
-std::string rightWeaponModelFile, rightWeaponTextureFile;
-glm::vec3 rightWeaponPositionOffset, rightWeaponRotationOffset, rightWeaponScale;
+std::string LeftWeaponModelFile, LeftWeaponTextureFile;
+glm::vec3 LeftWeaponPositionOffset, LeftWeaponRotationOffset, LeftWeaponScale;
+std::string RightWeaponModelFile, RightWeaponTextureFile;
+glm::vec3 RightWeaponPositionOffset, RightWeaponRotationOffset, RightWeaponScale;
 
 irrklang::ISoundEngine* SoundEngine;
 std::string ambientMusicFile;
@@ -79,6 +79,7 @@ int main()
         config.LoadFromFile("config.json");
 
         // Access individual configuration values
+        WindowTitle = config.GetNested<std::string>("window.title");
         WindowWidth = config.GetNested<int>("window.width");
         WindowHeight = config.GetNested<int>("window.height");
         FullScreen = config.GetNested<bool>("window.fullScreen");
@@ -87,22 +88,22 @@ int main()
 
         UseDeferredShading = config.GetNested<bool>("renderer.useDeferredShading");
 
-        fontFile = config.GetNested<std::string>("textRenderer.fontFile");
-        fontSize = config.GetNested<int>("textRenderer.fontSize");
+        FontFile = config.GetNested<std::string>("textRenderer.fontFile");
+        FontSize = config.GetNested<int>("textRenderer.fontSize");
 
-        levelMapFile = config.GetNested<std::string>("level.mapFile");
-        levelTextureFile = config.GetNested<std::string>("level.textureFile");
+        LevelMapFile = config.GetNested<std::string>("level.mapFile");
+        LevelTextureFile = config.GetNested<std::string>("level.textureFile");
 
-        leftWeaponModelFile = config.GetNested<std::string>("weapons.left.modelFile");
-        leftWeaponTextureFile = config.GetNested<std::string>("weapons.left.textureFile");
-        leftWeaponPositionOffset = config.GetNested<glm::vec3>("weapons.left.positionOffset");
-        leftWeaponRotationOffset = config.GetNested<glm::vec3>("weapons.left.rotationOffset");
-        leftWeaponScale = config.GetNested<glm::vec3>("weapons.left.scale");
-        rightWeaponModelFile = config.GetNested<std::string>("weapons.right.modelFile");
-        rightWeaponTextureFile = config.GetNested<std::string>("weapons.right.textureFile");
-        rightWeaponPositionOffset = config.GetNested<glm::vec3>("weapons.right.positionOffset");
-        rightWeaponRotationOffset = config.GetNested<glm::vec3>("weapons.right.rotationOffset");
-        rightWeaponScale = config.GetNested<glm::vec3>("weapons.right.scale");
+        LeftWeaponModelFile = config.GetNested<std::string>("weapons.left.modelFile");
+        LeftWeaponTextureFile = config.GetNested<std::string>("weapons.left.textureFile");
+        LeftWeaponPositionOffset = config.GetNested<glm::vec3>("weapons.left.positionOffset");
+        LeftWeaponRotationOffset = config.GetNested<glm::vec3>("weapons.left.rotationOffset");
+        LeftWeaponScale = config.GetNested<glm::vec3>("weapons.left.scale");
+        RightWeaponModelFile = config.GetNested<std::string>("weapons.right.modelFile");
+        RightWeaponTextureFile = config.GetNested<std::string>("weapons.right.textureFile");
+        RightWeaponPositionOffset = config.GetNested<glm::vec3>("weapons.right.positionOffset");
+        RightWeaponRotationOffset = config.GetNested<glm::vec3>("weapons.right.rotationOffset");
+        RightWeaponScale = config.GetNested<glm::vec3>("weapons.right.scale");
 
         TorchColor = config.GetNested<glm::vec3>("lighting.torch.color");
         TorchRadius = config.GetNested<float>("lighting.torch.radius");
@@ -187,22 +188,22 @@ int main()
     random.SetSeed(1337);
 
     // load TexRenderer
-    TextRenderer textRenderer(FileSystem::GetPath(fontFile), fontSize);
+    TextRenderer textRenderer(FileSystem::GetPath(FontFile), FontSize);
     Shader textShader(FileSystem::GetPath("shaders/text.vs"), FileSystem::GetPath("shaders/text.fs"));
     glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(WindowWidth), 0.0f, static_cast<float>(WindowHeight));
     textShader.Use();
     textShader.SetMat4("projection", orthoProjection);
 
     // load Level
-    Texture2D levelTexture(FileSystem::GetPath(levelTextureFile), true);
-    Level level(FileSystem::GetPath(levelMapFile), levelTexture);
+    Texture2D levelTexture(FileSystem::GetPath(LevelTextureFile), true);
+    Level level(FileSystem::GetPath(LevelMapFile), levelTexture);
     Camera.Position = level.StartingPosition;
 
     // load Weapons
-    Weapon leftWeapon(FileSystem::GetPath(leftWeaponModelFile), FileSystem::GetPath(leftWeaponTextureFile),
-        leftWeaponPositionOffset, leftWeaponRotationOffset, leftWeaponScale);
-    Weapon rightWeapon(FileSystem::GetPath(rightWeaponModelFile), FileSystem::GetPath(rightWeaponTextureFile),
-        rightWeaponPositionOffset, rightWeaponRotationOffset, rightWeaponScale);
+    Weapon leftWeapon(FileSystem::GetPath(LeftWeaponModelFile), FileSystem::GetPath(LeftWeaponTextureFile),
+        LeftWeaponPositionOffset, LeftWeaponRotationOffset, LeftWeaponScale);
+    Weapon rightWeapon(FileSystem::GetPath(RightWeaponModelFile), FileSystem::GetPath(RightWeaponTextureFile),
+        RightWeaponPositionOffset, RightWeaponRotationOffset, RightWeaponScale);
 
     // Initialize player state and footstep system
     PlayerState player = { Camera.Position, Camera.Position, false };
