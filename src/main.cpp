@@ -13,7 +13,6 @@
 #include "fps_camera.hpp"
 #include "glm/matrix.hpp"
 #include "level.hpp"
-#include "object.hpp"
 #include "quad.hpp"
 #include "random_generator.hpp"
 #include "shader.hpp"
@@ -41,9 +40,9 @@ void ProcessInput(GLFWwindow* window, float deltaTime);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
-GBuffer setupGBuffer(int width, int height);
-void setupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection);
-void setupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection);
+GBuffer SetupGBuffer(int width, int height);
+void SetupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection);
+void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection);
 
 // settings
 std::string WindowTitle = "Dunkelheit";
@@ -60,10 +59,10 @@ float LastY = WindowHeight / 2.0f;
 bool FirstMouse = true;
 
 glm::vec3 LightColor = { 1.0f, 1.0f, 0.8f };
-float LightRadius = 5.0;
-float AmbientLight = 0.01f;
-float SpecularShininess = 4.0f;
-float SpecularIntensity = 0.1f;
+float LightRadius = 7.5;
+float AmbientLight = 0.001f;
+float SpecularShininess = 8.0f;
+float SpecularIntensity = 0.2f;
 
 irrklang::ISoundEngine* SoundEngine;
 
@@ -159,9 +158,6 @@ int main()
     Weapon rightWeapon(FileSystem::GetPath("assets/blasterI.glb"), FileSystem::GetPath("assets/base_texture.png"),
         glm::vec3(1.4f, -1.0f, 1.8f), glm::vec3(5.0f, 185.0f, 0.0f), glm::vec3(2.0f));
 
-    // load test cube
-    Object testCube(glm::vec3(42.0f, 0.5f, 167.0f));
-
     // Initialize player state and footstep system
     PlayerState player = { Camera.Position, Camera.Position, false };
     FootstepSystem footsteps(SoundEngine);
@@ -171,15 +167,15 @@ int main()
 
     // deferred shading setup
     Quad quad;
-    GBuffer gBuffer = setupGBuffer(WindowWidth, WindowHeight);
+    GBuffer gBuffer = SetupGBuffer(WindowWidth, WindowHeight);
     Shader shaderGeometryPass(FileSystem::GetPath("shaders/geometry_pass.vs"), FileSystem::GetPath("shaders/geometry_pass.fs"));
     Shader shaderLightingPass(FileSystem::GetPath("shaders/render_to_quad.vs"), FileSystem::GetPath("shaders/lighting_pass.fs"));
-    setupDeferredShaders(shaderGeometryPass, shaderLightingPass, perspectiveProjection);
+    SetupDeferredShaders(shaderGeometryPass, shaderLightingPass, perspectiveProjection);
     level.SetLights(shaderLightingPass);
 
     // forward shading setup
     Shader defaultShader(FileSystem::GetPath("shaders/default.vs"), FileSystem::GetPath("shaders/default.fs"));
-    setupForwardShaders(defaultShader, perspectiveProjection);
+    SetupForwardShaders(defaultShader, perspectiveProjection);
     level.SetLights(defaultShader);
 
     // setup OpenGL
@@ -245,7 +241,6 @@ int main()
                 shaderGeometryPass.Use();
                 shaderGeometryPass.SetMat4("view", Camera.GetViewMatrix());
                 level.Draw(shaderGeometryPass);
-                testCube.Draw(shaderGeometryPass);
                 glClear(GL_DEPTH_BUFFER_BIT);
                 leftWeapon.Draw(shaderGeometryPass);
                 rightWeapon.Draw(shaderGeometryPass);
@@ -271,7 +266,6 @@ int main()
             defaultShader.SetVec3("cameraPos", Camera.Position);
             defaultShader.SetFloat("time", currentTime);
             level.Draw(defaultShader);
-            testCube.Draw(defaultShader);
             glClear(GL_DEPTH_BUFFER_BIT);
             leftWeapon.Draw(defaultShader);
             rightWeapon.Draw(defaultShader);
@@ -379,7 +373,7 @@ void MouseCallback(GLFWwindow* /* window */, double xposIn, double yposIn)
     Camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-GBuffer setupGBuffer(int width, int height)
+GBuffer SetupGBuffer(int width, int height)
 {
     GBuffer gBuffer;
 
@@ -429,7 +423,7 @@ GBuffer setupGBuffer(int width, int height)
     return gBuffer;
 }
 
-void setupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection)
+void SetupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection)
 {
     shaderGeometryPass.Use();
     shaderGeometryPass.SetMat4("projection", projection);
@@ -445,7 +439,7 @@ void setupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass
     shaderLightingPass.SetVec3("lightColor", LightColor);
 }
 
-void setupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection)
+void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection)
 {
     shaderSinglePass.Use();
     shaderSinglePass.SetMat4("projection", projection);
