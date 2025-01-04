@@ -5,6 +5,18 @@ project(dunkelheit LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Add a macro for Apple platforms
+if(APPLE)
+    add_compile_definitions(APPLE_PLATFORM)
+endif()
+
+# Add macros for build configurations
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(DEBUG_BUILD)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_definitions(RELEASE_BUILD)
+endif()
+
 # Include Dependencies
 add_subdirectory(deps)
 
