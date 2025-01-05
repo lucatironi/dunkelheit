@@ -41,7 +41,7 @@ void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection);
 // settings
 std::string WindowTitle;
 int WindowWidth, WindowHeight;
-int WindowPositionX, WindowPositionY = 0;
+int WindowPositionX, WindowPositionY;
 bool FullScreen, UseDeferredShading;
 
 std::string ForwardShadingVertexShaderFile, ForwardShadingFragmentShaderFile;
@@ -50,8 +50,7 @@ std::string DeferredShadingSecondPassVertexShaderFile, DeferredShadingSecondPass
 
 FPSCamera Camera(glm::vec3(0.0f));
 bool FirstMouse = true;
-float LastX;
-float LastY;
+float LastX, LastY;
 
 std::string FontFile;
 int FontSize;
@@ -60,9 +59,7 @@ std::string TextVertexShaderFile, TextFragmentShaderFile;
 glm::vec3 TorchColor;
 float TorchRadius;
 glm::vec3 AmbientColor;
-float AmbientIntensity;
-float SpecularShininess;
-float SpecularIntensity;
+float AmbientIntensity, SpecularShininess, SpecularIntensity;
 
 std::string LevelMapFile, LevelTextureFile;
 
@@ -393,11 +390,11 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if (!UseDeferredShading && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-        UseDeferredShading = true;
-
-    if (UseDeferredShading && glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+    if (UseDeferredShading && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
         UseDeferredShading = false;
+
+    if (!UseDeferredShading && glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+        UseDeferredShading = true;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         Camera.ProcessInputMovement(CAMERA_FORWARD, deltaTime);
