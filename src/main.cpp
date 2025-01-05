@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <filesystem>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -15,6 +16,7 @@
 #include "level.hpp"
 #include "quad.hpp"
 #include "random_generator.hpp"
+#include "resource_path.hpp"
 #include "shader.hpp"
 #include "text_renderer.hpp"
 #include "texture2D.hpp"
@@ -73,9 +75,13 @@ int main()
     // ----------------------
     try
     {
+        std::string resourcesDir = ResourcePath::getResourcesDirectory();
+        std::filesystem::current_path(resourcesDir);
+        std::cout << "Current working directory set to: " << std::filesystem::current_path() << std::endl;
+
         // Load the configuration file
         Config& config = Config::GetInstance();
-        config.LoadFromFile("config.json");
+        config.LoadFromFile(FileSystem::GetPath("config/settings.json"));
 
         // Access individual configuration values
         WindowTitle = config.GetNested<std::string>("window.title");
@@ -116,6 +122,7 @@ int main()
     catch (const std::exception& e)
     {
         std::cerr << "Error: " << e.what() << "\n";
+        return -1;
     }
 
     // glfw: initialize and configure
