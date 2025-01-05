@@ -22,7 +22,6 @@ set(SOURCE_FILES
 set(HEADER_FILES
     inc/config.hpp
     inc/cube_model.hpp
-    inc/file_system.hpp
     inc/footsteps_system.hpp
     inc/fps_camera.hpp
     inc/level.hpp
