@@ -46,11 +46,11 @@ public:
         return instance;
     }
 
-    void LoadFromFile(const std::string& filename)
+    void LoadFromFile(const std::string& path)
     {
-        std::ifstream file(filename);
+        std::ifstream file(path);
         if (!file.is_open())
-            throw std::runtime_error("Could not open config file: " + filename);
+            throw std::ifstream::failure("Failed to open file: " + path);
 
         try
         {
