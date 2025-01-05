@@ -73,36 +73,27 @@ target_link_libraries(${PROJECT_NAME} PRIVATE glfw glad glm assimp stb freetype 
 
 # Set the IrrKlang variables
 set(IRRKLANG_DIR ${CMAKE_SOURCE_DIR}/deps/irrklang)
-if (WIN32)
-    set(ARCH_DIR /winx64)
-    set(ARCH_LIB_EXT dll)
-    set(IRRKLANG_LIB_NAME irrklang)
-    # Link IrrKlang Library
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/winx64/irrKlang.lib)
-elseif(APPLE)
-    set(ARCH_DIR /macosx)
-    set(ARCH_LIB_EXT dylib)
-    set(IRRKLANG_LIB_NAME libirrklang)
-    # Link IrrKlang Library
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/macosx/libirrKlang.dylib)
-endif(WIN32)
 
 # Include the IrrKlang headers
 target_include_directories(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/include)
 
-set(IRRKLANG_LIBS
-    ${IRRKLANG_LIB_NAME}.${ARCH_LIB_EXT}
-    ikpFlac.${ARCH_LIB_EXT}
-    ikpMP3.${ARCH_LIB_EXT}
-)
-
-foreach(IRRKLANG_LIB ${IRRKLANG_LIBS})
+if (WIN32)
+    # Link IrrKlang Library
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/winx64/irrKlang.lib)
+    # Copy IrrKlang Library to build dir
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${IRRKLANG_DIR}/bin${ARCH_DIR}/${IRRKLANG_LIB}
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>/${IRRKLANG_LIB}
-)
-endforeach()
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${IRRKLANG_DIR}/bin/winx64/irrKlang.lib
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>/irrKlang.lib)
+elseif(APPLE)
+    # Link IrrKlang Library
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/macosx/libirrKlang.dylib)
+    # Copy IrrKlang Library to build dir
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${IRRKLANG_DIR}/bin/macosx/libirrKlang.dylib
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>/libirrKlang.dylib)
+endif(WIN32)
 
 # Final Output Message
 message(STATUS "Building project ${PROJECT_NAME}")
