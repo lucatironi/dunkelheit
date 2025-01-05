@@ -43,6 +43,10 @@ int WindowWidth, WindowHeight;
 int WindowPositionX, WindowPositionY = 0;
 bool FullScreen, UseDeferredShading;
 
+std::string ForwardShadingVertexShaderFile, ForwardShadingFragmentShaderFile;
+std::string DeferredShadingFirstPassVertexShaderFile, DeferredShadingFirstPassFragmentShaderFile;
+std::string DeferredShadingSecondPassVertexShaderFile, DeferredShadingSecondPassFragmentShaderFile;
+
 FPSCamera Camera(glm::vec3(0.0f));
 bool FirstMouse = true;
 float LastX;
@@ -50,6 +54,7 @@ float LastY;
 
 std::string FontFile;
 int FontSize;
+std::string TextVertexShaderFile, TextFragmentShaderFile;
 
 glm::vec3 TorchColor;
 float TorchRadius;
@@ -91,9 +96,17 @@ int main()
         LastY = WindowHeight / 2.0f;
 
         UseDeferredShading = config.GetNested<bool>("renderer.useDeferredShading");
+        ForwardShadingVertexShaderFile = config.GetNested<std::string>("renderer.forward.shaders.vertex");
+        ForwardShadingFragmentShaderFile = config.GetNested<std::string>("renderer.forward.shaders.fragment");
+        DeferredShadingFirstPassVertexShaderFile = config.GetNested<std::string>("renderer.deferredFirstPass.shaders.vertex");
+        DeferredShadingFirstPassFragmentShaderFile = config.GetNested<std::string>("renderer.deferredFirstPass.shaders.fragment");
+        DeferredShadingSecondPassVertexShaderFile = config.GetNested<std::string>("renderer.deferredSecondPass.shaders.vertex");
+        DeferredShadingSecondPassFragmentShaderFile = config.GetNested<std::string>("renderer.deferredSecondPass.shaders.fragment");
 
         FontFile = config.GetNested<std::string>("textRenderer.fontFile");
         FontSize = config.GetNested<int>("textRenderer.fontSize");
+        TextVertexShaderFile = config.GetNested<std::string>("textRenderer.shaders.vertex");
+        TextFragmentShaderFile = config.GetNested<std::string>("textRenderer.shaders.fragment");
 
         LevelMapFile = config.GetNested<std::string>("level.mapFile");
         LevelTextureFile = config.GetNested<std::string>("level.textureFile");
@@ -120,7 +133,7 @@ int main()
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Error: " << e.what() << "\n";
+        std::cerr << "Error: " << e.what() << std::endl;
         return -1;
     }
 
@@ -194,7 +207,7 @@ int main()
 
     // load TexRenderer
     TextRenderer textRenderer(FontFile, FontSize);
-    Shader textShader("shaders/text.vs", "shaders/text.fs");
+    Shader textShader(TextVertexShaderFile, TextFragmentShaderFile);
     glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(WindowWidth), 0.0f, static_cast<float>(WindowHeight));
     textShader.Use();
     textShader.SetMat4("projection", orthoProjection);
@@ -220,13 +233,13 @@ int main()
     // deferred shading setup
     Quad quad;
     GBuffer gBuffer = SetupGBuffer(WindowWidth, WindowHeight);
-    Shader shaderGeometryPass("shaders/geometry_pass.vs", "shaders/geometry_pass.fs");
-    Shader shaderLightingPass("shaders/render_to_quad.vs", "shaders/lighting_pass.fs");
+    Shader shaderGeometryPass(DeferredShadingFirstPassVertexShaderFile, DeferredShadingFirstPassFragmentShaderFile);
+    Shader shaderLightingPass(DeferredShadingSecondPassVertexShaderFile, DeferredShadingSecondPassFragmentShaderFile);
     SetupDeferredShaders(shaderGeometryPass, shaderLightingPass, perspectiveProjection);
     level.SetLights(shaderLightingPass);
 
     // forward shading setup
-    Shader defaultShader("shaders/default.vs", "shaders/default.fs");
+    Shader defaultShader(ForwardShadingVertexShaderFile, ForwardShadingFragmentShaderFile);
     SetupForwardShaders(defaultShader, perspectiveProjection);
     level.SetLights(defaultShader);
 

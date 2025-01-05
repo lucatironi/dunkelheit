@@ -6,11 +6,33 @@
         "fullScreen": false
     },
     "renderer": {
-        "useDeferredShading": false
+        "useDeferredShading": false,
+        "forward": {
+            "shaders": {
+                "vertex": "shaders/default.vs",
+                "fragment": "shaders/default.fs"
+            }
+        },
+        "deferredFirstPass": {
+            "shaders": {
+                "vertex": "shaders/geometry_pass.vs",
+                "fragment": "shaders/geometry_pass.fs"
+            }
+        },
+        "deferredSecondPass": {
+            "shaders": {
+                "vertex": "shaders/render_to_quad.vs",
+                "fragment": "shaders/lighting_pass.fs"
+            }
+        }
     },
     "textRenderer": {
         "fontFile": "assets/font.ttf",
-        "fontSize": 16
+        "fontSize": 16,
+        "shaders": {
+            "vertex": "shaders/text.vs",
+            "fragment": "shaders/text.fs"
+        }
     },
     "level": {
         "mapFile": "assets/level1.png",
