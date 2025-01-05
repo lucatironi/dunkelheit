@@ -86,8 +86,8 @@ if (WIN32)
     # Copy IrrKlang Library to build dir
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${IRRKLANG_DIR}/bin/winx64/irrKlang.lib
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/irrKlang.lib)
+        ${IRRKLANG_DIR}/bin/winx64/irrKlang.dll
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>/irrKlang.dll)
 elseif(APPLE)
     # Link IrrKlang Library
     target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/macosx/libirrKlang.dylib)
