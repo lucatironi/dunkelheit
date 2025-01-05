@@ -1,0 +1,52 @@
+{
+    "window": {
+        "title": "Dunkelheit",
+        "width": 800,
+        "height": 600,
+        "fullScreen": false
+    },
+    "renderer": {
+        "useDeferredShading": false
+    },
+    "textRenderer": {
+        "fontFile": "assets/font.ttf",
+        "fontSize": 16
+    },
+    "level": {
+        "mapFile": "assets/level1.png",
+        "textureFile": "assets/level_textures_02.png"
+    },
+    "weapons": {
+        "left": {
+            "modelFile": "assets/left_hand.glb",
+            "textureFile": "assets/base_texture.png",
+            "positionOffset": [-1.0, -1.2, 1.2],
+            "rotationOffset": [-60.0, 30.0, 0.0],
+            "scale": [1.0, 1.0, 1.0]
+        },
+        "right": {
+            "modelFile": "assets/blasterI.glb",
+            "textureFile": "assets/base_texture.png",
+            "positionOffset": [1.4, -1.0, 1.8],
+            "rotationOffset": [5.0, 185.0, 0.0],
+            "scale": [2.0, 2.0, 2.0]
+        }
+    },
+    "lighting": {
+        "torch": {
+            "color": [1.0, 1.0, 0.8],
+            "radius": 7.0
+        },
+        "ambient": {
+            "color":  [1.0, 1.0, 1.0],
+            "intensity": 0.001
+        },
+        "specular": {
+            "shininess": 8.0,
+            "intensity": 0.2
+        }
+    },
+    "audio": {
+        "ambientMusicFile": "assets/music.ogg"
+    }
+}

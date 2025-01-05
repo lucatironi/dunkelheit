@@ -50,6 +50,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_BINARY_DIR}/config
 )
 
+# Copy configuration file
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_CURRENT_SOURCE_DIR}/config/settings.json
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/config/settings.json
+)
+
 # Copy Shaders to Output Directory
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
