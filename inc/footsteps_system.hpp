@@ -8,7 +8,6 @@
 
 #include <irrKlang.h>
 
-#include "file_system.hpp"
 #include "random_generator.hpp"
 
 // Player movement state
@@ -32,7 +31,7 @@ public:
         };
 
         for (const auto& path : footstepSoundPaths)
-            footstepSounds.push_back(soundEngine->addSoundSourceFromFile(FileSystem::GetPath(path).c_str()));
+            footstepSounds.push_back(soundEngine->addSoundSourceFromFile(path.c_str()));
     }
 
     void Update(float elapsedTime, PlayerState& player)

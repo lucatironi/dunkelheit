@@ -37,9 +37,6 @@ set(HEADER_FILES
     inc/weapon.hpp
 )
 
-# Configure Root Directory Header
-configure_file(config/root_directory.hpp.in ${CMAKE_BINARY_DIR}/config/root_directory.hpp)
-
 # Add Executable First
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 

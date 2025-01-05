@@ -29,9 +29,7 @@ private:
         char path[PATH_MAX];
         CFBundleRef mainBundle = CFBundleGetMainBundle();
         if (!mainBundle)
-        {
             throw std::runtime_error("Failed to get main bundle.");
-        }
 
         CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
         if (!CFURLGetFileSystemRepresentation(resourcesURL, true, reinterpret_cast<UInt8 *>(path), PATH_MAX))

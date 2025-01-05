@@ -3,7 +3,6 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-#include "file_system.hpp"
 #include "cube_model.hpp"
 
 class Object

@@ -129,7 +129,7 @@ private:
             std::string texturePath = directory + "/" + std::string(str.C_Str());
 
             // Load texture using Texture2D
-            Texture2D texture2D(FileSystem::GetPath(texturePath));
+            Texture2D texture2D(texturePath);
             textures.emplace_back(Texture{ texture2D, typeName, texturePath });
         }
         return textures;

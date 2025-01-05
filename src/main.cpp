@@ -10,7 +10,6 @@
 #include <irrKlang.h>
 
 #include "config.hpp"
-#include "file_system.hpp"
 #include "footsteps_system.hpp"
 #include "fps_camera.hpp"
 #include "level.hpp"
@@ -81,7 +80,7 @@ int main()
 
         // Load the configuration file
         Config& config = Config::GetInstance();
-        config.LoadFromFile(FileSystem::GetPath("config/settings.json"));
+        config.LoadFromFile("config/settings.json");
 
         // Access individual configuration values
         WindowTitle = config.GetNested<std::string>("window.title");
@@ -194,21 +193,21 @@ int main()
     random.SetSeed(1337);
 
     // load TexRenderer
-    TextRenderer textRenderer(FileSystem::GetPath(FontFile), FontSize);
-    Shader textShader(FileSystem::GetPath("shaders/text.vs"), FileSystem::GetPath("shaders/text.fs"));
+    TextRenderer textRenderer(FontFile, FontSize);
+    Shader textShader("shaders/text.vs", "shaders/text.fs");
     glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(WindowWidth), 0.0f, static_cast<float>(WindowHeight));
     textShader.Use();
     textShader.SetMat4("projection", orthoProjection);
 
     // load Level
-    Texture2D levelTexture(FileSystem::GetPath(LevelTextureFile), true);
-    Level level(FileSystem::GetPath(LevelMapFile), levelTexture);
+    Texture2D levelTexture(LevelTextureFile, true);
+    Level level(LevelMapFile, levelTexture);
     Camera.Position = level.StartingPosition;
 
     // load Weapons
-    Weapon leftWeapon(FileSystem::GetPath(LeftWeaponModelFile), FileSystem::GetPath(LeftWeaponTextureFile),
+    Weapon leftWeapon(LeftWeaponModelFile, LeftWeaponTextureFile,
         LeftWeaponPositionOffset, LeftWeaponRotationOffset, LeftWeaponScale);
-    Weapon rightWeapon(FileSystem::GetPath(RightWeaponModelFile), FileSystem::GetPath(RightWeaponTextureFile),
+    Weapon rightWeapon(RightWeaponModelFile, RightWeaponTextureFile,
         RightWeaponPositionOffset, RightWeaponRotationOffset, RightWeaponScale);
 
     // Initialize player state and footstep system
@@ -221,13 +220,13 @@ int main()
     // deferred shading setup
     Quad quad;
     GBuffer gBuffer = SetupGBuffer(WindowWidth, WindowHeight);
-    Shader shaderGeometryPass(FileSystem::GetPath("shaders/geometry_pass.vs"), FileSystem::GetPath("shaders/geometry_pass.fs"));
-    Shader shaderLightingPass(FileSystem::GetPath("shaders/render_to_quad.vs"), FileSystem::GetPath("shaders/lighting_pass.fs"));
+    Shader shaderGeometryPass("shaders/geometry_pass.vs", "shaders/geometry_pass.fs");
+    Shader shaderLightingPass("shaders/render_to_quad.vs", "shaders/lighting_pass.fs");
     SetupDeferredShaders(shaderGeometryPass, shaderLightingPass, perspectiveProjection);
     level.SetLights(shaderLightingPass);
 
     // forward shading setup
-    Shader defaultShader(FileSystem::GetPath("shaders/default.vs"), FileSystem::GetPath("shaders/default.fs"));
+    Shader defaultShader("shaders/default.vs", "shaders/default.fs");
     SetupForwardShaders(defaultShader, perspectiveProjection);
     level.SetLights(defaultShader);
 
@@ -236,7 +235,7 @@ int main()
     glEnable(GL_CULL_FACE);
 
     // play ambient music
-    SoundEngine->play2D(FileSystem::GetPath(ambientMusicFile).c_str(), true);
+    SoundEngine->play2D(ambientMusicFile.c_str(), true);
 
     // game loop
     // -----------
