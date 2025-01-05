@@ -8,6 +8,10 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 class ResourcePath
 {
 public:
@@ -46,10 +50,17 @@ private:
     static std::string getWindowsResourcePath()
     {
         char path[MAX_PATH];
-        GetModuleFileNameA(nullptr, path, MAX_PATH);
-        std::string exePath = std::string(path);
+        // Attempt to get the executable's path
+        if (GetModuleFileNameA(nullptr, path, MAX_PATH) == 0)
+            return ""; // If it fails, return a default or empty path
+
+        std::string exePath(path);
         size_t lastSlash = exePath.find_last_of("\\/");
-        return exePath.substr(0, lastSlash) + "\\Resources";
+        if (lastSlash == std::string::npos)
+            return ""; // No valid directory delimiter found
+
+        // Construct the resource directory path
+        return exePath.substr(0, lastSlash) + "";
     }
 #endif
 
