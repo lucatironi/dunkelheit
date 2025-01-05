@@ -30,6 +30,7 @@ set(HEADER_FILES
     inc/model.hpp
     inc/object.hpp
     inc/random_generator.hpp
+    inc/resource_path.hpp
     inc/shader.hpp
     inc/text_renderer.hpp
     inc/texture2D.hpp
