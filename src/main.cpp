@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
+#include <vector>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -71,7 +72,8 @@ std::string RightWeaponModelFile, RightWeaponTextureFile;
 glm::vec3 RightWeaponPositionOffset, RightWeaponRotationOffset, RightWeaponScale;
 
 irrklang::ISoundEngine* SoundEngine;
-std::string ambientMusicFile;
+std::string AmbientMusicFile;
+std::vector<std::string> FootstepsSoundFiles;
 
 int main()
 {
@@ -129,7 +131,8 @@ int main()
         SpecularShininess = config.GetNested<float>("lighting.specular.shininess");
         SpecularIntensity = config.GetNested<float>("lighting.specular.intensity");
 
-        ambientMusicFile = config.GetNested<std::string>("audio.ambientMusicFile");
+        AmbientMusicFile = config.GetNested<std::string>("audio.ambientMusicFile");
+        FootstepsSoundFiles = config.GetNested<std::vector<std::string>>("audio.footstepsSoundFiles");
     }
     catch (const std::exception& e)
     {
@@ -225,7 +228,7 @@ int main()
 
     // Initialize player state and footstep system
     PlayerState player = { Camera.Position, Camera.Position, false };
-    FootstepSystem footsteps(SoundEngine);
+    FootstepSystem footsteps(SoundEngine, FootstepsSoundFiles);
 
     GLfloat aspectRatio = static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight);
     glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), aspectRatio, 0.1f, 100.0f);
@@ -248,7 +251,7 @@ int main()
     glEnable(GL_CULL_FACE);
 
     // play ambient music
-    SoundEngine->play2D(ambientMusicFile.c_str(), true);
+    SoundEngine->play2D(AmbientMusicFile.c_str(), true);
 
     // game loop
     // -----------

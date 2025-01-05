@@ -69,6 +69,11 @@
         }
     },
     "audio": {
-        "ambientMusicFile": "assets/music.ogg"
+        "ambientMusicFile": "assets/music.ogg",
+        "footstepsSoundFiles": [
+            "assets/footstep1.wav",
+            "assets/footstep2.wav",
+            "assets/footstep3.wav"
+        ]
     }
 }

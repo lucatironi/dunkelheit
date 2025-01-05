@@ -20,16 +20,9 @@ struct PlayerState {
 class FootstepSystem
 {
 public:
-    FootstepSystem(irrklang::ISoundEngine* engine)
+    FootstepSystem(irrklang::ISoundEngine* engine, const std::vector<std::string> footstepSoundPaths)
         : soundEngine(engine), lastStepTime(0.0f), stepInterval(0.6f)
     {
-        // Add footstep sounds to the list
-        std::vector<std::string> footstepSoundPaths = {
-            "assets/footstep1.wav",
-            "assets/footstep2.wav",
-            "assets/footstep3.wav"
-        };
-
         for (const auto& path : footstepSoundPaths)
             footstepSounds.push_back(soundEngine->addSoundSourceFromFile(path.c_str()));
     }
