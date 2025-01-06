@@ -1,9 +1,8 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <iostream>
-#include <stdexcept>
+#include "mesh.hpp"
+#include "shader.hpp"
+#include "texture2D.hpp"
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -11,9 +10,10 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "mesh.hpp"
-#include "shader.hpp"
-#include "texture2D.hpp"
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 class Model
 {

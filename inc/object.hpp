@@ -1,9 +1,9 @@
 #pragma once
 
+#include "cube_model.hpp"
+
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-
-#include "cube_model.hpp"
 
 class Object
 {

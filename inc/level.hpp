@@ -1,15 +1,15 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
-#include <glad/glad.h>
-#include <glm/glm.hpp>
-
 #include "fps_camera.hpp"
 #include "random_generator.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
+
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+
+#include <string>
+#include <vector>
 
 struct Light
 {

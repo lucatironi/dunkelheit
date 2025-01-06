@@ -1,12 +1,12 @@
 #pragma once
 
-#include <string>
+#include <glm/glm.hpp>
+#include <nlohmann/json.hpp>
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
-#include <glm/glm.hpp>
-#include <nlohmann/json.hpp>
+#include <string>
 
 // Specialization for glm::vec3
 namespace nlohmann {

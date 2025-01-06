@@ -1,13 +1,13 @@
 #pragma once
 
-#include <map>
-#include <string>
-#include <iostream>
+#include "shader.hpp"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include "shader.hpp"
+#include <map>
+#include <iostream>
+#include <string>
 
 struct Character {
     GLuint     TextureID; // ID handle of the glyph texture

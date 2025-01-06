@@ -1,14 +1,13 @@
 #pragma once
 
+#include "random_generator.hpp"
+
+#include <glm/glm.hpp>
+#include <irrKlang.h>
+
 #include <iostream>
 #include <string>
 #include <vector>
-
-#include <glm/glm.hpp>
-
-#include <irrKlang.h>
-
-#include "random_generator.hpp"
 
 // Player movement state
 struct PlayerState {

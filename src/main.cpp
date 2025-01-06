@@ -1,15 +1,3 @@
-#include <iostream>
-#include <string>
-#include <filesystem>
-#include <vector>
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/matrix.hpp>
-
-#include <irrKlang.h>
-
 #include "config.hpp"
 #include "footsteps_system.hpp"
 #include "fps_camera.hpp"
@@ -21,6 +9,17 @@
 #include "text_renderer.hpp"
 #include "texture2D.hpp"
 #include "weapon.hpp"
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/matrix.hpp>
+#include <irrKlang.h>
+
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <vector>
 
 struct GBuffer
 {

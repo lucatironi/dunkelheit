@@ -1,12 +1,12 @@
 #pragma once
 
-#include <vector>
+#include "shader.hpp"
+#include "texture2D.hpp"
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-#include "shader.hpp"
-#include "texture2D.hpp"
+#include <vector>
 
 struct Vertex
 {

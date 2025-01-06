@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
 #include <random>
 #include <stdexcept>
+#include <vector>
 
 class RandomGenerator
 {

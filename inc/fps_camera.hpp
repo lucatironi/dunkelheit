@@ -1,12 +1,12 @@
 #pragma once
 
-#include <vector>
-
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/quaternion.hpp>
+
+#include <vector>
 
 // Enumerates camera movement directions.
 enum CameraMovement

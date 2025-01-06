@@ -1,10 +1,10 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-
 #include "mesh.hpp"
 #include "shader.hpp"
+
+#include <memory>
+#include <vector>
 
 class CubeModel
 {
