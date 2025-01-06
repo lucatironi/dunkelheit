@@ -34,10 +34,10 @@ class Level
 public:
     glm::vec3 StartingPosition;
 
-    Level(const std::string& path, Texture2D texture)
+    Level(const std::string& mapPath, Texture2D texture)
         : texture(texture)
     {
-        loadLevel(path);
+        loadLevel(mapPath);
         setupBuffers();
     }
 
