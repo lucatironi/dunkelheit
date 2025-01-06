@@ -41,7 +41,9 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
 if (WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES
-    LINK_FLAGS_RELEASE "/ENTRY:mainCRTStartup /SUBSYSTEM:WINDOWS")
+        LINK_FLAGS_RELEASE "/ENTRY:mainCRTStartup /SUBSYSTEM:WINDOWS")
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        LINK_FLAGS_MINSIZEREL "/ENTRY:mainCRTStartup /SUBSYSTEM:WINDOWS")
 endif()
 
 # Include Directories
