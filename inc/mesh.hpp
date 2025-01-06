@@ -24,8 +24,8 @@ struct Texture {
 class Mesh
 {
 public:
-    Mesh(const std::vector<Vertex>& _vertices, const std::vector<GLuint>& _indices, const std::vector<Texture>& _textures)
-        : vertices(_vertices), indices(_indices), textures(_textures), VAO(0), VBO(0), EBO(0)
+    Mesh(const std::vector<Vertex>& v, const std::vector<GLuint>& i, const std::vector<Texture>& t)
+        : vertices(v), indices(i), textures(t), VAO(0), VBO(0), EBO(0)
     {
         setupBuffers();
     }

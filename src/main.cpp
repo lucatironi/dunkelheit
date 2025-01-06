@@ -349,15 +349,15 @@ int main()
 
         std::stringstream fpsText;
         fpsText << "FPS: " << fps.str();
-        textRenderer.RenderText(textShader, fpsText.str(), 4.0f, WindowHeight - 20.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        textRenderer.RenderText(fpsText.str(), textShader, 4.0f, WindowHeight - 20.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         std::stringstream windowSize;
         windowSize << WindowWidth << "x" << WindowHeight;
-        textRenderer.RenderText(textShader, windowSize.str(), 4.0f, WindowHeight - 40.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        textRenderer.RenderText(windowSize.str(), textShader, 4.0f, WindowHeight - 40.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         std::string shadingMode = UseDeferredShading ? "Deferred" : "Forward";
-        textRenderer.RenderText(textShader, shadingMode, 4.0f, WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        textRenderer.RenderText(shadingMode, textShader, 4.0f, WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         std::stringstream pos;
         pos << "pos x: " << (int)Camera.Position.x << ", z: " << (int)Camera.Position.z << ", tile: " << level.TileAt(Camera.Position.x, Camera.Position.z);
-        textRenderer.RenderText(textShader, pos.str(), 4.0f, WindowHeight - 80.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        textRenderer.RenderText(pos.str(), textShader, 4.0f, WindowHeight - 80.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
         // restore previous blending state
         glBlendFunc(srcAlphaFunc, dstAlphaFunc);

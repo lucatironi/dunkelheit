@@ -36,7 +36,7 @@ public:
         rotationMatrix = glm::mat4_cast(camera.GetRotation());
     }
 
-    void Draw(const Shader& shader)
+    void Draw(const Shader& shader) const
     {
         // Apply the stored rotation matrix
         glm::mat4 modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;

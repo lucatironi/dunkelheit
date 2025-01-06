@@ -34,10 +34,10 @@ class Level
 public:
     glm::vec3 StartingPosition;
 
-    Level(const std::string levelPath, Texture2D texture)
+    Level(const std::string& path, Texture2D texture)
         : texture(texture)
     {
-        loadLevel(levelPath);
+        loadLevel(path);
         setupBuffers();
     }
 
@@ -186,14 +186,14 @@ private:
             pushQuad(pF, pB, pC, pG, nR, random.GetWeightedRandomInRange(8, 11));
     }
 
-    void loadLevel(const std::string& levelPath)
+    void loadLevel(const std::string& path)
     {
         // Load level data from the image
         int channels;
-        levelData = stbi_load(levelPath.c_str(), &levelWidth, &levelDepth, &channels, 1);
+        levelData = stbi_load(path.c_str(), &levelWidth, &levelDepth, &channels, 1);
         if (!levelData)
         {
-            throw std::runtime_error("Failed to load level: " + levelPath);
+            throw std::runtime_error("Failed to load level: " + path);
         }
 
         // Process each tile

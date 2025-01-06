@@ -24,7 +24,7 @@ public:
     GLuint WrapS, WrapT;
     GLuint FilterMin, FilterMax;
 
-    Texture2D(const std::string& imagePath, bool alpha = false, const TextureParams& params = {})
+    Texture2D(const std::string& path, bool alpha = false, const TextureParams& params = {})
         : WrapS(params.wrapS), WrapT(params.wrapT),
           FilterMin(params.filterMin), FilterMax(params.filterMax)
     {
@@ -41,7 +41,7 @@ public:
         }
 
         // Load image
-        unsigned char* image = loadImage(imagePath.c_str());
+        unsigned char* image = loadImage(path.c_str());
         if (image)
         {
             generate(image);
@@ -49,7 +49,7 @@ public:
         }
         else
         {
-            std::cerr << "ERROR::TEXTURE2D: Failed to load texture: " << imagePath << std::endl;
+            std::cerr << "ERROR::TEXTURE2D: Failed to load texture: " << path << std::endl;
         }
     }
 
@@ -60,10 +60,10 @@ public:
 
 private:
     // Helper function to load the image data
-    unsigned char* loadImage(const char* imagePath)
+    unsigned char* loadImage(const char* path)
     {
         int width, height, channels;
-        unsigned char* image = stbi_load(imagePath, &width, &height, &channels, 0);
+        unsigned char* image = stbi_load(path, &width, &height, &channels, 0);
         if (image)
         {
             Width = width;

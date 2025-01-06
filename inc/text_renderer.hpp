@@ -34,7 +34,7 @@ public:
         glDeleteBuffers(1, &VBO);
     }
 
-    void RenderText(const Shader& shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color)
+    void RenderText(const std::string& text, const Shader& shader, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color)
     {
         // Use the shader program only once
         shader.Use();
@@ -88,7 +88,7 @@ private:
     std::map<GLchar, Character> characters;
     GLuint VAO, VBO;
 
-    void loadFont(const std::string& fontPath, const int fontSize)
+    void loadFont(const std::string& path, const int size)
     {
         FT_Library ft;
         if (FT_Init_FreeType(&ft))
@@ -98,13 +98,13 @@ private:
         }
 
         FT_Face face;
-        if (FT_New_Face(ft, fontPath.c_str(), 0, &face))
+        if (FT_New_Face(ft, path.c_str(), 0, &face))
         {
             std::cerr << "ERROR::FREETYPE: Failed to load font" << std::endl;
             return;
         }
 
-        FT_Set_Pixel_Sizes(face, 0, fontSize);
+        FT_Set_Pixel_Sizes(face, 0, size);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction
 
         // Load the first 128 ASCII characters
