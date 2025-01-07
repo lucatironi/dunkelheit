@@ -49,10 +49,9 @@ endif()
 # Include Directories
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_SOURCE_DIR}/inc
-    ${CMAKE_BINARY_DIR}/config
 )
 
-# Copy configuration file
+# Copy configuration file to Output Directory
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_CURRENT_SOURCE_DIR}/config/settings.json
@@ -85,7 +84,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/include)
 if (WIN32)
     # Link IrrKlang Library
     target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/winx64/irrKlang.lib)
-    # Copy IrrKlang Library to build dir
+    # Copy IrrKlang Library to Output Directory
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${IRRKLANG_DIR}/bin/winx64/irrKlang.dll
@@ -93,7 +92,7 @@ if (WIN32)
 elseif(APPLE)
     # Link IrrKlang Library
     target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/macosx/libirrKlang.dylib)
-    # Copy IrrKlang Library to build dir
+    # Copy IrrKlang Library to Output Directory
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${IRRKLANG_DIR}/bin/macosx/libirrKlang.dylib
