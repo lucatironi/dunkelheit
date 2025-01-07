@@ -9,7 +9,7 @@
 #include <vector>
 
 // Enumerates camera movement directions.
-enum CameraMovement
+enum CameraDirection
 {
     CAMERA_FORWARD,
     CAMERA_BACKWARD,
@@ -77,7 +77,7 @@ public:
     }
 
     // Processes keyboard-like input for camera movement.
-    void ProcessInputMovement(CameraMovement direction, float deltaTime)
+    void ProcessInputMovement(CameraDirection direction, float deltaTime)
     {
         if (deltaTime <= 0.0f)
             return;
