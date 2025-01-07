@@ -12,23 +12,23 @@
 #include <windows.h>
 #endif
 
-class ResourcePath
+class WorkingDirectory
 {
 public:
-    static std::string getResourcesDirectory()
+    static std::string getPath()
     {
 #ifdef __APPLE__
-        return getMacOSResourcePath();
+        return getMacOSPath();
 #elif _WIN32
-        return getWindowsResourcePath();
+        return getWindowsPath();
 #else
-        return getLinuxResourcePath();
+        return getLinuxPath();
 #endif
     }
 
 private:
 #ifdef __APPLE__
-    static std::string getMacOSResourcePath()
+    static std::string getMacOSPath()
     {
         char path[PATH_MAX];
         CFBundleRef mainBundle = CFBundleGetMainBundle();
@@ -47,7 +47,7 @@ private:
 #endif
 
 #ifdef _WIN32
-    static std::string getWindowsResourcePath()
+    static std::string getWindowsPath()
     {
         char path[MAX_PATH];
         // Attempt to get the executable's path
@@ -65,7 +65,7 @@ private:
 #endif
 
 #ifdef __linux__
-    static std::string getLinuxResourcePath()
+    static std::string getLinuxPath()
     {
         char path[PATH_MAX];
         ssize_t count = readlink("/proc/self/exe", path, PATH_MAX);

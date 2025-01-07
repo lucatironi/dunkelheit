@@ -4,11 +4,11 @@
 #include "level.hpp"
 #include "quad.hpp"
 #include "random_generator.hpp"
-#include "resource_path.hpp"
 #include "shader.hpp"
 #include "text_renderer.hpp"
 #include "texture2D.hpp"
 #include "weapon.hpp"
+#include "working_directory.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -77,8 +77,8 @@ int main()
     // ----------------------
     try
     {
-        std::string resourcesDir = ResourcePath::getResourcesDirectory();
-        std::filesystem::current_path(resourcesDir);
+        std::string workingDirPath = WorkingDirectory::getPath();
+        std::filesystem::current_path(workingDirPath);
         std::cout << "Current working directory set to: " << std::filesystem::current_path() << std::endl;
 
         // Load the configuration file
