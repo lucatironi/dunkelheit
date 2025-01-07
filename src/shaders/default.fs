@@ -8,12 +8,21 @@ layout(location = 0) out vec4 FragColor;
 
 uniform float time;
 uniform vec3 cameraPos;
+uniform vec3 cameraDir;
+uniform bool torchActivated;
 uniform vec3 torchColor;
-uniform float torchRadius;
+uniform float torchInnerCutoff;
+uniform float torchOuterCutoff;
+uniform float torchAttenuationConstant;
+uniform float torchAttenuationLinear;
+uniform float torchAttenuationQuadratic;
 uniform vec3 ambientColor;
 uniform float ambientIntensity;
 uniform float specularShininess;
 uniform float specularIntensity;
+uniform float attenuationConstant;
+uniform float attenuationLinear;
+uniform float attenuationQuadratic;
 
 uniform sampler2D texture_diffuse0;
 uniform sampler2D texture_specular0;
@@ -30,36 +39,53 @@ uniform int numLights;
 
 void main()
 {
-    vec3 Albedo = texture(texture_diffuse0, TexCoords).rgb;
+    float viewDistance = length(cameraPos - FragPos);
+    if (viewDistance > 75)
+        discard;
 
-    // Flicker calculation
-    float flicker = 0.8 + 0.2 * sin(time * 10.0) * sin(time * 3.0);
-
-    // Torchlight contribution
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(cameraPos - FragPos);
-    vec3 torchDir = normalize(cameraPos - FragPos);
-    float distanceToTorch = length(cameraPos - FragPos);
-    float torchAttenuation = 1.0 - clamp(distanceToTorch / torchRadius, 0.0, 1.0);
+    vec3 Albedo = texture(texture_diffuse0, TexCoords).rgb;
 
-    // Diffuse
-    float torchDiffuse = max(dot(norm, torchDir), 0.0);
+    // Torchlight contribution
+    vec3 torchLight;
+    if (torchActivated)
+    {
+        // check if lighting is inside the spotlight cone
+        float theta = dot(viewDir, normalize(-cameraDir));
+        float epsilon = torchInnerCutoff - torchOuterCutoff;
+        float intensity = clamp((theta - torchOuterCutoff) / epsilon, 0.0, 1.0);
 
-    // Specular
-    vec3 torchReflectDir = reflect(-torchDir, norm);
-    float torchSpec = pow(max(dot(viewDir, torchReflectDir), 0.0), specularShininess); // Shininess factor
+        // Quadratic attenuation
+        float torchAttenuation = 1.0 / (torchAttenuationConstant +
+                                        torchAttenuationLinear * viewDistance +
+                                        torchAttenuationQuadratic * viewDistance * viewDistance);
+        // Diffuse
+        float torchDiffuse = max(dot(norm, viewDir), 0.0);
 
-    vec3 torchLight = (ambientIntensity * ambientColor * Albedo +
-                       torchDiffuse * torchColor * Albedo +
-                       torchSpec * torchColor * specularIntensity) * torchAttenuation;
+        // Specular
+        vec3 torchReflectDir = reflect(-viewDir, norm);
+        float torchSpec = pow(max(dot(viewDir, torchReflectDir), 0.0), specularShininess); // Shininess factor
+        torchLight = (ambientIntensity * ambientColor * Albedo +
+                      torchDiffuse * torchColor * Albedo * intensity +
+                      torchSpec * torchColor * specularIntensity * intensity) * torchAttenuation;
+    }
+    else
+    {
+        torchLight = (ambientIntensity * ambientColor * Albedo);
+    }
 
     // Static lights contribution
+    float flicker = 0.8 + 0.2 * sin(time * 10.0) * sin(time * 3.0);
     vec3 staticLights = vec3(0.0);
     for (int i = 0; i < numLights; i++)
     {
         vec3 lightDir = normalize(lights[i].position - FragPos);
         float distance = length(lights[i].position - FragPos);
-        float lightAttenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance); // Quadratic attenuation
+        // Quadratic attenuation
+        float lightAttenuation = 1.0 / (attenuationConstant +
+                                        attenuationLinear * distance +
+                                        attenuationQuadratic * distance * distance);
 
         // Diffuse
         float lightDiffuse = max(dot(norm, lightDir), 0.0);

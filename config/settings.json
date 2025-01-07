@@ -57,7 +57,13 @@
     "lighting": {
         "torch": {
             "color": [1.0, 1.0, 0.8],
-            "radius": 7.0
+            "innerCutoff": 30.0,
+            "outerCutoff": 45.0,
+            "attenuation": {
+                "constant": 1.0,
+                "linear": 0.14,
+                "quadratic": 0.07
+            }
         },
         "ambient": {
             "color":  [1.0, 1.0, 1.0],
@@ -66,6 +72,11 @@
         "specular": {
             "shininess": 8.0,
             "intensity": 0.2
+        },
+        "attenuation": {
+            "constant": 1.0,
+            "linear": 0.09,
+            "quadratic": 0.032
         }
     },
     "audio": {

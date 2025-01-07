@@ -55,10 +55,13 @@ std::string FontFile;
 int FontSize;
 std::string TextVertexShaderFile, TextFragmentShaderFile;
 
+bool TorchActivated = true;
 glm::vec3 TorchColor;
-float TorchRadius;
+float TorchInnerCutoff, TorchOuterCutoff;
+float TorchAttenuationConstant, TorchAttenuationLinear, TorchAttenuationQuadratic;
 glm::vec3 AmbientColor;
 float AmbientIntensity, SpecularShininess, SpecularIntensity;
+float AttenuationConstant, AttenuationLinear, AttenuationQuadratic;
 
 std::string LevelMapFile, LevelTextureFile;
 
@@ -121,11 +124,18 @@ int main()
         RightWeaponScale = config.GetNested<glm::vec3>("weapons.right.scale");
 
         TorchColor = config.GetNested<glm::vec3>("lighting.torch.color");
-        TorchRadius = config.GetNested<float>("lighting.torch.radius");
+        TorchInnerCutoff = config.GetNested<float>("lighting.torch.innerCutoff");
+        TorchOuterCutoff = config.GetNested<float>("lighting.torch.outerCutoff");
+        TorchAttenuationConstant = config.GetNested<float>("lighting.torch.attenuation.constant");
+        TorchAttenuationLinear = config.GetNested<float>("lighting.torch.attenuation.linear");
+        TorchAttenuationQuadratic = config.GetNested<float>("lighting.torch.attenuation.quadratic");
         AmbientColor = config.GetNested<glm::vec3>("lighting.ambient.color");
         AmbientIntensity = config.GetNested<float>("lighting.ambient.intensity");
         SpecularShininess = config.GetNested<float>("lighting.specular.shininess");
         SpecularIntensity = config.GetNested<float>("lighting.specular.intensity");
+        AttenuationConstant = config.GetNested<float>("lighting.attenuation.constant");
+        AttenuationLinear = config.GetNested<float>("lighting.attenuation.linear");
+        AttenuationQuadratic = config.GetNested<float>("lighting.attenuation.quadratic");
 
         AmbientMusicFile = config.GetNested<std::string>("audio.ambientMusicFile");
         FootstepsSoundFiles = config.GetNested<std::vector<std::string>>("audio.footstepsSoundFiles");
@@ -313,7 +323,9 @@ int main()
             // 2. lighting pass: traditional deferred Blinn-Phong lighting
             shaderLightingPass.Use();
             shaderLightingPass.SetVec3("cameraPos", Camera.Position);
+            shaderLightingPass.SetVec3("cameraDir", Camera.Front);
             shaderLightingPass.SetFloat("time", currentTime);
+            shaderLightingPass.SetBool("torchActivated", TorchActivated);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, gBuffer.gPosition);
             glActiveTexture(GL_TEXTURE1);
@@ -328,7 +340,9 @@ int main()
             defaultShader.Use();
             defaultShader.SetMat4("view", Camera.GetViewMatrix());
             defaultShader.SetVec3("cameraPos", Camera.Position);
+            defaultShader.SetVec3("cameraDir", Camera.Front);
             defaultShader.SetFloat("time", currentTime);
+            defaultShader.SetBool("torchActivated", TorchActivated);
             level.Draw(defaultShader);
             glClear(GL_DEPTH_BUFFER_BIT);
             leftWeapon.Draw(defaultShader);
@@ -388,6 +402,12 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    if (TorchActivated && glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+        TorchActivated = false;
+
+    if (!TorchActivated && glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+        TorchActivated = true;
 
     if (UseDeferredShading && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
         UseDeferredShading = false;
@@ -497,11 +517,18 @@ void SetupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass
     shaderLightingPass.SetInt("gNormal", 1);
     shaderLightingPass.SetInt("gAlbedo", 2);
     shaderLightingPass.SetVec3("torchColor", TorchColor);
-    shaderLightingPass.SetFloat("torchRadius", TorchRadius);
+    shaderLightingPass.SetFloat("torchInnerCutoff", glm::cos(glm::radians(TorchInnerCutoff)));
+    shaderLightingPass.SetFloat("torchOuterCutoff", glm::cos(glm::radians(TorchOuterCutoff)));
+    shaderLightingPass.SetFloat("torchAttenuationConstant", TorchAttenuationConstant);
+    shaderLightingPass.SetFloat("torchAttenuationLinear", TorchAttenuationLinear);
+    shaderLightingPass.SetFloat("torchAttenuationQuadratic", TorchAttenuationQuadratic);
     shaderLightingPass.SetVec3("ambientColor", AmbientColor);
     shaderLightingPass.SetFloat("ambientIntensity", AmbientIntensity);
     shaderLightingPass.SetFloat("specularShininess", SpecularShininess);
     shaderLightingPass.SetFloat("specularIntensity", SpecularIntensity);
+    shaderLightingPass.SetFloat("attenuationConstant", AttenuationConstant);
+    shaderLightingPass.SetFloat("attenuationLinear", AttenuationLinear);
+    shaderLightingPass.SetFloat("attenuationQuadratic", AttenuationQuadratic);
 }
 
 void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection)
@@ -509,9 +536,17 @@ void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection)
     shaderSinglePass.Use();
     shaderSinglePass.SetMat4("projection", projection);
     shaderSinglePass.SetVec3("torchColor", TorchColor);
-    shaderSinglePass.SetFloat("torchRadius", TorchRadius);
+    shaderSinglePass.SetFloat("torchInnerCutoff", glm::cos(glm::radians(TorchInnerCutoff)));
+    shaderSinglePass.SetFloat("torchOuterCutoff", glm::cos(glm::radians(TorchOuterCutoff)));
+    shaderSinglePass.SetFloat("torchAttenuationConstant", TorchAttenuationConstant);
+    shaderSinglePass.SetFloat("torchAttenuationLinear", TorchAttenuationLinear);
+    shaderSinglePass.SetFloat("torchAttenuationQuadratic", TorchAttenuationQuadratic);
     shaderSinglePass.SetVec3("ambientColor", AmbientColor);
     shaderSinglePass.SetFloat("ambientIntensity", AmbientIntensity);
     shaderSinglePass.SetFloat("specularShininess", SpecularShininess);
     shaderSinglePass.SetFloat("specularIntensity", SpecularIntensity);
+    shaderSinglePass.SetFloat("attenuationConstant", AttenuationConstant);
+    shaderSinglePass.SetFloat("attenuationLinear", AttenuationLinear);
+    shaderSinglePass.SetFloat("attenuationQuadratic", AttenuationQuadratic);
+}
 }
