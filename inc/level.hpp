@@ -17,12 +17,13 @@ struct Light
     glm::vec3 color;
 };
 
-enum ColorKey {
+enum TileKey {
     COLOR_FLOOR  = 255,
     COLOR_PLAYER = 149,
     COLOR_WALL   = 128,
     COLOR_ENEMY  = 76,
-    COLOR_LIGHT  = 28
+    COLOR_LIGHT  = 28,
+    COLOR_EMPTY  = 0
 };
 
 constexpr float DEFAULT_TILE_FRACTION = 128.0f / 512.0f; // tile size / tilemap size
@@ -201,17 +202,17 @@ private:
         {
             for (int x = 0; x < levelWidth; ++x)
             {
-                int colorKey = levelData[levelWidth * z + x];
-                handleTile(colorKey, x, z);
+                int tileKey = levelData[levelWidth * z + x];
+                handleTile(tileKey, x, z);
             }
         }
     }
 
-    void handleTile(int colorKey, int x, int z)
+    void handleTile(int tileKey, int x, int z)
     {
         glm::vec3 position = glm::vec3(x * quadSize, 0.0f, z * quadSize);
 
-        switch (colorKey)
+        switch (tileKey)
         {
         case COLOR_FLOOR:
             addBlock(x, z);
