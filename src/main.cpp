@@ -94,8 +94,8 @@ int main()
         LastY = WindowHeight / 2.0f;
 
         UseDeferredShading = config.GetNested<bool>("renderer.useDeferredShading");
-        ForwardShadingVertexShaderFile = config.GetNested<std::string>("renderer.forward.shaders.vertex");
-        ForwardShadingFragmentShaderFile = config.GetNested<std::string>("renderer.forward.shaders.fragment");
+        ForwardShadingVertexShaderFile = config.GetNested<std::string>("renderer.forwardSinglePass.shaders.vertex");
+        ForwardShadingFragmentShaderFile = config.GetNested<std::string>("renderer.forwardSinglePass.shaders.fragment");
         DeferredShadingFirstPassVertexShaderFile = config.GetNested<std::string>("renderer.deferredFirstPass.shaders.vertex");
         DeferredShadingFirstPassFragmentShaderFile = config.GetNested<std::string>("renderer.deferredFirstPass.shaders.fragment");
         DeferredShadingSecondPassVertexShaderFile = config.GetNested<std::string>("renderer.deferredSecondPass.shaders.vertex");

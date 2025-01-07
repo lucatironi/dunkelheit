@@ -7,7 +7,7 @@
     },
     "renderer": {
         "useDeferredShading": false,
-        "forward": {
+        "forwardSinglePass": {
             "shaders": {
                 "vertex": "shaders/default.vs",
                 "fragment": "shaders/default.fs"
