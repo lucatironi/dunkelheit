@@ -2,6 +2,7 @@
 #include "footsteps_system.hpp"
 #include "fps_camera.hpp"
 #include "level.hpp"
+#include "player_entity.hpp"
 #include "quad.hpp"
 #include "random_generator.hpp"
 #include "shader.hpp"
@@ -14,8 +15,11 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/matrix.hpp>
+#include <glm/fwd.hpp>
+#include <glm/geometric.hpp>
 #include <irrKlang.h>
 
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <string>
@@ -48,6 +52,7 @@ std::string DeferredShadingFirstPassVertexShaderFile, DeferredShadingFirstPassFr
 std::string DeferredShadingSecondPassVertexShaderFile, DeferredShadingSecondPassFragmentShaderFile;
 
 FPSCamera Camera(glm::vec3(0.0f));
+PlayerEntity Player(glm::vec3(0.0f), &Camera);
 bool FirstMouse = true;
 float LastX, LastY;
 
@@ -224,7 +229,7 @@ int main()
     // load Level
     Texture2D levelTexture(LevelTextureFile, true);
     Level level(LevelMapFile, levelTexture);
-    Camera.Position = level.StartingPosition;
+    Player.SetPosition(level.StartingPosition);
 
     // load Weapons
     Weapon leftWeapon(LeftWeaponModelFile, LeftWeaponTextureFile,
@@ -233,7 +238,7 @@ int main()
         RightWeaponPositionOffset, RightWeaponRotationOffset, RightWeaponScale);
 
     // Initialize player state and footstep system
-    PlayerState player = { Camera.Position, Camera.Position, false };
+    PlayerState playerState = { Player.Position, Player.Position, false };
     FootstepSystem footsteps(SoundEngine, FootstepsSoundFiles);
 
     GLfloat aspectRatio = static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight);
@@ -284,23 +289,34 @@ int main()
 
         // input
         // -----
-        // store current position for collision detection
-        glm::vec3 previousPosition = Camera.Position;
         ProcessInput(window, deltaTime);
+
+        // collision detection
+        // -------------------
+        for (const auto& tile : level.GetNeighboringTiles(Player.Position))
+        {
+            if (tile.key == TileKey::COLOR_EMPTY || tile.key == TileKey::COLOR_WALL)
+            {
+                glm::vec3 nearestPoint;
+                nearestPoint.x = glm::clamp(Player.Position.x, tile.aabb.min.x, tile.aabb.max.x);
+                nearestPoint.z = glm::clamp(Player.Position.z, tile.aabb.min.z, tile.aabb.max.z);
+                glm::vec3 rayToNearest = nearestPoint - Player.Position;
+                rayToNearest.y = 0.0f;
+                float overlap = Player.CollisionRadius - glm::length(rayToNearest);
+                if (std::isnan(overlap))
+                    overlap = 0.0f;
+                if (overlap > 0.0f)
+                    Player.Position = Player.Position - glm::normalize(rayToNearest) * overlap;
+            }
+        }
 
         // update
         // ------
-        // simple collision detection
-        glm::vec3 checkPoint = Camera.Position + Camera.Front * 0.75f;
-        int tile = level.TileAt(checkPoint.x, checkPoint.z);
-        if (tile == 0 || tile == 128)
-            Camera.Position = previousPosition;
+        leftWeapon.Update(Player);
+        rightWeapon.Update(Player);
 
-        leftWeapon.Update(Camera);
-        rightWeapon.Update(Camera);
-
-        player.position = Camera.Position;
-        footsteps.Update(currentTime, player);
+        playerState.position = Player.Position;
+        footsteps.Update(currentTime, playerState);
 
         // render
         // ------
@@ -370,7 +386,7 @@ int main()
         std::string shadingMode = UseDeferredShading ? "Deferred" : "Forward";
         textRenderer.RenderText(shadingMode, textShader, 4.0f, WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         std::stringstream pos;
-        pos << "pos x: " << (int)Camera.Position.x << ", z: " << (int)Camera.Position.z << ", tile: " << level.TileAt(Camera.Position.x, Camera.Position.z);
+        pos << "pos x: " << (int)Player.Position.x << ", z: " << (int)Player.Position.z << ", tile: " << level.TileAt(Player.Position.x, Player.Position.z);
         textRenderer.RenderText(pos.str(), textShader, 4.0f, WindowHeight - 80.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
         // restore previous blending state
@@ -416,13 +432,13 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
         UseDeferredShading = true;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        Camera.ProcessInputMovement(CAMERA_FORWARD, deltaTime);
+        Player.Move(MOVE_FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        Camera.ProcessInputMovement(CAMERA_BACKWARD, deltaTime);
+        Player.Move(MOVE_BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        Camera.ProcessInputMovement(CAMERA_LEFT, deltaTime);
+        Player.Move(MOVE_LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        Camera.ProcessInputMovement(CAMERA_RIGHT, deltaTime);
+        Player.Move(MOVE_RIGHT, deltaTime);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -548,5 +564,4 @@ void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection)
     shaderSinglePass.SetFloat("attenuationConstant", AttenuationConstant);
     shaderSinglePass.SetFloat("attenuationLinear", AttenuationLinear);
     shaderSinglePass.SetFloat("attenuationQuadratic", AttenuationQuadratic);
-}
 }

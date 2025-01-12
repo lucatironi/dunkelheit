@@ -1,6 +1,5 @@
 #pragma once
 
-#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/constants.hpp>
@@ -9,14 +8,14 @@
 #include <vector>
 
 // Enumerates camera movement directions.
-enum CameraDirection
+enum MovementDirection
 {
-    CAMERA_FORWARD,
-    CAMERA_BACKWARD,
-    CAMERA_LEFT,
-    CAMERA_RIGHT,
-    CAMERA_UP,
-    CAMERA_DOWN
+    MOVE_FORWARD,
+    MOVE_BACKWARD,
+    MOVE_LEFT,
+    MOVE_RIGHT,
+    MOVE_UP,
+    MOVE_DOWN
 };
 
 class FPSCamera
@@ -77,7 +76,7 @@ public:
     }
 
     // Processes keyboard-like input for camera movement.
-    void ProcessInputMovement(CameraDirection direction, float deltaTime)
+    void ProcessInputMovement(const MovementDirection direction, const float deltaTime)
     {
         if (deltaTime <= 0.0f)
             return;
@@ -93,23 +92,23 @@ public:
 
         switch (direction)
         {
-        case CAMERA_FORWARD:
+        case MOVE_FORWARD:
             Position += constrainedFront * velocity;
             break;
-        case CAMERA_BACKWARD:
+        case MOVE_BACKWARD:
             Position -= constrainedFront * velocity;
             break;
-        case CAMERA_LEFT:
+        case MOVE_LEFT:
             Position -= Right * velocity;
             break;
-        case CAMERA_RIGHT:
+        case MOVE_RIGHT:
             Position += Right * velocity;
             break;
-        case CAMERA_UP:
+        case MOVE_UP:
             if (!Constrained)
                 Position += WorldUp * velocity;
             break;
-        case CAMERA_DOWN:
+        case MOVE_DOWN:
             if (!Constrained)
                 Position -= WorldUp * velocity;
             break;
