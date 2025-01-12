@@ -1,7 +1,6 @@
 #pragma once
 
 #include "fps_camera.hpp"
-#include "glm/fwd.hpp"
 
 #include <glm/glm.hpp>
 

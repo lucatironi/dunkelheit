@@ -1,7 +1,6 @@
 #pragma once
 
 #include "fps_camera.hpp"
-#include "glm/fwd.hpp"
 #include "random_generator.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
