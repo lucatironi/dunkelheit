@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fps_camera.hpp"
+#include "glm/fwd.hpp"
 #include "random_generator.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
@@ -17,7 +18,8 @@ struct Light
     glm::vec3 color;
 };
 
-enum TileKey {
+enum TileKey
+{
     COLOR_FLOOR  = 255,
     COLOR_PLAYER = 149,
     COLOR_WALL   = 128,
@@ -26,8 +28,20 @@ enum TileKey {
     COLOR_EMPTY  = 0
 };
 
+struct AABB
+{
+    glm::vec3 min;
+    glm::vec3 max;
+};
+
+struct Tile
+{
+    int key;
+    AABB aabb;
+};
+
 constexpr float DEFAULT_TILE_FRACTION = 128.0f / 512.0f; // tile size / tilemap size
-constexpr float DEFAULT_QUAD_SIZE = 3.0f;
+constexpr float DEFAULT_TILE_SIZE = 3.0f;
 constexpr size_t MAX_LIGHTS = 16;
 
 class Level
@@ -66,9 +80,30 @@ public:
     {
         if (x < 0 || z < 0 || x >= levelWidth * quadSize || z >= levelDepth * quadSize)
             return -1; // Return invalid tile for out-of-bounds
-        int i = static_cast<int>(x / quadSize);
-        int j = static_cast<int>(z / quadSize);
-        return levelData[levelWidth * j + i];
+        glm::ivec2 indices = getTileIndices(x, z);
+        return levelData[levelWidth * indices.y + indices.x];
+    }
+
+    std::vector<Tile> GetNeighboringTiles(const glm::vec3& position)
+    {
+        std::vector<Tile> neighbors;
+        int ix = static_cast<int>(position.x / quadSize);
+        int iz = static_cast<int>(position.z / quadSize);
+        for (int dx = -1; dx <= 1; ++dx)
+        {
+            for (int dz = -1; dz <= 1; ++dz)
+            {
+                if (dx == 0 && dz == 0)
+                    continue; // skip the center tile
+
+                Tile tile;
+                tile.key = levelData[levelWidth * (iz + dz) + (ix + dx)];
+                tile.aabb = { { (ix + dx) * quadSize, 0.0f, (iz + dz) * quadSize },
+                              { (ix + dx + 1) * quadSize, 0.0f, (iz + dz + 1) * quadSize } };
+                neighbors.emplace_back(tile);
+            }
+        }
+        return neighbors;
     }
 
     void AddLight(const glm::vec3& position, const glm::vec3& color)
@@ -97,16 +132,23 @@ public:
 
 private:
     const float tileFraction = DEFAULT_TILE_FRACTION;
-    const float quadSize = DEFAULT_QUAD_SIZE;
+    const float quadSize = DEFAULT_TILE_SIZE;
 
     int levelWidth, levelDepth;
-    unsigned char *levelData;
+    unsigned char* levelData;
     GLuint VAO, VBO;
     Texture2D texture;
     std::vector<GLfloat> vertices;
     std::vector<Light> lights;
 
     RandomGenerator& random = RandomGenerator::GetInstance();
+
+    glm::ivec2 getTileIndices(float x, float z) const
+    {
+        int i = static_cast<int>(x / quadSize);
+        int j = static_cast<int>(z / quadSize);
+        return {i, j};
+    }
 
     void setupBuffers()
     {
