@@ -20,15 +20,16 @@ set(SOURCE_FILES
 )
 
 set(HEADER_FILES
-    inc/config.hpp
     inc/cube_model.hpp
     inc/footsteps_system.hpp
     inc/fps_camera.hpp
+    inc/json_file.hpp
     inc/level.hpp
     inc/mesh.hpp
     inc/model.hpp
     inc/object.hpp
     inc/random_generator.hpp
+    inc/settings.hpp
     inc/shader.hpp
     inc/text_renderer.hpp
     inc/texture2D.hpp

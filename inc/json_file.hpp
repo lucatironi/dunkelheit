@@ -32,21 +32,21 @@ namespace nlohmann {
     };
 }
 
-class Config
+class JsonFile
 {
 public:
     // Delete copy constructor and assignment operator to enforce singleton
-    Config(const Config&) = delete;
-    Config& operator=(const Config&) = delete;
+    JsonFile(const JsonFile&) = delete;
+    JsonFile& operator=(const JsonFile&) = delete;
 
     // Access the singleton instance
-    static Config& GetInstance()
+    static JsonFile& GetInstance()
     {
-        static Config instance;
+        static JsonFile instance;
         return instance;
     }
 
-    void LoadFromFile(const std::string& path)
+    void Load(const std::string& path)
     {
         std::ifstream file(path);
         if (!file.is_open())
@@ -54,7 +54,7 @@ public:
 
         try
         {
-            file >> jsonConfig;
+            file >> jsonFile;
         }
         catch (const nlohmann::json::exception& e)
         {
@@ -67,7 +67,7 @@ public:
     {
         try
         {
-            return jsonConfig.at(key).get<T>();
+            return jsonFile.at(key).get<T>();
         }
         catch (const nlohmann::json::exception& e)
         {
@@ -81,7 +81,7 @@ public:
         try
         {
             auto keys = split(nestedKey, '.');
-            nlohmann::json current = jsonConfig;
+            nlohmann::json current = jsonFile;
 
             for (const auto& key : keys)
                 current = current.at(key);
@@ -95,8 +95,8 @@ public:
     }
 
 private:
-    Config() = default;
-    nlohmann::json jsonConfig;
+    JsonFile() = default;
+    nlohmann::json jsonFile;
 
     std::vector<std::string> split(const std::string& str, char delimiter) const
     {

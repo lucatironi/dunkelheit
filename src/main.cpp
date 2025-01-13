@@ -1,10 +1,11 @@
-#include "config.hpp"
 #include "footsteps_system.hpp"
 #include "fps_camera.hpp"
+#include "json_file.hpp"
 #include "level.hpp"
 #include "player_entity.hpp"
 #include "quad.hpp"
 #include "random_generator.hpp"
+#include "settings.hpp"
 #include "shader.hpp"
 #include "text_renderer.hpp"
 #include "texture2D.hpp"
@@ -38,43 +39,18 @@ GBuffer SetupGBuffer(int width, int height);
 void SetupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection);
 void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection);
 
-// settings
-std::string WindowTitle;
-int WindowWidth, WindowHeight;
-int WindowPositionX, WindowPositionY;
-bool FullScreen, UseDeferredShading, ShowDebugInfo;
-
-std::string ForwardShadingVertexShaderFile, ForwardShadingFragmentShaderFile;
-std::string DeferredShadingFirstPassVertexShaderFile, DeferredShadingFirstPassFragmentShaderFile;
-std::string DeferredShadingSecondPassVertexShaderFile, DeferredShadingSecondPassFragmentShaderFile;
+SettingsData settings;
+bool TorchActivated = true;
 
 FPSCamera Camera(glm::vec3(0.0f));
 PlayerEntity Player(glm::vec3(0.0f), &Camera);
+
+int WindowWidth, WindowHeight;
+int WindowPositionX, WindowPositionY;
 bool FirstMouse = true;
 float LastX, LastY;
 
-std::string FontFile;
-int FontSize;
-std::string TextVertexShaderFile, TextFragmentShaderFile;
-
-bool TorchActivated = true;
-glm::vec3 TorchColor;
-float TorchInnerCutoff, TorchOuterCutoff;
-float TorchAttenuationConstant, TorchAttenuationLinear, TorchAttenuationQuadratic;
-glm::vec3 AmbientColor;
-float AmbientIntensity, SpecularShininess, SpecularIntensity;
-float AttenuationConstant, AttenuationLinear, AttenuationQuadratic;
-
-std::string LevelMapFile, LevelTextureFile;
-
-std::string LeftWeaponModelFile, LeftWeaponTextureFile;
-glm::vec3 LeftWeaponPositionOffset, LeftWeaponRotationOffset, LeftWeaponScale;
-std::string RightWeaponModelFile, RightWeaponTextureFile;
-glm::vec3 RightWeaponPositionOffset, RightWeaponRotationOffset, RightWeaponScale;
-
 irrklang::ISoundEngine* SoundEngine;
-std::string AmbientMusicFile;
-std::vector<std::string> FootstepsSoundFiles;
 
 int main()
 {
@@ -86,62 +62,7 @@ int main()
         std::filesystem::current_path(workingDirPath);
         std::cout << "Current working directory set to: " << std::filesystem::current_path() << std::endl;
 
-        // Load the configuration file
-        Config& config = Config::GetInstance();
-        config.LoadFromFile("config/settings.json");
-
-        // Access individual configuration values
-        WindowTitle = config.GetNested<std::string>("window.title");
-        WindowWidth = config.GetNested<int>("window.width");
-        WindowHeight = config.GetNested<int>("window.height");
-        FullScreen = config.GetNested<bool>("window.fullScreen");
-        ShowDebugInfo = config.GetNested<bool>("window.showDebugInfo");
-        LastX = WindowWidth / 2.0f;
-        LastY = WindowHeight / 2.0f;
-
-        UseDeferredShading = config.GetNested<bool>("renderer.useDeferredShading");
-        ForwardShadingVertexShaderFile = config.GetNested<std::string>("renderer.forwardSinglePass.shaders.vertex");
-        ForwardShadingFragmentShaderFile = config.GetNested<std::string>("renderer.forwardSinglePass.shaders.fragment");
-        DeferredShadingFirstPassVertexShaderFile = config.GetNested<std::string>("renderer.deferredFirstPass.shaders.vertex");
-        DeferredShadingFirstPassFragmentShaderFile = config.GetNested<std::string>("renderer.deferredFirstPass.shaders.fragment");
-        DeferredShadingSecondPassVertexShaderFile = config.GetNested<std::string>("renderer.deferredSecondPass.shaders.vertex");
-        DeferredShadingSecondPassFragmentShaderFile = config.GetNested<std::string>("renderer.deferredSecondPass.shaders.fragment");
-
-        FontFile = config.GetNested<std::string>("textRenderer.fontFile");
-        FontSize = config.GetNested<int>("textRenderer.fontSize");
-        TextVertexShaderFile = config.GetNested<std::string>("textRenderer.shaders.vertex");
-        TextFragmentShaderFile = config.GetNested<std::string>("textRenderer.shaders.fragment");
-
-        LevelMapFile = config.GetNested<std::string>("level.mapFile");
-        LevelTextureFile = config.GetNested<std::string>("level.textureFile");
-
-        LeftWeaponModelFile = config.GetNested<std::string>("weapons.left.modelFile");
-        LeftWeaponTextureFile = config.GetNested<std::string>("weapons.left.textureFile");
-        LeftWeaponPositionOffset = config.GetNested<glm::vec3>("weapons.left.positionOffset");
-        LeftWeaponRotationOffset = config.GetNested<glm::vec3>("weapons.left.rotationOffset");
-        LeftWeaponScale = config.GetNested<glm::vec3>("weapons.left.scale");
-        RightWeaponModelFile = config.GetNested<std::string>("weapons.right.modelFile");
-        RightWeaponTextureFile = config.GetNested<std::string>("weapons.right.textureFile");
-        RightWeaponPositionOffset = config.GetNested<glm::vec3>("weapons.right.positionOffset");
-        RightWeaponRotationOffset = config.GetNested<glm::vec3>("weapons.right.rotationOffset");
-        RightWeaponScale = config.GetNested<glm::vec3>("weapons.right.scale");
-
-        TorchColor = config.GetNested<glm::vec3>("lighting.torch.color");
-        TorchInnerCutoff = config.GetNested<float>("lighting.torch.innerCutoff");
-        TorchOuterCutoff = config.GetNested<float>("lighting.torch.outerCutoff");
-        TorchAttenuationConstant = config.GetNested<float>("lighting.torch.attenuation.constant");
-        TorchAttenuationLinear = config.GetNested<float>("lighting.torch.attenuation.linear");
-        TorchAttenuationQuadratic = config.GetNested<float>("lighting.torch.attenuation.quadratic");
-        AmbientColor = config.GetNested<glm::vec3>("lighting.ambient.color");
-        AmbientIntensity = config.GetNested<float>("lighting.ambient.intensity");
-        SpecularShininess = config.GetNested<float>("lighting.specular.shininess");
-        SpecularIntensity = config.GetNested<float>("lighting.specular.intensity");
-        AttenuationConstant = config.GetNested<float>("lighting.attenuation.constant");
-        AttenuationLinear = config.GetNested<float>("lighting.attenuation.linear");
-        AttenuationQuadratic = config.GetNested<float>("lighting.attenuation.quadratic");
-
-        AmbientMusicFile = config.GetNested<std::string>("audio.ambientMusicFile");
-        FootstepsSoundFiles = config.GetNested<std::vector<std::string>>("audio.footstepsSoundFiles");
+        settings = LoadSettingsFile("config/settings.json");
     }
     catch (const std::exception& e)
     {
@@ -166,17 +87,17 @@ int main()
     // --------------------
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     GLFWwindow* window = nullptr;
-    if (FullScreen) {
+    if (settings.FullScreen) {
         const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-        window = glfwCreateWindow(mode->width, mode->height, WindowTitle.c_str(), monitor, nullptr);
-        WindowWidth = mode->width;
-        WindowHeight = mode->height;
+        window = glfwCreateWindow(mode->width, mode->height, settings.WindowTitle.c_str(), monitor, nullptr);
+        settings.WindowWidth = mode->width;
+        settings.WindowHeight = mode->height;
     }
     else
     {
-        window = glfwCreateWindow(WindowWidth, WindowHeight, WindowTitle.c_str(), nullptr, nullptr);
-        glfwGetWindowSize(window, &WindowWidth, &WindowHeight);
-        glfwGetWindowPos(window, &WindowPositionX, &WindowPositionY);
+        window = glfwCreateWindow(settings.WindowWidth, settings.WindowHeight, settings.WindowTitle.c_str(), nullptr, nullptr);
+        glfwGetWindowSize(window, &settings.WindowWidth, &settings.WindowHeight);
+        glfwGetWindowPos(window, &settings.WindowPositionX, &settings.WindowPositionY);
     }
 
     if (window == nullptr)
@@ -218,40 +139,40 @@ int main()
     random.SetSeed(1337);
 
     // load TexRenderer
-    TextRenderer textRenderer(FontFile, FontSize);
-    Shader textShader(TextVertexShaderFile, TextFragmentShaderFile);
-    glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(WindowWidth), 0.0f, static_cast<float>(WindowHeight));
+    TextRenderer textRenderer(settings.FontFile, settings.FontSize);
+    Shader textShader(settings.TextVertexShaderFile, settings.TextFragmentShaderFile);
+    glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(settings.WindowWidth), 0.0f, static_cast<float>(settings.WindowHeight));
     textShader.Use();
     textShader.SetMat4("projection", orthoProjection);
 
     // load Level
-    Texture2D levelTexture(LevelTextureFile, true);
-    Level level(LevelMapFile, levelTexture);
+    Texture2D levelTexture(settings.LevelTextureFile, true);
+    Level level(settings.LevelMapFile, levelTexture);
     Player.SetPosition(level.StartingPosition);
 
     // load Weapons
-    Weapon leftWeapon(LeftWeaponModelFile, LeftWeaponTextureFile,
-        LeftWeaponPositionOffset, LeftWeaponRotationOffset, LeftWeaponScale);
-    Weapon rightWeapon(RightWeaponModelFile, RightWeaponTextureFile,
-        RightWeaponPositionOffset, RightWeaponRotationOffset, RightWeaponScale);
+    Weapon leftWeapon(settings.LeftWeaponModelFile, settings.LeftWeaponTextureFile,
+        settings.LeftWeaponPositionOffset, settings.LeftWeaponRotationOffset, settings.LeftWeaponScale);
+    Weapon rightWeapon(settings.RightWeaponModelFile, settings.RightWeaponTextureFile,
+        settings.RightWeaponPositionOffset, settings.RightWeaponRotationOffset, settings.RightWeaponScale);
 
     // Initialize player state and footstep system
     PlayerState playerState = { Player.Position, Player.Position, false };
-    FootstepSystem footsteps(SoundEngine, FootstepsSoundFiles);
+    FootstepSystem footsteps(SoundEngine, settings.FootstepsSoundFiles);
 
-    GLfloat aspectRatio = static_cast<GLfloat>(WindowWidth) / static_cast<GLfloat>(WindowHeight);
+    GLfloat aspectRatio = static_cast<GLfloat>(settings.WindowWidth) / static_cast<GLfloat>(settings.WindowHeight);
     glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), aspectRatio, 0.1f, 100.0f);
 
     // deferred shading setup
     Quad quad;
-    GBuffer gBuffer = SetupGBuffer(WindowWidth, WindowHeight);
-    Shader shaderGeometryPass(DeferredShadingFirstPassVertexShaderFile, DeferredShadingFirstPassFragmentShaderFile);
-    Shader shaderLightingPass(DeferredShadingSecondPassVertexShaderFile, DeferredShadingSecondPassFragmentShaderFile);
+    GBuffer gBuffer = SetupGBuffer(settings.WindowWidth, settings.WindowHeight);
+    Shader shaderGeometryPass(settings.DeferredShadingFirstPassVertexShaderFile, settings.DeferredShadingFirstPassFragmentShaderFile);
+    Shader shaderLightingPass(settings.DeferredShadingSecondPassVertexShaderFile, settings.DeferredShadingSecondPassFragmentShaderFile);
     SetupDeferredShaders(shaderGeometryPass, shaderLightingPass, perspectiveProjection);
     level.SetLights(shaderLightingPass);
 
     // forward shading setup
-    Shader defaultShader(ForwardShadingVertexShaderFile, ForwardShadingFragmentShaderFile);
+    Shader defaultShader(settings.ForwardShadingVertexShaderFile, settings.ForwardShadingFragmentShaderFile);
     SetupForwardShaders(defaultShader, perspectiveProjection);
     level.SetLights(defaultShader);
 
@@ -260,7 +181,7 @@ int main()
     glEnable(GL_CULL_FACE);
 
     // play ambient music
-    SoundEngine->play2D(AmbientMusicFile.c_str(), true);
+    SoundEngine->play2D(settings.AmbientMusicFile.c_str(), true);
 
     // game loop
     // -----------
@@ -321,7 +242,7 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (UseDeferredShading)
+        if (settings.UseDeferredShading)
         {
             // deferred shading
             // 1. geometry pass: render scene's geometry/color data into gbuffer
@@ -377,17 +298,17 @@ int main()
 
         std::stringstream fpsText;
         fpsText << "FPS: " << fps.str();
-        textRenderer.RenderText(fpsText.str(), textShader, 4.0f, WindowHeight - 20.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-        if (ShowDebugInfo)
+        textRenderer.RenderText(fpsText.str(), textShader, 4.0f, settings.WindowHeight - 20.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        if (settings.ShowDebugInfo)
         {
             std::stringstream windowSize;
-            windowSize << WindowWidth << "x" << WindowHeight;
-            textRenderer.RenderText(windowSize.str(), textShader, 4.0f, WindowHeight - 40.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-            std::string shadingMode = UseDeferredShading ? "Deferred" : "Forward";
-            textRenderer.RenderText(shadingMode, textShader, 4.0f, WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            windowSize << settings.WindowWidth << "x" << settings.WindowHeight;
+            textRenderer.RenderText(windowSize.str(), textShader, 4.0f, settings.WindowHeight - 40.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            std::string shadingMode = settings.UseDeferredShading ? "Deferred" : "Forward";
+            textRenderer.RenderText(shadingMode, textShader, 4.0f, settings.WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
             std::stringstream pos;
             pos << "pos x: " << (int)Player.Position.x << ", z: " << (int)Player.Position.z << ", tile: " << level.GetTile(Player.Position).key;
-            textRenderer.RenderText(pos.str(), textShader, 4.0f, WindowHeight - 80.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            textRenderer.RenderText(pos.str(), textShader, 4.0f, settings.WindowHeight - 80.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         }
 
         // restore previous blending state
@@ -426,11 +347,11 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
     if (!TorchActivated && glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
         TorchActivated = true;
 
-    if (UseDeferredShading && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-        UseDeferredShading = false;
+    if (settings.UseDeferredShading && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+        settings.UseDeferredShading = false;
 
-    if (!UseDeferredShading && glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-        UseDeferredShading = true;
+    if (!settings.UseDeferredShading && glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+        settings.UseDeferredShading = true;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         Player.Move(MOVE_FORWARD, deltaTime);
@@ -533,36 +454,36 @@ void SetupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass
     shaderLightingPass.SetInt("gPosition", 0);
     shaderLightingPass.SetInt("gNormal", 1);
     shaderLightingPass.SetInt("gAlbedo", 2);
-    shaderLightingPass.SetVec3("torchColor", TorchColor);
-    shaderLightingPass.SetFloat("torchInnerCutoff", glm::cos(glm::radians(TorchInnerCutoff)));
-    shaderLightingPass.SetFloat("torchOuterCutoff", glm::cos(glm::radians(TorchOuterCutoff)));
-    shaderLightingPass.SetFloat("torchAttenuationConstant", TorchAttenuationConstant);
-    shaderLightingPass.SetFloat("torchAttenuationLinear", TorchAttenuationLinear);
-    shaderLightingPass.SetFloat("torchAttenuationQuadratic", TorchAttenuationQuadratic);
-    shaderLightingPass.SetVec3("ambientColor", AmbientColor);
-    shaderLightingPass.SetFloat("ambientIntensity", AmbientIntensity);
-    shaderLightingPass.SetFloat("specularShininess", SpecularShininess);
-    shaderLightingPass.SetFloat("specularIntensity", SpecularIntensity);
-    shaderLightingPass.SetFloat("attenuationConstant", AttenuationConstant);
-    shaderLightingPass.SetFloat("attenuationLinear", AttenuationLinear);
-    shaderLightingPass.SetFloat("attenuationQuadratic", AttenuationQuadratic);
+    shaderLightingPass.SetVec3("torchColor", settings.TorchColor);
+    shaderLightingPass.SetFloat("torchInnerCutoff", glm::cos(glm::radians(settings.TorchInnerCutoff)));
+    shaderLightingPass.SetFloat("torchOuterCutoff", glm::cos(glm::radians(settings.TorchOuterCutoff)));
+    shaderLightingPass.SetFloat("torchAttenuationConstant", settings.TorchAttenuationConstant);
+    shaderLightingPass.SetFloat("torchAttenuationLinear", settings.TorchAttenuationLinear);
+    shaderLightingPass.SetFloat("torchAttenuationQuadratic", settings.TorchAttenuationQuadratic);
+    shaderLightingPass.SetVec3("ambientColor", settings.AmbientColor);
+    shaderLightingPass.SetFloat("ambientIntensity", settings.AmbientIntensity);
+    shaderLightingPass.SetFloat("specularShininess", settings.SpecularShininess);
+    shaderLightingPass.SetFloat("specularIntensity", settings.SpecularIntensity);
+    shaderLightingPass.SetFloat("attenuationConstant", settings.AttenuationConstant);
+    shaderLightingPass.SetFloat("attenuationLinear", settings.AttenuationLinear);
+    shaderLightingPass.SetFloat("attenuationQuadratic", settings.AttenuationQuadratic);
 }
 
 void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection)
 {
     shaderSinglePass.Use();
     shaderSinglePass.SetMat4("projection", projection);
-    shaderSinglePass.SetVec3("torchColor", TorchColor);
-    shaderSinglePass.SetFloat("torchInnerCutoff", glm::cos(glm::radians(TorchInnerCutoff)));
-    shaderSinglePass.SetFloat("torchOuterCutoff", glm::cos(glm::radians(TorchOuterCutoff)));
-    shaderSinglePass.SetFloat("torchAttenuationConstant", TorchAttenuationConstant);
-    shaderSinglePass.SetFloat("torchAttenuationLinear", TorchAttenuationLinear);
-    shaderSinglePass.SetFloat("torchAttenuationQuadratic", TorchAttenuationQuadratic);
-    shaderSinglePass.SetVec3("ambientColor", AmbientColor);
-    shaderSinglePass.SetFloat("ambientIntensity", AmbientIntensity);
-    shaderSinglePass.SetFloat("specularShininess", SpecularShininess);
-    shaderSinglePass.SetFloat("specularIntensity", SpecularIntensity);
-    shaderSinglePass.SetFloat("attenuationConstant", AttenuationConstant);
-    shaderSinglePass.SetFloat("attenuationLinear", AttenuationLinear);
-    shaderSinglePass.SetFloat("attenuationQuadratic", AttenuationQuadratic);
+    shaderSinglePass.SetVec3("torchColor", settings.TorchColor);
+    shaderSinglePass.SetFloat("torchInnerCutoff", glm::cos(glm::radians(settings.TorchInnerCutoff)));
+    shaderSinglePass.SetFloat("torchOuterCutoff", glm::cos(glm::radians(settings.TorchOuterCutoff)));
+    shaderSinglePass.SetFloat("torchAttenuationConstant", settings.TorchAttenuationConstant);
+    shaderSinglePass.SetFloat("torchAttenuationLinear", settings.TorchAttenuationLinear);
+    shaderSinglePass.SetFloat("torchAttenuationQuadratic", settings.TorchAttenuationQuadratic);
+    shaderSinglePass.SetVec3("ambientColor", settings.AmbientColor);
+    shaderSinglePass.SetFloat("ambientIntensity", settings.AmbientIntensity);
+    shaderSinglePass.SetFloat("specularShininess", settings.SpecularShininess);
+    shaderSinglePass.SetFloat("specularIntensity", settings.SpecularIntensity);
+    shaderSinglePass.SetFloat("attenuationConstant", settings.AttenuationConstant);
+    shaderSinglePass.SetFloat("attenuationLinear", settings.AttenuationLinear);
+    shaderSinglePass.SetFloat("attenuationQuadratic", settings.AttenuationQuadratic);
 }
