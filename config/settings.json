@@ -3,7 +3,8 @@
         "title": "Dunkelheit",
         "width": 800,
         "height": 600,
-        "fullScreen": false
+        "fullScreen": false,
+        "showDebugInfo": true
     },
     "renderer": {
         "useDeferredShading": false,
