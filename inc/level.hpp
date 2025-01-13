@@ -75,12 +75,14 @@ public:
         glBindVertexArray(0);
     }
 
-    int TileAt(float x, float z) const
+    Tile& GetTile(const glm::vec3& position)
     {
-        if (x < 0 || z < 0 || x >= levelWidth * quadSize || z >= levelDepth * quadSize)
-            return -1; // Return invalid tile for out-of-bounds
-        glm::ivec2 indices = getTileIndices(x, z);
-        return levelData[levelWidth * indices.y + indices.x];
+        if (position.x < 0 || position.x >= levelWidth * quadSize ||
+            position.z < 0 || position.z >= levelDepth * quadSize)
+            return nullTile; // Return invalid tile for out-of-bounds
+        int ix = static_cast<int>(position.x / quadSize);
+        int iz = static_cast<int>(position.z / quadSize);
+        return tiles[iz * levelWidth + ix];
     }
 
     std::vector<Tile> GetNeighboringTiles(const glm::vec3& position)
@@ -94,12 +96,10 @@ public:
             {
                 if (dx == 0 && dz == 0)
                     continue; // skip the center tile
-
-                Tile tile;
-                tile.key = levelData[levelWidth * (iz + dz) + (ix + dx)];
-                tile.aabb = { { (ix + dx) * quadSize, 0.0f, (iz + dz) * quadSize },
-                              { (ix + dx + 1) * quadSize, 0.0f, (iz + dz + 1) * quadSize } };
-                neighbors.emplace_back(tile);
+                if (ix + dx < 0 || ix + dx >= levelWidth ||
+                    iz + dz < 0 || iz + dz >= levelDepth)
+                    continue; // skip out-of-bounds tiles
+                neighbors.emplace_back(tiles[(iz + dz) * levelWidth + (ix + dx)]);
             }
         }
         return neighbors;
@@ -137,17 +137,12 @@ private:
     unsigned char* levelData;
     GLuint VAO, VBO;
     Texture2D texture;
+    std::vector<Tile> tiles;
     std::vector<GLfloat> vertices;
     std::vector<Light> lights;
+    Tile nullTile;
 
     RandomGenerator& random = RandomGenerator::GetInstance();
-
-    glm::ivec2 getTileIndices(float x, float z) const
-    {
-        int i = static_cast<int>(x / quadSize);
-        int j = static_cast<int>(z / quadSize);
-        return {i, j};
-    }
 
     void setupBuffers()
     {
@@ -209,10 +204,10 @@ private:
         glm::vec3 nD = {  0.0f, -1.0f,  0.0f }; // Down
 
         // Determine if the neighboring tiles should be considered for wall generation
-        bool hasFloorFront = (z - 1 >= 0) && (levelData[levelWidth * (z - 1) + x] == COLOR_FLOOR);
-        bool hasFloorBack  = (z + 1 < levelDepth) && (levelData[levelWidth * (z + 1) + x] == COLOR_FLOOR);
-        bool hasFloorLeft  = (x - 1 >= 0) && (levelData[levelWidth * z + (x - 1)] == COLOR_FLOOR);
-        bool hasFloorRight = (x + 1 < levelWidth) && (levelData[levelWidth * z + (x + 1)] == COLOR_FLOOR);
+        bool hasFloorFront = (z - 1 >= 0) && (levelData[(z - 1) * levelWidth + x] == COLOR_FLOOR);
+        bool hasFloorBack  = (z + 1 < levelDepth) && (levelData[(z + 1) * levelWidth + x] == COLOR_FLOOR);
+        bool hasFloorLeft  = (x - 1 >= 0) && (levelData[z  * levelWidth + (x - 1)] == COLOR_FLOOR);
+        bool hasFloorRight = (x + 1 < levelWidth) && (levelData[z  * levelWidth + (x + 1)] == COLOR_FLOOR);
 
         // Backward wall
         if (hasFloorFront)
@@ -238,13 +233,19 @@ private:
             throw std::runtime_error("Failed to load level: " + path);
         }
 
+        tiles.resize(levelWidth * levelDepth);
+
         // Process each tile
         for (int z = 0; z < levelDepth; ++z)
         {
             for (int x = 0; x < levelWidth; ++x)
             {
-                int tileKey = levelData[levelWidth * z + x];
-                handleTile(tileKey, x, z);
+                Tile tile;
+                tile.key = levelData[z * levelWidth + x];
+                tile.aabb = { { x * quadSize, 0.0f, z * quadSize },                   // min
+                              { (x + 1) * quadSize, quadSize, (z + 1) * quadSize } }; // max
+                tiles[z * levelWidth + x] = tile;
+                handleTile(tile.key, x, z);
             }
         }
     }
