@@ -14,9 +14,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <glm/matrix.hpp>
-#include <glm/fwd.hpp>
-#include <glm/geometric.hpp>
 #include <irrKlang.h>
 
 #include <cmath>

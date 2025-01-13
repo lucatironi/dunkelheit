@@ -13,7 +13,7 @@ class Weapon
 {
 public:
     Weapon(const std::string& modelPath, const std::string& texturePath,
-        const glm::vec3 posOffset, const glm::vec3 rotOffset, const glm::vec3 scaleFactor)
+           const glm::vec3 posOffset, const glm::vec3 rotOffset, const glm::vec3 scaleFactor)
         : positionOffset(posOffset), rotationOffset(rotOffset)
     {
         weaponModel = new Model(modelPath);

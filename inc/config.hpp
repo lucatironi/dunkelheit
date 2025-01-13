@@ -104,9 +104,8 @@ private:
         std::string token;
         std::istringstream tokenStream(str);
         while (std::getline(tokenStream, token, delimiter))
-        {
             tokens.push_back(token);
-        }
+
         return tokens;
     }
 };

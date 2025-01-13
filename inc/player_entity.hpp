@@ -17,19 +17,20 @@ public:
     float CollisionRadius;
     float Speed;
 
-    PlayerEntity(glm::vec3 position, FPSCamera* camera)
+    PlayerEntity(const glm::vec3&  position, FPSCamera* camera)
         : Camera(camera), Speed(DEFAULT_SPEED), CollisionRadius(DEFAULT_COL_RADIUS)
     {
         SetPosition(position);
     }
 
-    void SetPosition(glm::vec3 position)
+    void SetPosition(const glm::vec3& position)
     {
         Position = position;
+        Position.y = DEFAULT_HEAD_HEIGHT;
         Camera->Position = Position;
     }
 
-    void Move(MovementDirection direction, const float deltaTime)
+    void Move(const MovementDirection& direction, const float deltaTime)
     {
          if (deltaTime <= 0.0f)
             return;
@@ -54,7 +55,7 @@ public:
             break;
         }
 
-        if (Velocity.length() > 0.0f)
+        if (glm::length(Velocity) > 0.0f)
             Velocity = glm::normalize(Velocity) * Speed;
 
         Position += Velocity * deltaTime;
