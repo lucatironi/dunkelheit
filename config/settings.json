@@ -39,6 +39,11 @@
         "mapFile": "assets/level1.png",
         "textureFile": "assets/level_textures_02.png"
     },
+    "player": {
+        "headHeight": 1.75,
+        "collisionRadius": 0.6,
+        "speed": 5.0
+    },
     "weapons": {
         "left": {
             "modelFile": "assets/left_hand.glb",

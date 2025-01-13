@@ -1,6 +1,6 @@
 #pragma once
 
-#include "player_entity.hpp"
+#include "fps_camera.hpp"
 #include "model.hpp"
 
 #include <glad/glad.h>
@@ -25,15 +25,15 @@ public:
     }
 
     // Update the weapon's position based on the camera's position and orientation
-    void Update(const PlayerEntity& player)
+    void Update(const FPSCamera& camera)
     {
         // Calculate the weapon's position based on the camera's position and forward direction
-        glm::vec3 position = player.Position + player.Camera->Front * positionOffset.z
-                                             + player.Camera->Up * positionOffset.y
-                                             + player.Camera->Right * positionOffset.x;
+        glm::vec3 position = camera.Position + camera.Front * positionOffset.z
+                                             + camera.Up * positionOffset.y
+                                             + camera.Right * positionOffset.x;
 
         translationMatrix = glm::translate(glm::mat4(1.0f), position);
-        rotationMatrix = glm::mat4_cast(player.Camera->GetRotation());
+        rotationMatrix = glm::mat4_cast(camera.GetRotation());
     }
 
     void Draw(const Shader& shader) const

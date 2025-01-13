@@ -2,7 +2,6 @@
 #include "fps_camera.hpp"
 #include "json_file.hpp"
 #include "level.hpp"
-#include "player_entity.hpp"
 #include "quad.hpp"
 #include "random_generator.hpp"
 #include "settings.hpp"
@@ -42,11 +41,8 @@ void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection);
 SettingsData settings;
 bool TorchActivated = true;
 
-FPSCamera Camera(glm::vec3(0.0f));
-PlayerEntity Player(glm::vec3(0.0f), &Camera);
+FPSCamera Camera;
 
-int WindowWidth, WindowHeight;
-int WindowPositionX, WindowPositionY;
 bool FirstMouse = true;
 float LastX, LastY;
 
@@ -148,7 +144,12 @@ int main()
     // load Level
     Texture2D levelTexture(settings.LevelTextureFile, true);
     Level level(settings.LevelMapFile, levelTexture);
-    Player.SetPosition(level.StartingPosition);
+
+    // load camera
+    Camera.Constrained = true;
+    Camera.Position = level.StartingPosition;
+    Camera.MovementSpeed = settings.PlayerSpeed;
+    Camera.HeadHeight = settings.PlayerHeadHeight;
 
     // load Weapons
     Weapon leftWeapon(settings.LeftWeaponModelFile, settings.LeftWeaponTextureFile,
@@ -157,7 +158,7 @@ int main()
         settings.RightWeaponPositionOffset, settings.RightWeaponRotationOffset, settings.RightWeaponScale);
 
     // Initialize player state and footstep system
-    PlayerState playerState = { Player.Position, Player.Position, false };
+    PlayerState playerState = { Camera.Position, Camera.Position, false };
     FootstepSystem footsteps(SoundEngine, settings.FootstepsSoundFiles);
 
     GLfloat aspectRatio = static_cast<GLfloat>(settings.WindowWidth) / static_cast<GLfloat>(settings.WindowHeight);
@@ -212,29 +213,29 @@ int main()
 
         // collision detection
         // -------------------
-        for (const auto& tile : level.GetNeighboringTiles(Player.Position))
+        for (const auto& tile : level.GetNeighboringTiles(Camera.Position))
         {
             if (tile.key == TileKey::COLOR_EMPTY || tile.key == TileKey::COLOR_WALL)
             {
                 glm::vec3 nearestPoint;
-                nearestPoint.x = glm::clamp(Player.Position.x, tile.aabb.min.x, tile.aabb.max.x);
-                nearestPoint.z = glm::clamp(Player.Position.z, tile.aabb.min.z, tile.aabb.max.z);
-                glm::vec3 rayToNearest = nearestPoint - Player.Position;
+                nearestPoint.x = glm::clamp(Camera.Position.x, tile.aabb.min.x, tile.aabb.max.x);
+                nearestPoint.z = glm::clamp(Camera.Position.z, tile.aabb.min.z, tile.aabb.max.z);
+                glm::vec3 rayToNearest = nearestPoint - Camera.Position;
                 rayToNearest.y = 0.0f; // y component is irrelevant
-                float overlap = Player.CollisionRadius - glm::length(rayToNearest);
+                float overlap = settings.PlayerCollisionRadius - glm::length(rayToNearest);
                 if (std::isnan(overlap))
                     overlap = 0.0f;
                 if (overlap > 0.0f)
-                    Player.Position -= glm::normalize(rayToNearest) * overlap;
+                    Camera.Position -= glm::normalize(rayToNearest) * overlap;
             }
         }
 
         // update
         // ------
-        leftWeapon.Update(Player);
-        rightWeapon.Update(Player);
+        leftWeapon.Update(Camera);
+        rightWeapon.Update(Camera);
 
-        playerState.position = Player.Position;
+        playerState.position = Camera.Position;
         footsteps.Update(currentTime, playerState);
 
         // render
@@ -307,7 +308,7 @@ int main()
             std::string shadingMode = settings.UseDeferredShading ? "Deferred" : "Forward";
             textRenderer.RenderText(shadingMode, textShader, 4.0f, settings.WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
             std::stringstream pos;
-            pos << "pos x: " << (int)Player.Position.x << ", z: " << (int)Player.Position.z << ", tile: " << level.GetTile(Player.Position).key;
+            pos << "pos x: " << (int)Camera.Position.x << ", z: " << (int)Camera.Position.z << ", tile: " << level.GetTile(Camera.Position).key;
             textRenderer.RenderText(pos.str(), textShader, 4.0f, settings.WindowHeight - 80.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         }
 
@@ -354,13 +355,13 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
         settings.UseDeferredShading = true;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        Player.Move(MOVE_FORWARD, deltaTime);
+        Camera.Move(MOVE_FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        Player.Move(MOVE_BACKWARD, deltaTime);
+        Camera.Move(MOVE_BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        Player.Move(MOVE_LEFT, deltaTime);
+        Camera.Move(MOVE_LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        Player.Move(MOVE_RIGHT, deltaTime);
+        Camera.Move(MOVE_RIGHT, deltaTime);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

@@ -34,6 +34,7 @@ public:
 
     // Camera Attributes
     glm::vec3 Position;
+    glm::vec3 Velocity;
     glm::vec3 Front;
     glm::vec3 Up;
     glm::vec3 Right;
@@ -44,6 +45,7 @@ public:
     float Pitch;
 
     // Camera options
+    float HeadHeight;
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
@@ -55,7 +57,7 @@ public:
               float yaw = DEFAULT_YAW,
               float pitch = DEFAULT_PITCH,
               bool constrained = true)
-        : Position(position), WorldUp(up),
+        : Position(position), WorldUp(up), HeadHeight(DEFAULT_HEAD_HEIGHT),
           Yaw(yaw), Pitch(pitch), Constrained(constrained),
           Front(DEFAULT_FRONT), MovementSpeed(DEFAULT_SPEED),
           MouseSensitivity(DEFAULT_SENSITIVITY), Zoom(DEFAULT_ZOOM)
@@ -76,46 +78,44 @@ public:
     }
 
     // Processes keyboard-like input for camera movement.
-    void ProcessInputMovement(const MovementDirection direction, const float deltaTime)
+    void Move(const MovementDirection direction, const float deltaTime)
     {
         if (deltaTime <= 0.0f)
             return;
 
-        float velocity = MovementSpeed * deltaTime;
-        glm::vec3 constrainedFront = Front;
-
-        if (Constrained)
-        {
-            constrainedFront.y = 0.0f;
-            constrainedFront = glm::normalize(constrainedFront); // Ensure unit length.
-        }
+        Velocity = glm::vec3(0.0f);
 
         switch (direction)
         {
         case MOVE_FORWARD:
-            Position += constrainedFront * velocity;
+            Velocity += Front;
             break;
         case MOVE_BACKWARD:
-            Position -= constrainedFront * velocity;
+            Velocity -= Front;
             break;
         case MOVE_LEFT:
-            Position -= Right * velocity;
+            Velocity -= Right;
             break;
         case MOVE_RIGHT:
-            Position += Right * velocity;
+            Velocity += Right;
             break;
         case MOVE_UP:
             if (!Constrained)
-                Position += WorldUp * velocity;
+                Velocity += WorldUp;
             break;
         case MOVE_DOWN:
             if (!Constrained)
-                Position -= WorldUp * velocity;
+                Velocity -= WorldUp;
             break;
         }
 
+        if (glm::length(Velocity) > 0.0f)
+            Velocity = glm::normalize(Velocity) * MovementSpeed;
+
+        Position += Velocity * deltaTime;
+
         if (Constrained)
-            Position.y = DEFAULT_HEAD_HEIGHT;
+            Position.y = HeadHeight;
     }
 
     // Processes mouse input for camera rotation.

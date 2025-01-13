@@ -28,6 +28,9 @@ public:
     // Level settings
     std::string LevelMapFile, LevelTextureFile;
 
+    // Player settings
+    float PlayerSpeed, PlayerCollisionRadius, PlayerHeadHeight;
+
     // Weapon settings
     std::string LeftWeaponModelFile, LeftWeaponTextureFile;
     glm::vec3 LeftWeaponPositionOffset, LeftWeaponRotationOffset, LeftWeaponScale;
@@ -75,6 +78,10 @@ inline SettingsData LoadSettingsFile(const std::string& path)
 
     settings.LevelMapFile = json.GetNested<std::string>("level.mapFile");
     settings.LevelTextureFile = json.GetNested<std::string>("level.textureFile");
+
+    settings.PlayerSpeed = json.GetNested<float>("player.speed");
+    settings.PlayerCollisionRadius = json.GetNested<float>("player.collisionRadius");
+    settings.PlayerHeadHeight = json.GetNested<float>("player.headHeight");
 
     settings.LeftWeaponModelFile = json.GetNested<std::string>("weapons.left.modelFile");
     settings.LeftWeaponTextureFile = json.GetNested<std::string>("weapons.left.textureFile");
