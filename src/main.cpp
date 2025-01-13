@@ -42,7 +42,7 @@ void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection);
 std::string WindowTitle;
 int WindowWidth, WindowHeight;
 int WindowPositionX, WindowPositionY;
-bool FullScreen, UseDeferredShading;
+bool FullScreen, UseDeferredShading, ShowDebugInfo;
 
 std::string ForwardShadingVertexShaderFile, ForwardShadingFragmentShaderFile;
 std::string DeferredShadingFirstPassVertexShaderFile, DeferredShadingFirstPassFragmentShaderFile;
@@ -95,6 +95,7 @@ int main()
         WindowWidth = config.GetNested<int>("window.width");
         WindowHeight = config.GetNested<int>("window.height");
         FullScreen = config.GetNested<bool>("window.fullScreen");
+        ShowDebugInfo = config.GetNested<bool>("window.showDebugInfo");
         LastX = WindowWidth / 2.0f;
         LastY = WindowHeight / 2.0f;
 
@@ -377,14 +378,17 @@ int main()
         std::stringstream fpsText;
         fpsText << "FPS: " << fps.str();
         textRenderer.RenderText(fpsText.str(), textShader, 4.0f, WindowHeight - 20.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-        std::stringstream windowSize;
-        windowSize << WindowWidth << "x" << WindowHeight;
-        textRenderer.RenderText(windowSize.str(), textShader, 4.0f, WindowHeight - 40.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-        std::string shadingMode = UseDeferredShading ? "Deferred" : "Forward";
-        textRenderer.RenderText(shadingMode, textShader, 4.0f, WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-        std::stringstream pos;
-        pos << "pos x: " << (int)Player.Position.x << ", z: " << (int)Player.Position.z << ", tile: " << level.TileAt(Player.Position.x, Player.Position.z);
-        textRenderer.RenderText(pos.str(), textShader, 4.0f, WindowHeight - 80.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        if (ShowDebugInfo)
+        {
+            std::stringstream windowSize;
+            windowSize << WindowWidth << "x" << WindowHeight;
+            textRenderer.RenderText(windowSize.str(), textShader, 4.0f, WindowHeight - 40.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            std::string shadingMode = UseDeferredShading ? "Deferred" : "Forward";
+            textRenderer.RenderText(shadingMode, textShader, 4.0f, WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            std::stringstream pos;
+            pos << "pos x: " << (int)Player.Position.x << ", z: " << (int)Player.Position.z << ", tile: " << level.GetTile(Player.Position).key;
+            textRenderer.RenderText(pos.str(), textShader, 4.0f, WindowHeight - 80.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        }
 
         // restore previous blending state
         glBlendFunc(srcAlphaFunc, dstAlphaFunc);
