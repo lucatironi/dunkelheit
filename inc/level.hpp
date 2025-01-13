@@ -40,6 +40,7 @@ struct Tile
 
 constexpr float DEFAULT_TILE_FRACTION = 128.0f / 512.0f; // tile size / tilemap size
 constexpr float DEFAULT_TILE_SIZE = 3.0f;
+constexpr glm::vec3 DEFAULT_LIGHT_COLOR = glm::vec3(0.0f, 0.1f, 0.7f);
 constexpr size_t MAX_LIGHTS = 16;
 
 class Level
@@ -107,25 +108,25 @@ public:
     void AddLight(const glm::vec3& position, const glm::vec3& color)
     {
         if (lights.size() < MAX_LIGHTS)
-            lights.push_back({position, color});
+            lights.push_back({ position, color });
         else
             std::cerr << "Warning: Maximum number of lights exceeded!" << std::endl;
     }
 
     int NumLights() const
     {
-        return (int)lights.size();
+        return static_cast<int>(lights.size());
     }
 
     void SetLights(const Shader& shader)
     {
         shader.Use();
-        for (size_t i = 0; i < lights.size(); ++i)
+        for (size_t i = 0; i < NumLights(); ++i)
         {
             shader.SetVec3("lights[" + std::to_string(i) + "].position", lights[i].position);
             shader.SetVec3("lights[" + std::to_string(i) + "].color", lights[i].color);
         }
-        shader.SetInt("numLights", (int)lights.size());
+        shader.SetInt("numLights", NumLights());
     }
 
 private:
@@ -268,7 +269,7 @@ private:
             addBlock(x, z);
             break;
         case COLOR_LIGHT:
-            AddLight(position + (quadSize / 2.0f), glm::vec3(0.0f, 0.1f, 0.7f));
+            AddLight(position + (quadSize / 2.0f), DEFAULT_LIGHT_COLOR);
             addBlock(x, z);
             break;
         default:
