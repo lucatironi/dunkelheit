@@ -299,12 +299,12 @@ int main()
                 nearestPoint.x = glm::clamp(Player.Position.x, tile.aabb.min.x, tile.aabb.max.x);
                 nearestPoint.z = glm::clamp(Player.Position.z, tile.aabb.min.z, tile.aabb.max.z);
                 glm::vec3 rayToNearest = nearestPoint - Player.Position;
-                rayToNearest.y = 0.0f;
+                rayToNearest.y = 0.0f; // y component is irrelevant
                 float overlap = Player.CollisionRadius - glm::length(rayToNearest);
                 if (std::isnan(overlap))
                     overlap = 0.0f;
                 if (overlap > 0.0f)
-                    Player.Position = Player.Position - glm::normalize(rayToNearest) * overlap;
+                    Player.Position -= glm::normalize(rayToNearest) * overlap;
             }
         }
 
