@@ -26,7 +26,6 @@ public:
     static constexpr float DEFAULT_PITCH = 0.0f;
     static constexpr float DEFAULT_SPEED = 5.0f;
     static constexpr float DEFAULT_SENSITIVITY = 0.1f;
-    static constexpr float DEFAULT_ZOOM = 45.0f;
     static constexpr float DEFAULT_HEAD_HEIGHT = 1.75f;
     static constexpr glm::vec3 DEFAULT_POSITION = glm::vec3(0.0f);
     static constexpr glm::vec3 DEFAULT_UP = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -48,7 +47,6 @@ public:
     float HeadHeight;
     float MovementSpeed;
     float MouseSensitivity;
-    float Zoom;
     bool Constrained;
 
     // Constructor
@@ -60,7 +58,7 @@ public:
         : Position(position), WorldUp(up), HeadHeight(DEFAULT_HEAD_HEIGHT),
           Yaw(yaw), Pitch(pitch), Constrained(constrained),
           Front(DEFAULT_FRONT), MovementSpeed(DEFAULT_SPEED),
-          MouseSensitivity(DEFAULT_SENSITIVITY), Zoom(DEFAULT_ZOOM)
+          MouseSensitivity(DEFAULT_SENSITIVITY)
     {
         updateCameraVectors();
     }
@@ -131,12 +129,6 @@ public:
             Pitch = glm::clamp(Pitch, -80.0f, 80.0f); // Constrain pitch to avoid flipping.
 
         updateCameraVectors();
-    }
-
-    // Processes input from a mouse scroll-wheel to adjust zoom.
-    void ProcessMouseZoom(float yoffset)
-    {
-        Zoom = glm::clamp(Zoom - yoffset, 1.0f, 45.0f);
     }
 
 private:
