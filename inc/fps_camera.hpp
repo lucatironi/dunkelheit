@@ -39,10 +39,6 @@ public:
     glm::vec3 Right;
     glm::vec3 WorldUp;
 
-    // Euler Angles
-    float Yaw;
-    float Pitch;
-
     // Camera options
     float HeadHeight;
     float MovementSpeed;
@@ -50,15 +46,11 @@ public:
     bool Constrained;
 
     // Constructor
-    FPSCamera(glm::vec3 position = DEFAULT_POSITION,
-              glm::vec3 up = DEFAULT_UP,
-              float yaw = DEFAULT_YAW,
-              float pitch = DEFAULT_PITCH,
-              bool constrained = true)
-        : Position(position), WorldUp(up), HeadHeight(DEFAULT_HEAD_HEIGHT),
-          Yaw(yaw), Pitch(pitch), Constrained(constrained),
-          Front(DEFAULT_FRONT), MovementSpeed(DEFAULT_SPEED),
-          MouseSensitivity(DEFAULT_SENSITIVITY)
+    FPSCamera(const glm::vec3& position = DEFAULT_POSITION, bool constrained = true)
+        : Position(position), Front(DEFAULT_FRONT), WorldUp(DEFAULT_UP),
+          HeadHeight(DEFAULT_HEAD_HEIGHT), Constrained(constrained),
+          MovementSpeed(DEFAULT_SPEED), MouseSensitivity(DEFAULT_SENSITIVITY),
+          yawAngle(DEFAULT_YAW), pitchAngle(DEFAULT_PITCH)
     {
         updateCameraVectors();
     }
@@ -122,23 +114,27 @@ public:
         xoffset *= MouseSensitivity;
         yoffset *= MouseSensitivity;
 
-        Yaw += xoffset;
-        Pitch += yoffset;
+        yawAngle += xoffset;
+        pitchAngle += yoffset;
 
         if (constrainPitch)
-            Pitch = glm::clamp(Pitch, -80.0f, 80.0f); // Constrain pitch to avoid flipping.
+            pitchAngle = glm::clamp(pitchAngle, -80.0f, 80.0f); // Constrain pitch to avoid flipping.
 
         updateCameraVectors();
     }
 
 private:
+    // Euler Angles
+    float yawAngle;
+    float pitchAngle;
+
     // Updates the camera's vectors based on the current yaw and pitch angles.
     void updateCameraVectors()
     {
         glm::vec3 front;
-        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        front.y = sin(glm::radians(Pitch));
-        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        front.x = cos(glm::radians(yawAngle)) * cos(glm::radians(pitchAngle));
+        front.y = sin(glm::radians(pitchAngle));
+        front.z = sin(glm::radians(yawAngle)) * cos(glm::radians(pitchAngle));
         Front = glm::normalize(front);
 
         // Recalculate Right and Up vectors.
