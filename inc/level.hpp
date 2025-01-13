@@ -62,7 +62,7 @@ public:
         if (VBO != 0) glDeleteBuffers(1, &VBO);
     }
 
-    void Draw(const Shader& shader)
+    void Draw(const Shader& shader) const
     {
         shader.Use();
         shader.SetMat4("model", glm::mat4(1.0f));

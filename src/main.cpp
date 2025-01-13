@@ -37,6 +37,7 @@ void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 GBuffer SetupGBuffer(int width, int height);
 void SetupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection);
 void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection);
+void RenderScene(const Shader& shader, const Level& level, const Weapon& leftWeapon, const Weapon& rightWeapon);
 
 SettingsData settings;
 bool TorchActivated = true;
@@ -250,10 +251,7 @@ int main()
             glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.FBO);
                 shaderGeometryPass.Use();
                 shaderGeometryPass.SetMat4("view", Camera.GetViewMatrix());
-                level.Draw(shaderGeometryPass);
-                glClear(GL_DEPTH_BUFFER_BIT);
-                leftWeapon.Draw(shaderGeometryPass);
-                rightWeapon.Draw(shaderGeometryPass);
+                RenderScene(shaderGeometryPass, level, leftWeapon, rightWeapon);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
             // 2. lighting pass: traditional deferred Blinn-Phong lighting
@@ -279,10 +277,7 @@ int main()
             defaultShader.SetVec3("cameraDir", Camera.Front);
             defaultShader.SetFloat("time", currentTime);
             defaultShader.SetBool("torchActivated", TorchActivated);
-            level.Draw(defaultShader);
-            glClear(GL_DEPTH_BUFFER_BIT);
-            leftWeapon.Draw(defaultShader);
-            rightWeapon.Draw(defaultShader);
+            RenderScene(defaultShader, level, leftWeapon, rightWeapon);
         }
 
         // render Debug Information
@@ -487,4 +482,12 @@ void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection)
     shaderSinglePass.SetFloat("attenuationConstant", settings.AttenuationConstant);
     shaderSinglePass.SetFloat("attenuationLinear", settings.AttenuationLinear);
     shaderSinglePass.SetFloat("attenuationQuadratic", settings.AttenuationQuadratic);
+}
+
+void RenderScene(const Shader& shader, const Level& level, const Weapon& leftWeapon, const Weapon& rightWeapon)
+{
+    level.Draw(shader);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    leftWeapon.Draw(shader);
+    rightWeapon.Draw(shader);
 }
