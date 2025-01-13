@@ -1,6 +1,5 @@
 #pragma once
 
-#include "fps_camera.hpp"
 #include "random_generator.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
@@ -259,7 +258,7 @@ private:
             addBlock(x, z);
             break;
         case COLOR_PLAYER:
-            StartingPosition = glm::vec3(position.x, FPSCamera::DEFAULT_HEAD_HEIGHT, position.z);
+            StartingPosition = position + (quadSize / 2.0f);
             addBlock(x, z);
             break;
         case COLOR_WALL:
