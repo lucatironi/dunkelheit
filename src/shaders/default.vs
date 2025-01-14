@@ -16,7 +16,7 @@ void main()
 {
     vec4 worldPos = model * vec4(aPos, 1.0);
     FragPos = worldPos.xyz;
-    Normal = mat3(transpose(inverse(model))) * aNormal;  // Transform normals to world space
+    Normal = mat3(transpose(inverse(model))) * aNormal; // Transform normals to world space
     TexCoords = aTexCoords;
 
     gl_Position = projection * view * worldPos;

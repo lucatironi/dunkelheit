@@ -41,7 +41,7 @@ struct Tile
 constexpr float DEFAULT_TILE_FRACTION = 128.0f / 512.0f; // tile size / tilemap size
 constexpr float DEFAULT_TILE_SIZE = 3.0f;
 constexpr glm::vec3 DEFAULT_LIGHT_COLOR = glm::vec3(0.0f, 0.1f, 0.7f);
-constexpr size_t MAX_LIGHTS = 16;
+constexpr size_t MAX_LIGHTS = 32;
 
 class Level
 {

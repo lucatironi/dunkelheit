@@ -32,7 +32,7 @@ struct Light {
     vec3 color;
 };
 
-#define MAX_LIGHTS 10
+#define MAX_LIGHTS 32
 uniform Light lights[MAX_LIGHTS];
 uniform int numLights;
 
@@ -41,7 +41,7 @@ void main()
     vec3 FragPos = texture(gPosition, TexCoords).rgb;
 
     float viewDistance = length(cameraPos - FragPos);
-    if (viewDistance > 75)
+    if (viewDistance > 80.0)
         discard;
 
     vec3 Normal = texture(gNormal, TexCoords).rgb;
@@ -83,8 +83,10 @@ void main()
     vec3 staticLights = vec3(0.0);
     for (int i = 0; i < numLights; i++)
     {
-        vec3 lightDir = normalize(lights[i].position - FragPos);
         float distance = length(lights[i].position - FragPos);
+        if (distance > 50.0)
+            continue;
+        vec3 lightDir = normalize(lights[i].position - FragPos);
         // Quadratic attenuation
         float lightAttenuation = 1.0 / (attenuationConstant +
                                         attenuationLinear * distance +
