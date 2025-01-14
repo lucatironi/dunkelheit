@@ -216,7 +216,7 @@ int main()
         // -------------------
         for (const auto& tile : level.GetNeighboringTiles(Camera.Position))
         {
-            if (tile.key == TileKey::COLOR_EMPTY || tile.key == TileKey::COLOR_WALL)
+            if (tile.key == TileKey::COLOR_WALL || tile.key == TileKey::COLOR_EMPTY)
             {
                 glm::vec3 nearestPoint;
                 nearestPoint.x = glm::clamp(Camera.Position.x, tile.aabb.min.x, tile.aabb.max.x);
