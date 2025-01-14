@@ -35,8 +35,9 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
 GBuffer SetupGBuffer(int width, int height);
-void SetupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection);
-void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection);
+void SetupDeferredShaders(const Shader& shaderGeometryPass, const Shader& shaderLightingPass, const glm::mat4& projection);
+void SetupForwardShaders(const Shader& shaderSinglePass, const glm::mat4& projection);
+void SetupLightingUniforms(const Shader& shader);
 void RenderScene(const Shader& shader, const Level& level, const Weapon& leftWeapon, const Weapon& rightWeapon);
 
 SettingsData settings;
@@ -244,7 +245,18 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (settings.UseDeferredShading)
+        if (!settings.UseDeferredShading)
+        {
+            // forward shading
+            defaultShader.Use();
+            defaultShader.SetMat4("view", Camera.GetViewMatrix());
+            defaultShader.SetVec3("cameraPos", Camera.Position);
+            defaultShader.SetVec3("cameraDir", Camera.Front);
+            defaultShader.SetFloat("time", currentTime);
+            defaultShader.SetBool("torchActivated", TorchActivated);
+            RenderScene(defaultShader, level, leftWeapon, rightWeapon);
+        }
+        else
         {
             // deferred shading
             // 1. geometry pass: render scene's geometry/color data into gbuffer
@@ -267,17 +279,6 @@ int main()
             glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D, gBuffer.gAlbedo);
             quad.Draw();
-        }
-        else
-        {
-            // forward shading
-            defaultShader.Use();
-            defaultShader.SetMat4("view", Camera.GetViewMatrix());
-            defaultShader.SetVec3("cameraPos", Camera.Position);
-            defaultShader.SetVec3("cameraDir", Camera.Front);
-            defaultShader.SetFloat("time", currentTime);
-            defaultShader.SetBool("torchActivated", TorchActivated);
-            RenderScene(defaultShader, level, leftWeapon, rightWeapon);
         }
 
         // render Debug Information
@@ -441,7 +442,7 @@ GBuffer SetupGBuffer(int width, int height)
     return gBuffer;
 }
 
-void SetupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass, glm::mat4 projection)
+void SetupDeferredShaders(const Shader& shaderGeometryPass, const Shader& shaderLightingPass, const glm::mat4& projection)
 {
     shaderGeometryPass.Use();
     shaderGeometryPass.SetMat4("projection", projection);
@@ -450,38 +451,31 @@ void SetupDeferredShaders(Shader& shaderGeometryPass, Shader& shaderLightingPass
     shaderLightingPass.SetInt("gPosition", 0);
     shaderLightingPass.SetInt("gNormal", 1);
     shaderLightingPass.SetInt("gAlbedo", 2);
-    shaderLightingPass.SetVec3("torchColor", settings.TorchColor);
-    shaderLightingPass.SetFloat("torchInnerCutoff", glm::cos(glm::radians(settings.TorchInnerCutoff)));
-    shaderLightingPass.SetFloat("torchOuterCutoff", glm::cos(glm::radians(settings.TorchOuterCutoff)));
-    shaderLightingPass.SetFloat("torchAttenuationConstant", settings.TorchAttenuationConstant);
-    shaderLightingPass.SetFloat("torchAttenuationLinear", settings.TorchAttenuationLinear);
-    shaderLightingPass.SetFloat("torchAttenuationQuadratic", settings.TorchAttenuationQuadratic);
-    shaderLightingPass.SetVec3("ambientColor", settings.AmbientColor);
-    shaderLightingPass.SetFloat("ambientIntensity", settings.AmbientIntensity);
-    shaderLightingPass.SetFloat("specularShininess", settings.SpecularShininess);
-    shaderLightingPass.SetFloat("specularIntensity", settings.SpecularIntensity);
-    shaderLightingPass.SetFloat("attenuationConstant", settings.AttenuationConstant);
-    shaderLightingPass.SetFloat("attenuationLinear", settings.AttenuationLinear);
-    shaderLightingPass.SetFloat("attenuationQuadratic", settings.AttenuationQuadratic);
+    SetupLightingUniforms(shaderLightingPass);
 }
 
-void SetupForwardShaders(Shader& shaderSinglePass, glm::mat4 projection)
+void SetupForwardShaders(const Shader& shaderSinglePass, const glm::mat4& projection)
 {
     shaderSinglePass.Use();
     shaderSinglePass.SetMat4("projection", projection);
-    shaderSinglePass.SetVec3("torchColor", settings.TorchColor);
-    shaderSinglePass.SetFloat("torchInnerCutoff", glm::cos(glm::radians(settings.TorchInnerCutoff)));
-    shaderSinglePass.SetFloat("torchOuterCutoff", glm::cos(glm::radians(settings.TorchOuterCutoff)));
-    shaderSinglePass.SetFloat("torchAttenuationConstant", settings.TorchAttenuationConstant);
-    shaderSinglePass.SetFloat("torchAttenuationLinear", settings.TorchAttenuationLinear);
-    shaderSinglePass.SetFloat("torchAttenuationQuadratic", settings.TorchAttenuationQuadratic);
-    shaderSinglePass.SetVec3("ambientColor", settings.AmbientColor);
-    shaderSinglePass.SetFloat("ambientIntensity", settings.AmbientIntensity);
-    shaderSinglePass.SetFloat("specularShininess", settings.SpecularShininess);
-    shaderSinglePass.SetFloat("specularIntensity", settings.SpecularIntensity);
-    shaderSinglePass.SetFloat("attenuationConstant", settings.AttenuationConstant);
-    shaderSinglePass.SetFloat("attenuationLinear", settings.AttenuationLinear);
-    shaderSinglePass.SetFloat("attenuationQuadratic", settings.AttenuationQuadratic);
+    SetupLightingUniforms(shaderSinglePass);
+}
+
+void SetupLightingUniforms(const Shader& shader)
+{
+    shader.SetVec3("torchColor", settings.TorchColor);
+    shader.SetFloat("torchInnerCutoff", glm::cos(glm::radians(settings.TorchInnerCutoff)));
+    shader.SetFloat("torchOuterCutoff", glm::cos(glm::radians(settings.TorchOuterCutoff)));
+    shader.SetFloat("torchAttenuationConstant", settings.TorchAttenuationConstant);
+    shader.SetFloat("torchAttenuationLinear", settings.TorchAttenuationLinear);
+    shader.SetFloat("torchAttenuationQuadratic", settings.TorchAttenuationQuadratic);
+    shader.SetVec3("ambientColor", settings.AmbientColor);
+    shader.SetFloat("ambientIntensity", settings.AmbientIntensity);
+    shader.SetFloat("specularShininess", settings.SpecularShininess);
+    shader.SetFloat("specularIntensity", settings.SpecularIntensity);
+    shader.SetFloat("attenuationConstant", settings.AttenuationConstant);
+    shader.SetFloat("attenuationLinear", settings.AttenuationLinear);
+    shader.SetFloat("attenuationQuadratic", settings.AttenuationQuadratic);
 }
 
 void RenderScene(const Shader& shader, const Level& level, const Weapon& leftWeapon, const Weapon& rightWeapon)
