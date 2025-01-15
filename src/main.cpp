@@ -23,16 +23,20 @@
 
 void ProcessInput(GLFWwindow* window, float deltaTime);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
 void SetupShaders(const Shader& shader, const glm::mat4& projection);
-void SetupLightingUniforms(const Shader& shader);
+void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& fpsCount, std::stringstream& fps);
+void HandleCollisions(FPSCamera& camera, const Level& level);
+void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const std::string& fps, const SettingsData& settings);
 
 SettingsData settings;
 bool TorchActivated = true;
 
 FPSCamera Camera;
 
+float CurrentTime = 0.0f;
 bool FirstMouse = true;
 float LastX, LastY;
 
@@ -44,8 +48,7 @@ int main()
     // ----------------------
     try
     {
-        std::string workingDirPath = WorkingDirectory::getPath();
-        std::filesystem::current_path(workingDirPath);
+        std::filesystem::current_path(WorkingDirectory::getPath());
         std::cout << "Current working directory set to: " << std::filesystem::current_path() << std::endl;
 
         settings = LoadSettingsFile("config/settings.json");
@@ -98,6 +101,7 @@ int main()
     glfwSwapInterval(0);
 
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
+    glfwSetKeyCallback(window, KeyCallback);
     glfwSetCursorPosCallback(window, MouseCallback);
 
     // tell GLFW to capture our mouse
@@ -147,7 +151,7 @@ int main()
     Weapon rightWeapon(settings.RightWeaponModelFile, settings.RightWeaponTextureFile,
         settings.RightWeaponPositionOffset, settings.RightWeaponRotationOffset, settings.RightWeaponScale);
 
-    // Initialize player state and footstep system
+    // initialize player state and footstep system
     PlayerState playerState = { Camera.Position, Camera.Position, false };
     FootstepSystem footsteps(SoundEngine, settings.FootstepsSoundFiles);
 
@@ -166,7 +170,6 @@ int main()
 
     // game loop
     // -----------
-    float currentTime = 0.0f;
     float lastTime    = 0.0f;
     float lastFPSTime = 0.0f;
     float deltaTime   = 0.0f;
@@ -176,16 +179,9 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         // calculate deltaTime and FPS
-        currentTime = glfwGetTime();
-        deltaTime = currentTime - lastTime;
-        fpsCount++;
-        if ((currentTime - lastFPSTime) >= 1.0f)
-        {
-            fps.str(std::string());
-            fps << fpsCount;
-            fpsCount = 0;
-            lastFPSTime = currentTime;
-        }
+        // ---------------------------
+        CurrentTime = glfwGetTime();
+        CalculateFPS(lastTime, lastFPSTime, deltaTime, fpsCount, fps);
 
         // input
         // -----
@@ -193,22 +189,7 @@ int main()
 
         // collision detection
         // -------------------
-        for (const auto& tile : level.GetNeighboringTiles(Camera.Position))
-        {
-            if (tile.key == TileKey::COLOR_WALL || tile.key == TileKey::COLOR_EMPTY)
-            {
-                glm::vec3 nearestPoint;
-                nearestPoint.x = glm::clamp(Camera.Position.x, tile.aabb.min.x, tile.aabb.max.x);
-                nearestPoint.z = glm::clamp(Camera.Position.z, tile.aabb.min.z, tile.aabb.max.z);
-                glm::vec3 rayToNearest = nearestPoint - Camera.Position;
-                rayToNearest.y = 0.0f; // y component is irrelevant
-                float overlap = settings.PlayerCollisionRadius - glm::length(rayToNearest);
-                if (std::isnan(overlap))
-                    overlap = 0.0f;
-                if (overlap > 0.0f)
-                    Camera.Position -= glm::normalize(rayToNearest) * overlap;
-            }
-        }
+        HandleCollisions(Camera, level);
 
         // update
         // ------
@@ -216,7 +197,7 @@ int main()
         rightWeapon.Update(Camera);
 
         playerState.Position = Camera.Position;
-        footsteps.Update(playerState, currentTime);
+        footsteps.Update(playerState, CurrentTime);
 
         // render
         // ------
@@ -235,42 +216,15 @@ int main()
         leftWeapon.Draw(defaultShader);
         rightWeapon.Draw(defaultShader);
 
-        // render Debug Information
-        // save current blending state
-        GLboolean blendEnabled = glIsEnabled(GL_BLEND);
-        GLint srcAlphaFunc, dstAlphaFunc;
-        glGetIntegerv(GL_BLEND_SRC_ALPHA, &srcAlphaFunc);
-        glGetIntegerv(GL_BLEND_DST_ALPHA, &dstAlphaFunc);
 
-        // enable alpha blending and set blend function
-        glDisable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        std::stringstream fpsText;
-        fpsText << "FPS: " << fps.str();
-        textRenderer.RenderText(fpsText.str(), textShader, 4.0f, settings.WindowHeight - 20.0f, 1.0f, settings.FontColor);
-        if (settings.ShowDebugInfo)
-        {
-            std::stringstream windowSize;
-            windowSize << settings.WindowWidth << "x" << settings.WindowHeight;
-            textRenderer.RenderText(windowSize.str(), textShader, 4.0f, settings.WindowHeight - 40.0f, 1.0f, settings.FontColor);
-            std::stringstream pos;
-            pos << "pos x: " << (int)Camera.Position.x << ", z: " << (int)Camera.Position.z << ", tile: " << level.GetTile(Camera.Position).key;
-            textRenderer.RenderText(pos.str(), textShader, 4.0f, settings.WindowHeight - 60.0f, 1.0f, settings.FontColor);
-        }
-
-        // restore previous blending state
-        glBlendFunc(srcAlphaFunc, dstAlphaFunc);
-        if (!blendEnabled)
-            glDisable(GL_BLEND);
-        glEnable(GL_DEPTH_TEST);
+        RenderDebugInfo(textRenderer, textShader, fps.str(), settings);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-        lastTime = currentTime;
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        lastTime = CurrentTime;
     }
 
     // optional: de-allocate all resources once they've outlived their purpose:
@@ -287,15 +241,6 @@ int main()
 // ---------------------------------------------------------------------------------------------------------
 void ProcessInput(GLFWwindow* window, float deltaTime)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    if (TorchActivated && glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-        TorchActivated = false;
-
-    if (!TorchActivated && glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
-        TorchActivated = true;
-
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         Camera.Move(MOVE_FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -313,6 +258,15 @@ void FramebufferSizeCallback(GLFWwindow* /* window */, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+}
+
+void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, int /* mods */)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+        TorchActivated = !TorchActivated;
 }
 
 // glfw: whenever the mouse moves, this callback is called
@@ -342,11 +296,6 @@ void SetupShaders(const Shader& shader, const glm::mat4& projection)
 {
     shader.Use();
     shader.SetMat4("projection", projection);
-    SetupLightingUniforms(shader);
-}
-
-void SetupLightingUniforms(const Shader& shader)
-{
     shader.SetInt("texture_diffuse0", 0);
     shader.SetInt("texture_specular0", 1);
     shader.SetVec3("torchColor", settings.TorchColor);
@@ -362,4 +311,70 @@ void SetupLightingUniforms(const Shader& shader)
     shader.SetFloat("attenuationConstant", settings.AttenuationConstant);
     shader.SetFloat("attenuationLinear", settings.AttenuationLinear);
     shader.SetFloat("attenuationQuadratic", settings.AttenuationQuadratic);
+}
+
+void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& fpsCount, std::stringstream& fps)
+{
+    deltaTime = CurrentTime - lastTime;
+    fpsCount++;
+    if ((CurrentTime - lastFPSTime) >= 1.0f)
+    {
+        fps.str(std::string());
+        fps << fpsCount;
+        fpsCount = 0;
+        lastFPSTime = CurrentTime;
+    }
+}
+
+void HandleCollisions(FPSCamera& camera, const Level& level)
+{
+    for (const auto& tile : level.GetNeighboringTiles(Camera.Position))
+    {
+        if (tile.key == TileKey::COLOR_WALL || tile.key == TileKey::COLOR_EMPTY)
+        {
+            glm::vec3 nearestPoint;
+            nearestPoint.x = glm::clamp(Camera.Position.x, tile.aabb.min.x, tile.aabb.max.x);
+            nearestPoint.z = glm::clamp(Camera.Position.z, tile.aabb.min.z, tile.aabb.max.z);
+            glm::vec3 rayToNearest = nearestPoint - Camera.Position;
+            rayToNearest.y = 0.0f; // y component is irrelevant
+            float overlap = settings.PlayerCollisionRadius - glm::length(rayToNearest);
+            if (std::isnan(overlap))
+                overlap = 0.0f;
+            if (overlap > 0.0f)
+                Camera.Position -= glm::normalize(rayToNearest) * overlap;
+        }
+    }
+}
+
+void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const std::string& fps, const SettingsData& settings)
+{
+    // save current blending state
+    GLboolean blendEnabled = glIsEnabled(GL_BLEND);
+    GLint srcAlphaFunc, dstAlphaFunc;
+    glGetIntegerv(GL_BLEND_SRC_ALPHA, &srcAlphaFunc);
+    glGetIntegerv(GL_BLEND_DST_ALPHA, &dstAlphaFunc);
+
+    // enable alpha blending and set blend function
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    std::stringstream fpsText;
+    fpsText << "FPS: " << fps;
+    textRenderer.RenderText(fpsText.str(), textShader, 4.0f, settings.WindowHeight - 20.0f, 1.0f, settings.FontColor);
+    if (settings.ShowDebugInfo)
+    {
+        std::stringstream windowSize;
+        windowSize << settings.WindowWidth << "x" << settings.WindowHeight;
+        textRenderer.RenderText(windowSize.str(), textShader, 4.0f, settings.WindowHeight - 40.0f, 1.0f, settings.FontColor);
+        std::stringstream pos;
+        pos << "pos x: " << (int)Camera.Position.x << ", z: " << (int)Camera.Position.z;
+        textRenderer.RenderText(pos.str(), textShader, 4.0f, settings.WindowHeight - 60.0f, 1.0f, settings.FontColor);
+    }
+
+    // restore previous blending state
+    glBlendFunc(srcAlphaFunc, dstAlphaFunc);
+    if (!blendEnabled)
+        glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 }
