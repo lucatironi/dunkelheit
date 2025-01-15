@@ -10,10 +10,9 @@ class Object
 public:
     Object(const glm::vec3 pos)
         : position(pos)
-    {
-    }
+    {}
 
-    void Draw(const Shader& shader)
+    void Draw(const Shader& shader) const
     {
         shader.Use();
         shader.SetMat4("model", glm::translate(glm::mat4(1.0f), position));
