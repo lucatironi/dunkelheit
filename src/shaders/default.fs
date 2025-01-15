@@ -37,10 +37,26 @@ struct Light {
 uniform Light lights[MAX_LIGHTS];
 uniform int numLights;
 
+vec3 CalcBlinnPhong(vec3 viewDir, vec3 normal, vec3 lightDir, vec3 lightColor)
+{
+    // Diffuse
+    float diff = max(dot(normal, lightDir), 0.0);
+    // Specular
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(viewDir, halfwayDir), 0.0), specularShininess);
+
+    return (ambientColor * ambientIntensity + diff * lightColor + spec * lightColor * specularIntensity);
+}
+
+float CalcAtt(float distance, float constant, float linear, float quadratic)
+{
+    return 1.0 / (constant + linear * distance + quadratic * distance * distance);
+}
+
 void main()
 {
-    float viewDistance = length(cameraPos - FragPos);
-    if (viewDistance > 80.0)
+    float torchDist = length(cameraPos - FragPos);
+    if (torchDist > 80.0)
         discard;
 
     vec3 norm = normalize(Normal);
@@ -51,25 +67,15 @@ void main()
     vec3 torchLight;
     if (torchActivated)
     {
-        // check if lighting is inside the spotlight cone
+        // Spotlight Intensity
         float theta = dot(viewDir, normalize(-cameraDir));
         float epsilon = torchInnerCutoff - torchOuterCutoff;
         float intensity = clamp((theta - torchOuterCutoff) / epsilon, 0.0, 1.0);
 
-        // Quadratic attenuation
-        float torchAttenuation = 1.0 / (torchAttenuationConstant +
-                                        torchAttenuationLinear * viewDistance +
-                                        torchAttenuationQuadratic * viewDistance * viewDistance);
-        // Diffuse
-        float torchDiffuse = max(dot(norm, viewDir), 0.0);
-
-        // Specular
-        vec3 torchReflectDir = reflect(-viewDir, norm);
-        float torchSpec = pow(max(dot(viewDir, torchReflectDir), 0.0), specularShininess); // Shininess factor
-
-        torchLight = (ambientIntensity * ambientColor * Albedo +
-                      torchDiffuse * torchColor * Albedo * intensity +
-                      torchSpec * torchColor * specularIntensity * intensity) * torchAttenuation;
+        torchLight = CalcBlinnPhong(viewDir, norm, viewDir, torchColor) *
+                     CalcAtt(torchDist, torchAttenuationConstant, torchAttenuationLinear, torchAttenuationQuadratic) *
+                     intensity *
+                     Albedo;
     }
     else
     {
@@ -81,25 +87,14 @@ void main()
     vec3 staticLights = vec3(0.0);
     for (int i = 0; i < numLights; i++)
     {
-        float distance = length(lights[i].position - FragPos);
-        if (distance > 50.0)
+        float lightDist = length(lights[i].position - FragPos);
+        if (lightDist > 50.0)
             continue;
         vec3 lightDir = normalize(lights[i].position - FragPos);
-        // Quadratic attenuation
-        float lightAttenuation = 1.0 / (attenuationConstant +
-                                        attenuationLinear * distance +
-                                        attenuationQuadratic * distance * distance);
 
-        // Diffuse
-        float lightDiffuse = max(dot(norm, lightDir), 0.0);
-
-        // Specular
-        vec3 reflectDir = reflect(-lightDir, norm);
-        float lightSpec = pow(max(dot(viewDir, reflectDir), 0.0), specularShininess); // Shininess factor
-
-        staticLights += (ambientIntensity * ambientColor * Albedo +
-                         lightDiffuse * lights[i].color * Albedo +
-                         lightSpec * lights[i].color * specularIntensity) * lightAttenuation * flicker;
+        staticLights += CalcBlinnPhong(viewDir, norm, lightDir, lights[i].color) *
+                        CalcAtt(lightDist, attenuationConstant, attenuationLinear, attenuationQuadratic) *
+                        Albedo * flicker;
     }
 
     // Combine torchlight and static lights
