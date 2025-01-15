@@ -21,6 +21,7 @@ set(SOURCE_FILES
 
 set(HEADER_FILES
     inc/cube_model.hpp
+    inc/entity.hpp
     inc/footsteps_system.hpp
     inc/fps_camera.hpp
     inc/json_file.hpp
