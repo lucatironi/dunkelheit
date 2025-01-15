@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entity.hpp"
 #include "random_generator.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
@@ -43,7 +44,7 @@ constexpr float DEFAULT_TILE_SIZE = 3.0f;
 constexpr glm::vec3 DEFAULT_LIGHT_COLOR = glm::vec3(0.0f, 0.1f, 0.7f);
 constexpr size_t MAX_LIGHTS = 32;
 
-class Level
+class Level : public Entity
 {
 public:
     glm::vec3 StartingPosition;
@@ -62,7 +63,7 @@ public:
         if (VBO != 0) glDeleteBuffers(1, &VBO);
     }
 
-    void Draw(const Shader& shader) const
+    void Draw(const Shader& shader) const override
     {
         shader.Use();
         shader.SetMat4("model", glm::mat4(1.0f));
@@ -85,7 +86,7 @@ public:
         return tiles[iz * levelWidth + ix];
     }
 
-    std::vector<Tile> GetNeighboringTiles(const glm::vec3& position)
+    std::vector<Tile> GetNeighboringTiles(const glm::vec3& position) const
     {
         std::vector<Tile> neighbors;
         int ix = static_cast<int>(position.x / quadSize);

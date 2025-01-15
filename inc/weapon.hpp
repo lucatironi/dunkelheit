@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entity.hpp"
 #include "fps_camera.hpp"
 #include "model.hpp"
 
@@ -9,7 +10,7 @@
 
 #include <string>
 
-class Weapon
+class Weapon : public Entity
 {
 public:
     Weapon(const std::string& modelPath, const std::string& texturePath,
