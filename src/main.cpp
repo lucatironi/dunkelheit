@@ -215,8 +215,8 @@ int main()
         leftWeapon.Update(Camera);
         rightWeapon.Update(Camera);
 
-        playerState.position = Camera.Position;
-        footsteps.Update(currentTime, playerState);
+        playerState.Position = Camera.Position;
+        footsteps.Update(playerState, currentTime);
 
         // render
         // ------

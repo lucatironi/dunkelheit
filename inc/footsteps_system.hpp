@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fps_camera.hpp"
 #include "random_generator.hpp"
 
 #include <glm/glm.hpp>
@@ -9,38 +10,35 @@
 #include <string>
 #include <vector>
 
-// Player movement state
 struct PlayerState {
-    glm::vec3 position;
-    glm::vec3 previousPosition;
-    bool isMoving = false;
+    glm::vec3 Position;
+    glm::vec3 PreviousPosition;
+    bool IsMoving = false;
 };
 
 class FootstepSystem
 {
 public:
-    FootstepSystem(irrklang::ISoundEngine* engine, const std::vector<std::string> footstepSoundPaths)
+    FootstepSystem(irrklang::ISoundEngine* engine, const std::vector<std::string>& footstepSoundPaths)
         : soundEngine(engine), lastStepTime(0.0f), stepInterval(0.6f)
     {
         for (const auto& path : footstepSoundPaths)
             footstepSounds.push_back(soundEngine->addSoundSourceFromFile(path.c_str()));
     }
 
-    void Update(float elapsedTime, PlayerState& player)
+    void Update(PlayerState& player, float elapsedTime)
     {
         // Check if the player is moving
-        float distanceMoved = glm::length(player.position - player.previousPosition);
-        player.isMoving = distanceMoved > movementThreshold;
+        float distanceMoved = glm::length(player.Position - player.PreviousPosition);
+        player.IsMoving = distanceMoved > movementThreshold;
 
         // Play footstep sound if moving and enough time has passed
-        if (player.isMoving && (elapsedTime - lastStepTime) > stepInterval)
+        if (player.IsMoving && (elapsedTime - lastStepTime) > stepInterval)
         {
             playFootstepSound();
             lastStepTime = elapsedTime;
         }
-
-        // Update player's previous position
-        player.previousPosition = player.position;
+        player.PreviousPosition = player.Position;
     }
 
 private:
