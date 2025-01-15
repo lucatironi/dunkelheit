@@ -1,3 +1,4 @@
+#include "entity.hpp"
 #include "footsteps_system.hpp"
 #include "fps_camera.hpp"
 #include "json_file.hpp"
@@ -29,12 +30,14 @@ void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void SetupShaders(const Shader& shader, const glm::mat4& projection);
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& fpsCount, std::stringstream& fps);
 void HandleCollisions(FPSCamera& camera, const Level& level);
+void Render(const std::vector<Entity*>& entities, const Shader& shader);
 void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const std::string& fps, const SettingsData& settings);
 
 SettingsData settings;
 bool TorchActivated = true;
 
 FPSCamera Camera;
+std::vector<Entity*> Entities;
 
 float CurrentTime = 0.0f;
 bool FirstMouse = true;
@@ -138,6 +141,7 @@ int main()
     // load Level
     Texture2D levelTexture(settings.LevelTextureFile, true);
     Level level(settings.LevelMapFile, levelTexture);
+    Entities.push_back(&level);
 
     // load camera
     Camera.Constrained = true;
@@ -150,6 +154,10 @@ int main()
         settings.LeftWeaponPositionOffset, settings.LeftWeaponRotationOffset, settings.LeftWeaponScale);
     Weapon rightWeapon(settings.RightWeaponModelFile, settings.RightWeaponTextureFile,
         settings.RightWeaponPositionOffset, settings.RightWeaponRotationOffset, settings.RightWeaponScale);
+    leftWeapon.InFrontOfCamera = true;
+    rightWeapon.InFrontOfCamera = true;
+    Entities.push_back(&leftWeapon);
+    Entities.push_back(&rightWeapon);
 
     // initialize player state and footstep system
     PlayerState playerState = { Camera.Position, Camera.Position, false };
@@ -201,21 +209,7 @@ int main()
 
         // render
         // ------
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        defaultShader.Use();
-        defaultShader.SetMat4("view", Camera.GetViewMatrix());
-        defaultShader.SetVec3("cameraPos", Camera.Position);
-        defaultShader.SetVec3("cameraDir", Camera.Front);
-        defaultShader.SetFloat("time", currentTime);
-        defaultShader.SetBool("torchActivated", TorchActivated);
-
-        level.Draw(defaultShader);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        leftWeapon.Draw(defaultShader);
-        rightWeapon.Draw(defaultShader);
-
+        Render(Entities, defaultShader);
 
         RenderDebugInfo(textRenderer, textShader, fps.str(), settings);
 
@@ -343,6 +337,26 @@ void HandleCollisions(FPSCamera& camera, const Level& level)
             if (overlap > 0.0f)
                 Camera.Position -= glm::normalize(rayToNearest) * overlap;
         }
+    }
+}
+
+void Render(const std::vector<Entity*>& entities, const Shader& shader)
+{
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    shader.Use();
+    shader.SetMat4("view", Camera.GetViewMatrix());
+    shader.SetVec3("cameraPos", Camera.Position);
+    shader.SetVec3("cameraDir", Camera.Front);
+    shader.SetFloat("time", CurrentTime);
+    shader.SetBool("torchActivated", TorchActivated);
+
+    for (const auto& entity : entities)
+    {
+        if (entity->InFrontOfCamera)
+            glClear(GL_DEPTH_BUFFER_BIT);
+        entity->Draw(shader);
     }
 }
 
