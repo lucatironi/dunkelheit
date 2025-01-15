@@ -13,6 +13,7 @@ public:
     std::string WindowTitle;
     int WindowWidth, WindowHeight;
     int WindowPositionX, WindowPositionY;
+    float FOV;
     bool FullScreen, ShowDebugInfo;
 
     // Shaders
@@ -21,6 +22,7 @@ public:
     // Text renderer settings
     std::string FontFile;
     int FontSize;
+    glm::vec3 FontColor;
     std::string TextVertexShaderFile, TextFragmentShaderFile;
 
     // Level settings
@@ -58,6 +60,7 @@ inline SettingsData LoadSettingsFile(const std::string& path)
     settings.WindowTitle = json.GetNested<std::string>("window.title");
     settings.WindowWidth = json.GetNested<int>("window.width");
     settings.WindowHeight = json.GetNested<int>("window.height");
+    settings.FOV = json.GetNested<float>("window.FOV");
     settings.FullScreen = json.GetNested<bool>("window.fullScreen");
     settings.ShowDebugInfo = json.GetNested<bool>("window.showDebugInfo");
 
@@ -66,6 +69,7 @@ inline SettingsData LoadSettingsFile(const std::string& path)
 
     settings.FontFile = json.GetNested<std::string>("textRenderer.fontFile");
     settings.FontSize = json.GetNested<int>("textRenderer.fontSize");
+    settings.FontColor = json.GetNested<glm::vec3>("textRenderer.fontColor");
     settings.TextVertexShaderFile = json.GetNested<std::string>("textRenderer.shaders.vertex");
     settings.TextFragmentShaderFile = json.GetNested<std::string>("textRenderer.shaders.fragment");
 

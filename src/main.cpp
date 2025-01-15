@@ -152,7 +152,7 @@ int main()
     FootstepSystem footsteps(SoundEngine, settings.FootstepsSoundFiles);
 
     GLfloat aspectRatio = static_cast<GLfloat>(settings.WindowWidth) / static_cast<GLfloat>(settings.WindowHeight);
-    glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), aspectRatio, 0.1f, 100.0f);
+    glm::mat4 perspectiveProjection = glm::perspective(glm::radians(settings.FOV), aspectRatio, 0.1f, 100.0f);
     Shader defaultShader(settings.ForwardShadingVertexShaderFile, settings.ForwardShadingFragmentShaderFile);
     SetupShaders(defaultShader, perspectiveProjection);
     level.SetLights(defaultShader);
@@ -249,17 +249,15 @@ int main()
 
         std::stringstream fpsText;
         fpsText << "FPS: " << fps.str();
-        textRenderer.RenderText(fpsText.str(), textShader, 4.0f, settings.WindowHeight - 20.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        textRenderer.RenderText(fpsText.str(), textShader, 4.0f, settings.WindowHeight - 20.0f, 1.0f, settings.FontColor);
         if (settings.ShowDebugInfo)
         {
             std::stringstream windowSize;
             windowSize << settings.WindowWidth << "x" << settings.WindowHeight;
-            textRenderer.RenderText(windowSize.str(), textShader, 4.0f, settings.WindowHeight - 40.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-            std::string shadingMode = settings.UseDeferredShading ? "Deferred" : "Forward";
-            textRenderer.RenderText(shadingMode, textShader, 4.0f, settings.WindowHeight - 60.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            textRenderer.RenderText(windowSize.str(), textShader, 4.0f, settings.WindowHeight - 40.0f, 1.0f, settings.FontColor);
             std::stringstream pos;
             pos << "pos x: " << (int)Camera.Position.x << ", z: " << (int)Camera.Position.z << ", tile: " << level.GetTile(Camera.Position).key;
-            textRenderer.RenderText(pos.str(), textShader, 4.0f, settings.WindowHeight - 80.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            textRenderer.RenderText(pos.str(), textShader, 4.0f, settings.WindowHeight - 60.0f, 1.0f, settings.FontColor);
         }
 
         // restore previous blending state

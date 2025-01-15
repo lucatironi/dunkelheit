@@ -3,6 +3,7 @@
         "title": "Dunkelheit",
         "width": 1280,
         "height": 720,
+        "FOV": 80.0,
         "fullScreen": false,
         "showDebugInfo": true
     },
@@ -17,6 +18,7 @@
     "textRenderer": {
         "fontFile": "assets/font.ttf",
         "fontSize": 16,
+        "fontColor": [1.0, 1.0, 1.0],
         "shaders": {
             "vertex": "shaders/text.vs",
             "fragment": "shaders/text.fs"
