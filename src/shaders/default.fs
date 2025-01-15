@@ -66,6 +66,7 @@ void main()
         // Specular
         vec3 torchReflectDir = reflect(-viewDir, norm);
         float torchSpec = pow(max(dot(viewDir, torchReflectDir), 0.0), specularShininess); // Shininess factor
+
         torchLight = (ambientIntensity * ambientColor * Albedo +
                       torchDiffuse * torchColor * Albedo * intensity +
                       torchSpec * torchColor * specularIntensity * intensity) * torchAttenuation;

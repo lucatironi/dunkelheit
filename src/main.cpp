@@ -2,7 +2,6 @@
 #include "fps_camera.hpp"
 #include "json_file.hpp"
 #include "level.hpp"
-#include "quad.hpp"
 #include "random_generator.hpp"
 #include "settings.hpp"
 #include "shader.hpp"
@@ -22,23 +21,12 @@
 #include <string>
 #include <vector>
 
-struct GBuffer
-{
-    GLuint FBO;
-    GLuint gPosition;
-    GLuint gNormal;
-    GLuint gAlbedo;
-};
-
 void ProcessInput(GLFWwindow* window, float deltaTime);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
-GBuffer SetupGBuffer(int width, int height);
-void SetupDeferredShaders(const Shader& shaderGeometryPass, const Shader& shaderLightingPass, const glm::mat4& projection);
-void SetupForwardShaders(const Shader& shaderSinglePass, const glm::mat4& projection);
+void SetupShaders(const Shader& shader, const glm::mat4& projection);
 void SetupLightingUniforms(const Shader& shader);
-void RenderScene(const Shader& shader, const Level& level, const Weapon& leftWeapon, const Weapon& rightWeapon);
 
 SettingsData settings;
 bool TorchActivated = true;
@@ -165,18 +153,8 @@ int main()
 
     GLfloat aspectRatio = static_cast<GLfloat>(settings.WindowWidth) / static_cast<GLfloat>(settings.WindowHeight);
     glm::mat4 perspectiveProjection = glm::perspective(glm::radians(80.0f), aspectRatio, 0.1f, 100.0f);
-
-    // deferred shading setup
-    Quad quad;
-    GBuffer gBuffer = SetupGBuffer(settings.WindowWidth, settings.WindowHeight);
-    Shader shaderGeometryPass(settings.DeferredShadingFirstPassVertexShaderFile, settings.DeferredShadingFirstPassFragmentShaderFile);
-    Shader shaderLightingPass(settings.DeferredShadingSecondPassVertexShaderFile, settings.DeferredShadingSecondPassFragmentShaderFile);
-    SetupDeferredShaders(shaderGeometryPass, shaderLightingPass, perspectiveProjection);
-    level.SetLights(shaderLightingPass);
-
-    // forward shading setup
     Shader defaultShader(settings.ForwardShadingVertexShaderFile, settings.ForwardShadingFragmentShaderFile);
-    SetupForwardShaders(defaultShader, perspectiveProjection);
+    SetupShaders(defaultShader, perspectiveProjection);
     level.SetLights(defaultShader);
 
     // setup OpenGL
@@ -245,41 +223,17 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (!settings.UseDeferredShading)
-        {
-            // forward shading
-            defaultShader.Use();
-            defaultShader.SetMat4("view", Camera.GetViewMatrix());
-            defaultShader.SetVec3("cameraPos", Camera.Position);
-            defaultShader.SetVec3("cameraDir", Camera.Front);
-            defaultShader.SetFloat("time", currentTime);
-            defaultShader.SetBool("torchActivated", TorchActivated);
-            RenderScene(defaultShader, level, leftWeapon, rightWeapon);
-        }
-        else
-        {
-            // deferred shading
-            // 1. geometry pass: render scene's geometry/color data into gbuffer
-            glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.FBO);
-                shaderGeometryPass.Use();
-                shaderGeometryPass.SetMat4("view", Camera.GetViewMatrix());
-                RenderScene(shaderGeometryPass, level, leftWeapon, rightWeapon);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        defaultShader.Use();
+        defaultShader.SetMat4("view", Camera.GetViewMatrix());
+        defaultShader.SetVec3("cameraPos", Camera.Position);
+        defaultShader.SetVec3("cameraDir", Camera.Front);
+        defaultShader.SetFloat("time", currentTime);
+        defaultShader.SetBool("torchActivated", TorchActivated);
 
-            // 2. lighting pass: traditional deferred Blinn-Phong lighting
-            shaderLightingPass.Use();
-            shaderLightingPass.SetVec3("cameraPos", Camera.Position);
-            shaderLightingPass.SetVec3("cameraDir", Camera.Front);
-            shaderLightingPass.SetFloat("time", currentTime);
-            shaderLightingPass.SetBool("torchActivated", TorchActivated);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, gBuffer.gPosition);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, gBuffer.gNormal);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, gBuffer.gAlbedo);
-            quad.Draw();
-        }
+        level.Draw(defaultShader);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        leftWeapon.Draw(defaultShader);
+        rightWeapon.Draw(defaultShader);
 
         // render Debug Information
         // save current blending state
@@ -344,12 +298,6 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
     if (!TorchActivated && glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
         TorchActivated = true;
 
-    if (settings.UseDeferredShading && glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-        settings.UseDeferredShading = false;
-
-    if (!settings.UseDeferredShading && glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-        settings.UseDeferredShading = true;
-
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         Camera.Move(MOVE_FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -392,77 +340,17 @@ void MouseCallback(GLFWwindow* /* window */, double xposIn, double yposIn)
     Camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-GBuffer SetupGBuffer(int width, int height)
+void SetupShaders(const Shader& shader, const glm::mat4& projection)
 {
-    GBuffer gBuffer;
-
-    glGenFramebuffers(1, &gBuffer.FBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.FBO);
-
-    // position color buffer
-    glGenTextures(1, &gBuffer.gPosition);
-    glBindTexture(GL_TEXTURE_2D, gBuffer.gPosition);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gBuffer.gPosition, 0);
-
-    // normal color buffer
-    glGenTextures(1, &gBuffer.gNormal);
-    glBindTexture(GL_TEXTURE_2D, gBuffer.gNormal);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gBuffer.gNormal, 0);
-
-    // albedo color buffer
-    glGenTextures(1, &gBuffer.gAlbedo);
-    glBindTexture(GL_TEXTURE_2D, gBuffer.gAlbedo);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gBuffer.gAlbedo, 0);
-
-    unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-    glDrawBuffers(3, attachments);
-
-    // depth buffer (renderbuffer)
-    unsigned int rboDepth;
-    glGenRenderbuffers(1, &rboDepth);
-    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cerr << "ERROR::GBUFFER: Framebuffer not complete!" << std::endl;
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    return gBuffer;
-}
-
-void SetupDeferredShaders(const Shader& shaderGeometryPass, const Shader& shaderLightingPass, const glm::mat4& projection)
-{
-    shaderGeometryPass.Use();
-    shaderGeometryPass.SetMat4("projection", projection);
-
-    shaderLightingPass.Use();
-    shaderLightingPass.SetInt("gPosition", 0);
-    shaderLightingPass.SetInt("gNormal", 1);
-    shaderLightingPass.SetInt("gAlbedo", 2);
-    SetupLightingUniforms(shaderLightingPass);
-}
-
-void SetupForwardShaders(const Shader& shaderSinglePass, const glm::mat4& projection)
-{
-    shaderSinglePass.Use();
-    shaderSinglePass.SetMat4("projection", projection);
-    SetupLightingUniforms(shaderSinglePass);
+    shader.Use();
+    shader.SetMat4("projection", projection);
+    SetupLightingUniforms(shader);
 }
 
 void SetupLightingUniforms(const Shader& shader)
 {
+    shader.SetInt("texture_diffuse0", 0);
+    shader.SetInt("texture_specular0", 1);
     shader.SetVec3("torchColor", settings.TorchColor);
     shader.SetFloat("torchInnerCutoff", glm::cos(glm::radians(settings.TorchInnerCutoff)));
     shader.SetFloat("torchOuterCutoff", glm::cos(glm::radians(settings.TorchOuterCutoff)));
@@ -476,12 +364,4 @@ void SetupLightingUniforms(const Shader& shader)
     shader.SetFloat("attenuationConstant", settings.AttenuationConstant);
     shader.SetFloat("attenuationLinear", settings.AttenuationLinear);
     shader.SetFloat("attenuationQuadratic", settings.AttenuationQuadratic);
-}
-
-void RenderScene(const Shader& shader, const Level& level, const Weapon& leftWeapon, const Weapon& rightWeapon)
-{
-    level.Draw(shader);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    leftWeapon.Draw(shader);
-    rightWeapon.Draw(shader);
 }

@@ -13,12 +13,10 @@ public:
     std::string WindowTitle;
     int WindowWidth, WindowHeight;
     int WindowPositionX, WindowPositionY;
-    bool FullScreen, UseDeferredShading, ShowDebugInfo;
+    bool FullScreen, ShowDebugInfo;
 
     // Shaders
     std::string ForwardShadingVertexShaderFile, ForwardShadingFragmentShaderFile;
-    std::string DeferredShadingFirstPassVertexShaderFile, DeferredShadingFirstPassFragmentShaderFile;
-    std::string DeferredShadingSecondPassVertexShaderFile, DeferredShadingSecondPassFragmentShaderFile;
 
     // Text renderer settings
     std::string FontFile;
@@ -63,13 +61,8 @@ inline SettingsData LoadSettingsFile(const std::string& path)
     settings.FullScreen = json.GetNested<bool>("window.fullScreen");
     settings.ShowDebugInfo = json.GetNested<bool>("window.showDebugInfo");
 
-    settings.UseDeferredShading = json.GetNested<bool>("renderer.useDeferredShading");
     settings.ForwardShadingVertexShaderFile = json.GetNested<std::string>("renderer.forwardSinglePass.shaders.vertex");
     settings.ForwardShadingFragmentShaderFile = json.GetNested<std::string>("renderer.forwardSinglePass.shaders.fragment");
-    settings.DeferredShadingFirstPassVertexShaderFile = json.GetNested<std::string>("renderer.deferredFirstPass.shaders.vertex");
-    settings.DeferredShadingFirstPassFragmentShaderFile = json.GetNested<std::string>("renderer.deferredFirstPass.shaders.fragment");
-    settings.DeferredShadingSecondPassVertexShaderFile = json.GetNested<std::string>("renderer.deferredSecondPass.shaders.vertex");
-    settings.DeferredShadingSecondPassFragmentShaderFile = json.GetNested<std::string>("renderer.deferredSecondPass.shaders.fragment");
 
     settings.FontFile = json.GetNested<std::string>("textRenderer.fontFile");
     settings.FontSize = json.GetNested<int>("textRenderer.fontSize");

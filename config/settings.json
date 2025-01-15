@@ -7,23 +7,10 @@
         "showDebugInfo": true
     },
     "renderer": {
-        "useDeferredShading": false,
         "forwardSinglePass": {
             "shaders": {
                 "vertex": "shaders/default.vs",
                 "fragment": "shaders/default.fs"
-            }
-        },
-        "deferredFirstPass": {
-            "shaders": {
-                "vertex": "shaders/geometry_pass.vs",
-                "fragment": "shaders/geometry_pass.fs"
-            }
-        },
-        "deferredSecondPass": {
-            "shaders": {
-                "vertex": "shaders/render_to_quad.vs",
-                "fragment": "shaders/lighting_pass.fs"
             }
         }
     },
