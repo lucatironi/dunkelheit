@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/trigonometric.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/constants.hpp>
@@ -27,6 +28,10 @@ public:
     static constexpr float DEFAULT_SPEED = 5.0f;
     static constexpr float DEFAULT_SENSITIVITY = 0.1f;
     static constexpr float DEFAULT_HEAD_HEIGHT = 1.75f;
+    static constexpr float DEFAULT_FOV = 75.0f;
+    static constexpr float DEFAULT_ASPECT_RATIO = 16.0f / 9.0f;
+    static constexpr float DEFAULT_NEAR_PLANE = 0.1f;
+    static constexpr float DEFAULT_FAR_PLANE = 100.0f;
     static constexpr glm::vec3 DEFAULT_POSITION = glm::vec3(0.0f);
     static constexpr glm::vec3 DEFAULT_UP = glm::vec3(0.0f, 1.0f, 0.0f);
     static constexpr glm::vec3 DEFAULT_FRONT = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -38,6 +43,10 @@ public:
     glm::vec3 Up;
     glm::vec3 Right;
     glm::vec3 WorldUp;
+    float FOV;
+    float AspectRatio;
+    float NearPlane;
+    float FarPlane;
 
     // Camera options
     float HeadHeight;
@@ -46,11 +55,13 @@ public:
     bool Constrained;
 
     // Constructor
-    FPSCamera(const glm::vec3& position = DEFAULT_POSITION, bool constrained = true)
+    FPSCamera(const glm::vec3& position = DEFAULT_POSITION, bool constrained = false)
         : Position(position), Front(DEFAULT_FRONT), WorldUp(DEFAULT_UP),
           HeadHeight(DEFAULT_HEAD_HEIGHT), Constrained(constrained),
           MovementSpeed(DEFAULT_SPEED), MouseSensitivity(DEFAULT_SENSITIVITY),
-          yawAngle(DEFAULT_YAW), pitchAngle(DEFAULT_PITCH)
+          yawAngle(DEFAULT_YAW), pitchAngle(DEFAULT_PITCH),
+          FOV(DEFAULT_FOV), AspectRatio(DEFAULT_ASPECT_RATIO),
+          NearPlane(DEFAULT_NEAR_PLANE), FarPlane(DEFAULT_FAR_PLANE)
     {
         updateCameraVectors();
     }
@@ -59,6 +70,11 @@ public:
     glm::mat4 GetViewMatrix() const
     {
         return glm::lookAt(Position, Position + Front, Up);
+    }
+
+    glm::mat4 GetProjectionMatrix() const
+    {
+        return glm::perspective(glm::radians(FOV), AspectRatio, NearPlane, FarPlane);
     }
 
     // Return a quaternion that represents the camera's rotation

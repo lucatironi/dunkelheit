@@ -27,7 +27,7 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
-void SetupShaders(const Shader& shader, const glm::mat4& projection);
+void SetupShaders(const Shader& shader);
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& fpsCount, std::stringstream& fps);
 void HandleCollisions(FPSCamera& camera, const Level& level);
 void Render(const std::vector<Entity*>& entities, const Shader& shader);
@@ -145,6 +145,8 @@ int main()
 
     // load camera
     Camera.Constrained = true;
+    Camera.FOV = settings.FOV;
+    Camera.AspectRatio = static_cast<GLfloat>(settings.WindowWidth) / static_cast<GLfloat>(settings.WindowHeight);
     Camera.Position = level.StartingPosition;
     Camera.MovementSpeed = settings.PlayerSpeed;
     Camera.HeadHeight = settings.PlayerHeadHeight;
@@ -158,13 +160,12 @@ int main()
     Entities.push_back(&rightWeapon);
 
     // initialize player state and footstep system
-    PlayerState playerState = { Camera.Position, Camera.Position, false };
-    FootstepSystem footsteps(SoundEngine, settings.FootstepsSoundFiles);
+    Player.Position = Camera.Position;
+    Player.PreviousPosition = Camera.Position;
+    Player.IsMoving = false;
 
-    GLfloat aspectRatio = static_cast<GLfloat>(settings.WindowWidth) / static_cast<GLfloat>(settings.WindowHeight);
-    glm::mat4 perspectiveProjection = glm::perspective(glm::radians(settings.FOV), aspectRatio, 0.1f, 100.0f);
     Shader defaultShader(settings.ForwardShadingVertexShaderFile, settings.ForwardShadingFragmentShaderFile);
-    SetupShaders(defaultShader, perspectiveProjection);
+    SetupShaders(defaultShader);
     level.SetLights(defaultShader);
 
     // setup OpenGL
@@ -284,10 +285,10 @@ void MouseCallback(GLFWwindow* /* window */, double xposIn, double yposIn)
     Camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-void SetupShaders(const Shader& shader, const glm::mat4& projection)
+void SetupShaders(const Shader& shader)
 {
     shader.Use();
-    shader.SetMat4("projection", projection);
+    shader.SetMat4("projection", Camera.GetProjectionMatrix());
     shader.SetInt("texture_diffuse0", 0);
     shader.SetInt("texture_specular0", 1);
     shader.SetVec3("torchColor", settings.TorchColor);
