@@ -1,9 +1,9 @@
 #include "entity.hpp"
-#include "footsteps_system.hpp"
 #include "fps_camera.hpp"
 #include "item.hpp"
 #include "json_file.hpp"
 #include "level.hpp"
+#include "player_audio_system.hpp"
 #include "random_generator.hpp"
 #include "settings.hpp"
 #include "shader.hpp"
@@ -34,9 +34,8 @@ void Render(const std::vector<Entity*>& entities, const Shader& shader);
 void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const std::string& fps, const SettingsData& settings);
 
 SettingsData settings;
-bool TorchActivated = true;
-
 FPSCamera Camera;
+PlayerState Player;
 std::vector<Entity*> Entities;
 
 float CurrentTime = 0.0f;
@@ -163,6 +162,8 @@ int main()
     Player.Position = Camera.Position;
     Player.PreviousPosition = Camera.Position;
     Player.IsMoving = false;
+    Player.IsTorchOn = true;
+    PlayerAudioSystem playerAudioSystem(SoundEngine, settings.FootstepsSoundFiles);
 
     Shader defaultShader(settings.ForwardShadingVertexShaderFile, settings.ForwardShadingFragmentShaderFile);
     SetupShaders(defaultShader);
@@ -203,8 +204,8 @@ int main()
         leftWeapon.Update(Camera);
         rightWeapon.Update(Camera);
 
-        playerState.Position = Camera.Position;
-        footsteps.Update(playerState, CurrentTime);
+        Player.Position = Camera.Position;
+        playerAudioSystem.Update(Player, CurrentTime);
 
         // render
         // ------
@@ -259,7 +260,7 @@ void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, in
         glfwSetWindowShouldClose(window, true);
 
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
-        TorchActivated = !TorchActivated;
+        Player.IsTorchOn = !Player.IsTorchOn;
 }
 
 // glfw: whenever the mouse moves, this callback is called
@@ -349,7 +350,7 @@ void Render(const std::vector<Entity*>& entities, const Shader& shader)
     shader.SetVec3("cameraPos", Camera.Position);
     shader.SetVec3("cameraDir", Camera.Front);
     shader.SetFloat("time", CurrentTime);
-    shader.SetBool("torchActivated", TorchActivated);
+    shader.SetBool("torchActivated", Player.IsTorchOn);
 
     for (const auto& entity : entities)
     {

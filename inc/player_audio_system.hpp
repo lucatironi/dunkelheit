@@ -14,12 +14,13 @@ struct PlayerState {
     glm::vec3 Position;
     glm::vec3 PreviousPosition;
     bool IsMoving = false;
+    bool IsTorchOn = false;
 };
 
-class FootstepSystem
+class PlayerAudioSystem
 {
 public:
-    FootstepSystem(irrklang::ISoundEngine* engine, const std::vector<std::string>& footstepSoundPaths)
+    PlayerAudioSystem(irrklang::ISoundEngine* engine, const std::vector<std::string>& footstepSoundPaths)
         : soundEngine(engine), lastStepTime(0.0f), stepInterval(0.6f)
     {
         for (const auto& path : footstepSoundPaths)
