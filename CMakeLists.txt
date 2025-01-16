@@ -24,6 +24,7 @@ set(HEADER_FILES
     inc/entity.hpp
     inc/footsteps_system.hpp
     inc/fps_camera.hpp
+    inc/item.hpp
     inc/json_file.hpp
     inc/level.hpp
     inc/mesh.hpp
@@ -34,7 +35,6 @@ set(HEADER_FILES
     inc/shader.hpp
     inc/text_renderer.hpp
     inc/texture2D.hpp
-    inc/weapon.hpp
     inc/working_directory.hpp
 )
 

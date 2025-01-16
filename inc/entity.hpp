@@ -5,6 +5,7 @@
 class Entity
 {
 public:
-    bool InFrontOfCamera = false;
+    bool AlwaysOnTop = false;
+
     virtual void Draw(const Shader& shader) const = 0;
 };

@@ -1,6 +1,7 @@
 #include "entity.hpp"
 #include "footsteps_system.hpp"
 #include "fps_camera.hpp"
+#include "item.hpp"
 #include "json_file.hpp"
 #include "level.hpp"
 #include "random_generator.hpp"
@@ -8,7 +9,6 @@
 #include "shader.hpp"
 #include "text_renderer.hpp"
 #include "texture2D.hpp"
-#include "weapon.hpp"
 #include "working_directory.hpp"
 
 #include <glad/glad.h>
@@ -150,12 +150,10 @@ int main()
     Camera.HeadHeight = settings.PlayerHeadHeight;
 
     // load Weapons
-    Weapon leftWeapon(settings.LeftWeaponModelFile, settings.LeftWeaponTextureFile,
+    Item leftWeapon(settings.LeftWeaponModelFile, settings.LeftWeaponTextureFile,
         settings.LeftWeaponPositionOffset, settings.LeftWeaponRotationOffset, settings.LeftWeaponScale);
-    Weapon rightWeapon(settings.RightWeaponModelFile, settings.RightWeaponTextureFile,
+    Item rightWeapon(settings.RightWeaponModelFile, settings.RightWeaponTextureFile,
         settings.RightWeaponPositionOffset, settings.RightWeaponRotationOffset, settings.RightWeaponScale);
-    leftWeapon.InFrontOfCamera = true;
-    rightWeapon.InFrontOfCamera = true;
     Entities.push_back(&leftWeapon);
     Entities.push_back(&rightWeapon);
 
@@ -354,7 +352,7 @@ void Render(const std::vector<Entity*>& entities, const Shader& shader)
 
     for (const auto& entity : entities)
     {
-        if (entity->InFrontOfCamera)
+        if (entity->AlwaysOnTop)
             glClear(GL_DEPTH_BUFFER_BIT);
         entity->Draw(shader);
     }

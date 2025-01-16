@@ -8,21 +8,24 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <memory>
 #include <string>
 
-class Weapon : public Entity
+class Item : public Entity
 {
 public:
-    Weapon(const std::string& modelPath, const std::string& texturePath,
-           const glm::vec3 posOffset, const glm::vec3 rotOffset, const glm::vec3 scaleFactor)
-        : positionOffset(posOffset), rotationOffset(rotOffset)
+    Item(const std::string& modelPath, const std::string& texturePath,
+         const glm::vec3 posOffset, const glm::vec3 rotOffset, const glm::vec3 scaleFactor)
+         : positionOffset(posOffset), rotationOffset(rotOffset)
     {
-        weaponModel = new Model(modelPath);
+        itemModel = std::make_unique<Model>(modelPath);
         if (texturePath != "")
-            weaponModel->TextureOverride(texturePath, true);
+            itemModel->TextureOverride(texturePath, true);
 
         scaleMatrix    = glm::scale(glm::mat4(1.0f), scaleFactor);
         rotationMatrix = glm::mat4(1.0f); // Initialize with identity matrix
+
+        AlwaysOnTop = true;
     }
 
     // Update the weapon's position based on the camera's position and orientation
@@ -37,7 +40,7 @@ public:
         rotationMatrix = glm::mat4_cast(camera.GetRotation());
     }
 
-    void Draw(const Shader& shader) const
+    void Draw(const Shader& shader) const override
     {
         // Apply the stored rotation matrix
         glm::mat4 modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
@@ -50,11 +53,11 @@ public:
         shader.Use();
         shader.SetMat4("model", modelMatrix);
 
-        weaponModel->Draw(shader);
+        itemModel->Draw(shader);
     }
 
 private:
-    Model* weaponModel;
+    std::unique_ptr<Model> itemModel;
     glm::vec3 positionOffset;
     glm::vec3 rotationOffset;
     glm::mat4 translationMatrix;

@@ -1,11 +1,12 @@
 #pragma once
 
+#include "entity.hpp"
 #include "cube_model.hpp"
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-class Object
+class Object : public Entity
 {
 public:
     Object(const glm::vec3 pos)
