@@ -94,7 +94,8 @@ void main()
 
         staticLights += CalcBlinnPhong(viewDir, norm, lightDir, lights[i].color) *
                         CalcAtt(lightDist, attenuationConstant, attenuationLinear, attenuationQuadratic) *
-                        Albedo * flicker;
+                        flicker *
+                        Albedo;
     }
 
     // Combine torchlight and static lights
