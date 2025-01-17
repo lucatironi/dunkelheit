@@ -31,9 +31,9 @@ void SetupShaders(const Shader& shader);
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& fpsCount, std::stringstream& fps);
 void HandleCollisions(FPSCamera& camera, const Level& level);
 void Render(const std::vector<Entity*>& entities, const Shader& shader);
-void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const std::string& fps, const SettingsData& settings);
+void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const std::string& fps);
 
-SettingsData settings;
+SettingsData Settings;
 FPSCamera Camera;
 PlayerState Player;
 std::vector<Entity*> Entities;
@@ -53,7 +53,7 @@ int main()
         std::filesystem::current_path(WorkingDirectory::getPath());
         std::cout << "Current working directory set to: " << std::filesystem::current_path() << std::endl;
 
-        settings = LoadSettingsFile("config/settings.json");
+        Settings = LoadSettingsFile("config/settings.json");
     }
     catch (const std::exception& e)
     {
@@ -78,17 +78,17 @@ int main()
     // --------------------
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     GLFWwindow* window = nullptr;
-    if (settings.FullScreen) {
+    if (Settings.FullScreen) {
         const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-        window = glfwCreateWindow(mode->width, mode->height, settings.WindowTitle.c_str(), monitor, nullptr);
-        settings.WindowWidth = mode->width;
-        settings.WindowHeight = mode->height;
+        window = glfwCreateWindow(mode->width, mode->height, Settings.WindowTitle.c_str(), monitor, nullptr);
+        Settings.WindowWidth = mode->width;
+        Settings.WindowHeight = mode->height;
     }
     else
     {
-        window = glfwCreateWindow(settings.WindowWidth, settings.WindowHeight, settings.WindowTitle.c_str(), nullptr, nullptr);
-        glfwGetWindowSize(window, &settings.WindowWidth, &settings.WindowHeight);
-        glfwGetWindowPos(window, &settings.WindowPositionX, &settings.WindowPositionY);
+        window = glfwCreateWindow(Settings.WindowWidth, Settings.WindowHeight, Settings.WindowTitle.c_str(), nullptr, nullptr);
+        glfwGetWindowSize(window, &Settings.WindowWidth, &Settings.WindowHeight);
+        glfwGetWindowPos(window, &Settings.WindowPositionX, &Settings.WindowPositionY);
     }
 
     if (window == nullptr)
@@ -131,30 +131,30 @@ int main()
     random.SetSeed(1337);
 
     // load TexRenderer
-    TextRenderer textRenderer(settings.FontFile, settings.FontSize);
-    Shader textShader(settings.TextVertexShaderFile, settings.TextFragmentShaderFile);
-    glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(settings.WindowWidth), 0.0f, static_cast<float>(settings.WindowHeight));
+    TextRenderer textRenderer(Settings.FontFile, Settings.FontSize);
+    Shader textShader(Settings.TextVertexShaderFile, Settings.TextFragmentShaderFile);
+    glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(Settings.WindowWidth), 0.0f, static_cast<float>(Settings.WindowHeight));
     textShader.Use();
     textShader.SetMat4("projection", orthoProjection);
 
     // load Level
-    Texture2D levelTexture(settings.LevelTextureFile, true);
-    Level level(settings.LevelMapFile, levelTexture);
+    Texture2D levelTexture(Settings.LevelTextureFile, true);
+    Level level(Settings.LevelMapFile, levelTexture);
     Entities.push_back(&level);
 
     // load camera
     Camera.Constrained = true;
-    Camera.FOV = settings.FOV;
-    Camera.AspectRatio = static_cast<GLfloat>(settings.WindowWidth) / static_cast<GLfloat>(settings.WindowHeight);
+    Camera.FOV = Settings.FOV;
+    Camera.AspectRatio = static_cast<GLfloat>(Settings.WindowWidth) / static_cast<GLfloat>(Settings.WindowHeight);
     Camera.Position = level.StartingPosition;
-    Camera.MovementSpeed = settings.PlayerSpeed;
-    Camera.HeadHeight = settings.PlayerHeadHeight;
+    Camera.MovementSpeed = Settings.PlayerSpeed;
+    Camera.HeadHeight = Settings.PlayerHeadHeight;
 
     // load Weapons
-    Item leftWeapon(settings.LeftWeaponModelFile, settings.LeftWeaponTextureFile,
-        settings.LeftWeaponPositionOffset, settings.LeftWeaponRotationOffset, settings.LeftWeaponScale);
-    Item rightWeapon(settings.RightWeaponModelFile, settings.RightWeaponTextureFile,
-        settings.RightWeaponPositionOffset, settings.RightWeaponRotationOffset, settings.RightWeaponScale);
+    Item leftWeapon(Settings.LeftWeaponModelFile, Settings.LeftWeaponTextureFile,
+        Settings.LeftWeaponPositionOffset, Settings.LeftWeaponRotationOffset, Settings.LeftWeaponScale);
+    Item rightWeapon(Settings.RightWeaponModelFile, Settings.RightWeaponTextureFile,
+        Settings.RightWeaponPositionOffset, Settings.RightWeaponRotationOffset, Settings.RightWeaponScale);
     Entities.push_back(&leftWeapon);
     Entities.push_back(&rightWeapon);
 
@@ -163,9 +163,9 @@ int main()
     Player.PreviousPosition = Camera.Position;
     Player.IsMoving = false;
     Player.IsTorchOn = true;
-    PlayerAudioSystem playerAudioSystem(SoundEngine, settings.FootstepsSoundFiles);
+    PlayerAudioSystem playerAudioSystem(SoundEngine, Settings.FootstepsSoundFiles);
 
-    Shader defaultShader(settings.ForwardShadingVertexShaderFile, settings.ForwardShadingFragmentShaderFile);
+    Shader defaultShader(Settings.ForwardShadingVertexShaderFile, Settings.ForwardShadingFragmentShaderFile);
     SetupShaders(defaultShader);
     level.SetLights(defaultShader);
 
@@ -174,7 +174,7 @@ int main()
     glEnable(GL_CULL_FACE);
 
     // play ambient music
-    SoundEngine->play2D(settings.AmbientMusicFile.c_str(), true);
+    SoundEngine->play2D(Settings.AmbientMusicFile.c_str(), true);
 
     // game loop
     // -----------
@@ -211,7 +211,7 @@ int main()
         // ------
         Render(Entities, defaultShader);
 
-        RenderDebugInfo(textRenderer, textShader, fps.str(), settings);
+        RenderDebugInfo(textRenderer, textShader, fps.str());
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -292,19 +292,19 @@ void SetupShaders(const Shader& shader)
     shader.SetMat4("projection", Camera.GetProjectionMatrix());
     shader.SetInt("texture_diffuse0", 0);
     shader.SetInt("texture_specular0", 1);
-    shader.SetVec3("torchColor", settings.TorchColor);
-    shader.SetFloat("torchInnerCutoff", glm::cos(glm::radians(settings.TorchInnerCutoff)));
-    shader.SetFloat("torchOuterCutoff", glm::cos(glm::radians(settings.TorchOuterCutoff)));
-    shader.SetFloat("torchAttenuationConstant", settings.TorchAttenuationConstant);
-    shader.SetFloat("torchAttenuationLinear", settings.TorchAttenuationLinear);
-    shader.SetFloat("torchAttenuationQuadratic", settings.TorchAttenuationQuadratic);
-    shader.SetVec3("ambientColor", settings.AmbientColor);
-    shader.SetFloat("ambientIntensity", settings.AmbientIntensity);
-    shader.SetFloat("specularShininess", settings.SpecularShininess);
-    shader.SetFloat("specularIntensity", settings.SpecularIntensity);
-    shader.SetFloat("attenuationConstant", settings.AttenuationConstant);
-    shader.SetFloat("attenuationLinear", settings.AttenuationLinear);
-    shader.SetFloat("attenuationQuadratic", settings.AttenuationQuadratic);
+    shader.SetVec3("torchColor", Settings.TorchColor);
+    shader.SetFloat("torchInnerCutoff", glm::cos(glm::radians(Settings.TorchInnerCutoff)));
+    shader.SetFloat("torchOuterCutoff", glm::cos(glm::radians(Settings.TorchOuterCutoff)));
+    shader.SetFloat("torchAttenuationConstant", Settings.TorchAttenuationConstant);
+    shader.SetFloat("torchAttenuationLinear", Settings.TorchAttenuationLinear);
+    shader.SetFloat("torchAttenuationQuadratic", Settings.TorchAttenuationQuadratic);
+    shader.SetVec3("ambientColor", Settings.AmbientColor);
+    shader.SetFloat("ambientIntensity", Settings.AmbientIntensity);
+    shader.SetFloat("specularShininess", Settings.SpecularShininess);
+    shader.SetFloat("specularIntensity", Settings.SpecularIntensity);
+    shader.SetFloat("attenuationConstant", Settings.AttenuationConstant);
+    shader.SetFloat("attenuationLinear", Settings.AttenuationLinear);
+    shader.SetFloat("attenuationQuadratic", Settings.AttenuationQuadratic);
 }
 
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& fpsCount, std::stringstream& fps)
@@ -331,7 +331,7 @@ void HandleCollisions(FPSCamera& camera, const Level& level)
             nearestPoint.z = glm::clamp(Camera.Position.z, tile.aabb.min.z, tile.aabb.max.z);
             glm::vec3 rayToNearest = nearestPoint - Camera.Position;
             rayToNearest.y = 0.0f; // y component is irrelevant
-            float overlap = settings.PlayerCollisionRadius - glm::length(rayToNearest);
+            float overlap = Settings.PlayerCollisionRadius - glm::length(rayToNearest);
             if (std::isnan(overlap))
                 overlap = 0.0f;
             if (overlap > 0.0f)
@@ -360,7 +360,7 @@ void Render(const std::vector<Entity*>& entities, const Shader& shader)
     }
 }
 
-void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const std::string& fps, const SettingsData& settings)
+void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const std::string& fps)
 {
     // save current blending state
     GLboolean blendEnabled = glIsEnabled(GL_BLEND);
@@ -375,15 +375,15 @@ void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const std::
 
     std::stringstream fpsText;
     fpsText << "FPS: " << fps;
-    textRenderer.RenderText(fpsText.str(), textShader, 4.0f, settings.WindowHeight - 20.0f, 1.0f, settings.FontColor);
-    if (settings.ShowDebugInfo)
+    textRenderer.RenderText(fpsText.str(), textShader, 4.0f, Settings.WindowHeight - 20.0f, 1.0f, Settings.FontColor);
+    if (Settings.ShowDebugInfo)
     {
         std::stringstream windowSize;
-        windowSize << settings.WindowWidth << "x" << settings.WindowHeight;
-        textRenderer.RenderText(windowSize.str(), textShader, 4.0f, settings.WindowHeight - 40.0f, 1.0f, settings.FontColor);
+        windowSize << Settings.WindowWidth << "x" << Settings.WindowHeight;
+        textRenderer.RenderText(windowSize.str(), textShader, 4.0f, Settings.WindowHeight - 40.0f, 1.0f, Settings.FontColor);
         std::stringstream pos;
         pos << "pos x: " << (int)Camera.Position.x << ", z: " << (int)Camera.Position.z;
-        textRenderer.RenderText(pos.str(), textShader, 4.0f, settings.WindowHeight - 60.0f, 1.0f, settings.FontColor);
+        textRenderer.RenderText(pos.str(), textShader, 4.0f, Settings.WindowHeight - 60.0f, 1.0f, Settings.FontColor);
     }
 
     // restore previous blending state

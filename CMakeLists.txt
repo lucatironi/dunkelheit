@@ -22,7 +22,6 @@ set(SOURCE_FILES
 set(HEADER_FILES
     inc/cube_model.hpp
     inc/entity.hpp
-    inc/footsteps_system.hpp
     inc/fps_camera.hpp
     inc/item.hpp
     inc/json_file.hpp
@@ -30,6 +29,7 @@ set(HEADER_FILES
     inc/mesh.hpp
     inc/model.hpp
     inc/object.hpp
+    inc/player_audio_system.hpp
     inc/random_generator.hpp
     inc/settings.hpp
     inc/shader.hpp
