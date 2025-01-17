@@ -25,7 +25,7 @@
 void ProcessInput(GLFWwindow* window, float deltaTime);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void MouseCallback(GLFWwindow* window, double xposIn, double yposIn);
+void CursorPosCallback(GLFWwindow* window, double xposIn, double yposIn);
 
 void SetupShaders(const Shader& shader);
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& fpsCount, std::stringstream& fps);
@@ -104,7 +104,7 @@ int main()
 
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
     glfwSetKeyCallback(window, KeyCallback);
-    glfwSetCursorPosCallback(window, MouseCallback);
+    glfwSetCursorPosCallback(window, CursorPosCallback);
 
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -265,7 +265,7 @@ void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, in
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
-void MouseCallback(GLFWwindow* /* window */, double xposIn, double yposIn)
+void CursorPosCallback(GLFWwindow* /* window */, double xposIn, double yposIn)
 {
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
