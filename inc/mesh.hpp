@@ -1,7 +1,7 @@
 #pragma once
 
 #include "shader.hpp"
-#include "texture2D.hpp"
+#include "texture_2D.hpp"
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>

@@ -8,7 +8,7 @@
 #include "settings.hpp"
 #include "shader.hpp"
 #include "text_renderer.hpp"
-#include "texture2D.hpp"
+#include "texture_2D.hpp"
 #include "working_directory.hpp"
 
 #include <glad/glad.h>

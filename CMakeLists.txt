@@ -34,7 +34,7 @@ set(HEADER_FILES
     inc/settings.hpp
     inc/shader.hpp
     inc/text_renderer.hpp
-    inc/texture2D.hpp
+    inc/texture_2D.hpp
     inc/working_directory.hpp
 )
 
