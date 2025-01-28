@@ -26,12 +26,15 @@ void ProcessInput(GLFWwindow* window, float deltaTime);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xposIn, double yposIn);
+void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
 void SetupShaders(const Shader& shader);
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& frames, int& fps);
 void HandleCollisions(FPSCamera& camera, const Level& level);
 void Render(const std::vector<Entity*>& entities, const Shader& shader);
 void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int fps);
+
+void Shoot();
 
 SettingsData Settings;
 FPSCamera Camera;
@@ -105,6 +108,7 @@ int main()
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
     glfwSetKeyCallback(window, KeyCallback);
     glfwSetCursorPosCallback(window, CursorPosCallback);
+    glfwSetMouseButtonCallback(window, MouseButtonCallback);
 
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -254,6 +258,8 @@ void FramebufferSizeCallback(GLFWwindow* /* window */, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+// glfw: whenever a keyboard key is pressed, this callback is called
+// -----------------------------------------------------------------
 void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, int /* mods */)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -284,6 +290,14 @@ void CursorPosCallback(GLFWwindow* /* window */, double xposIn, double yposIn)
     LastY = ypos;
 
     Camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+// glfw: whenever a mouse button is clicked, this callback is called
+// -----------------------------------------------------------------
+void MouseButtonCallback(GLFWwindow* window, int button, int action, int /* mods */)
+{
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+        Shoot();
 }
 
 void SetupShaders(const Shader& shader)
@@ -390,4 +404,9 @@ void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int f
     if (!blendEnabled)
         glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+}
+
+void Shoot()
+{
+    std::cout << "Pew!" << std::endl;
 }
