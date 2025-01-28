@@ -1,6 +1,5 @@
 #pragma once
 
-#include "glm/trigonometric.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/constants.hpp>
@@ -30,7 +29,7 @@ public:
     static constexpr float DEFAULT_HEAD_HEIGHT = 1.75f;
     static constexpr float DEFAULT_FOV = 75.0f;
     static constexpr float DEFAULT_ASPECT_RATIO = 16.0f / 9.0f;
-    static constexpr float DEFAULT_NEAR_PLANE = 0.1f;
+    static constexpr float DEFAULT_NEAR_PLANE = 0.01f;
     static constexpr float DEFAULT_FAR_PLANE = 100.0f;
     static constexpr glm::vec3 DEFAULT_POSITION = glm::vec3(0.0f);
     static constexpr glm::vec3 DEFAULT_UP = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -81,6 +80,11 @@ public:
     glm::quat GetRotation() const
     {
         return glm::quatLookAt(Front, Up);
+    }
+
+    glm::vec3 GetAngles() const
+    {
+        return glm::vec3(glm::radians(pitchAngle), glm::radians(yawAngle), 0.0f);
     }
 
     // Processes keyboard-like input for camera movement.

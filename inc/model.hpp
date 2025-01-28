@@ -32,7 +32,7 @@ public:
     void TextureOverride(const std::string& texturePath, bool alpha = false)
     {
         Texture2D texture2D(texturePath, alpha);
-        Texture texture({ texture2D, "texture_diffuse", texturePath });
+        Texture texture({ texture2D, "texture_diffuse" });
 
         for (auto& mesh : meshes)
             mesh.AddTexture(texture);
@@ -130,7 +130,7 @@ private:
 
             // Load texture using Texture2D
             Texture2D texture2D(texturePath);
-            textures.emplace_back(Texture{ texture2D, typeName, texturePath });
+            textures.emplace_back(Texture{ texture2D, typeName });
         }
         return textures;
     }

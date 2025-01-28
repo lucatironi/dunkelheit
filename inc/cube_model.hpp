@@ -3,15 +3,15 @@
 #include "mesh.hpp"
 #include "shader.hpp"
 
-#include <memory>
+#include <string>
 #include <vector>
 
 class CubeModel
 {
 public:
-    CubeModel()
+    CubeModel(const std::string& texturePath)
     {
-        loadMesh();
+        creatMesh(texturePath);
     }
 
     void Draw(const Shader& shader) const
@@ -22,7 +22,7 @@ public:
 private:
     std::unique_ptr<Mesh> mesh;
 
-    void loadMesh()
+    void creatMesh(const std::string& texturePath)
     {
         // Shared data for cube geometry
         const glm::vec3 positions[] = {
@@ -44,7 +44,6 @@ private:
         };
 
         // Vertex data for cube faces
-        std::vector<Vertex> vertices;
         const int faceIndices[6][4] = {
             { 1, 0, 3, 2 }, // Front
             { 4, 5, 6, 7 }, // Back
@@ -53,7 +52,8 @@ private:
             { 7, 6, 2, 3 }, // Top
             { 0, 1, 5, 4 }  // Bottom
         };
-
+        std::vector<Vertex> vertices;
+        vertices.reserve(24);
         for (int i = 0; i < 6; ++i)
         {
             const auto& face = faceIndices[i];
@@ -65,6 +65,7 @@ private:
 
         // Indices for cube faces
         std::vector<GLuint> indices;
+        indices.reserve(36);
         for (GLuint i = 0; i < 6; ++i)
         {
             GLuint base = i * 4;
@@ -73,7 +74,7 @@ private:
 
         // Texture setup
         std::vector<Texture> textures = {
-            { Texture2D("assets/texture_05.png", false), "texture_diffuse", "assets/texture_05.png" }
+            { Texture2D(texturePath, false), "texture_diffuse" }
         };
 
         // Create the mesh

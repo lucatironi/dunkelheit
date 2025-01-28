@@ -18,7 +18,6 @@ struct Vertex
 struct Texture {
     Texture2D texture;
     std::string type;
-    std::string path;
 };
 
 class Mesh
