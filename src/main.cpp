@@ -28,10 +28,10 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void CursorPosCallback(GLFWwindow* window, double xposIn, double yposIn);
 
 void SetupShaders(const Shader& shader);
-void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& fpsCount, std::stringstream& fps);
+void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& frames, int& fps);
 void HandleCollisions(FPSCamera& camera, const Level& level);
 void Render(const std::vector<Entity*>& entities, const Shader& shader);
-void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const std::string& fps);
+void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int fps);
 
 SettingsData Settings;
 FPSCamera Camera;
@@ -181,15 +181,15 @@ int main()
     float lastTime    = 0.0f;
     float lastFPSTime = 0.0f;
     float deltaTime   = 0.0f;
-    int fpsCount = 0;
-    std::stringstream fps;
+    int frames = 0;
+    int fps    = 0;
 
     while (!glfwWindowShouldClose(window))
     {
         // calculate deltaTime and FPS
         // ---------------------------
         CurrentTime = glfwGetTime();
-        CalculateFPS(lastTime, lastFPSTime, deltaTime, fpsCount, fps);
+        CalculateFPS(lastTime, lastFPSTime, deltaTime, frames, fps);
 
         // input
         // -----
@@ -211,7 +211,7 @@ int main()
         // ------
         Render(Entities, defaultShader);
 
-        RenderDebugInfo(textRenderer, textShader, fps.str());
+        RenderDebugInfo(textRenderer, textShader, fps);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -307,15 +307,14 @@ void SetupShaders(const Shader& shader)
     shader.SetFloat("attenuationQuadratic", Settings.AttenuationQuadratic);
 }
 
-void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& fpsCount, std::stringstream& fps)
+void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& frames, int& fps)
 {
     deltaTime = CurrentTime - lastTime;
-    fpsCount++;
+    frames++;
     if ((CurrentTime - lastFPSTime) >= 1.0f)
     {
-        fps.str(std::string());
-        fps << fpsCount;
-        fpsCount = 0;
+        fps = frames;
+        frames = 0;
         lastFPSTime = CurrentTime;
     }
 }
@@ -360,7 +359,7 @@ void Render(const std::vector<Entity*>& entities, const Shader& shader)
     }
 }
 
-void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const std::string& fps)
+void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int fps)
 {
     // save current blending state
     GLboolean blendEnabled = glIsEnabled(GL_BLEND);
