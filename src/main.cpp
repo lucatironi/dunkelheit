@@ -3,6 +3,7 @@
 #include "item.hpp"
 #include "json_file.hpp"
 #include "level.hpp"
+#include "pixelator.hpp"
 #include "player_audio_system.hpp"
 #include "random_generator.hpp"
 #include "settings.hpp"
@@ -154,6 +155,8 @@ int main()
     Camera.MovementSpeed = Settings.PlayerSpeed;
     Camera.HeadHeight = Settings.PlayerHeadHeight;
 
+    Pixelator pixelator(Settings.WindowWidth, Settings.WindowHeight, Settings.WindowWidth / 4.0f, Settings.WindowHeight / 4.0f);
+
     // load Weapons
     Item leftWeapon(Settings.LeftWeaponModelFile, Settings.LeftWeaponTextureFile,
         Settings.LeftWeaponPositionOffset, Settings.LeftWeaponRotationOffset, Settings.LeftWeaponScale);
@@ -213,7 +216,13 @@ int main()
 
         // render
         // ------
+        if (Settings.Pixelate)
+            pixelator.BeginRender();
+
         Render(defaultShader);
+
+        if (Settings.Pixelate)
+            pixelator.EndRender();
 
         if (Settings.ShowDebugInfo)
             RenderDebugInfo(textRenderer, textShader, fps);
@@ -269,6 +278,8 @@ void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, in
         Player.IsTorchOn = !Player.IsTorchOn;
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
         Settings.ShowDebugInfo = !Settings.ShowDebugInfo;
+    if (key == GLFW_KEY_P && action == GLFW_PRESS)
+        Settings.Pixelate = !Settings.Pixelate;
 }
 
 // glfw: whenever the mouse moves, this callback is called

@@ -19,6 +19,9 @@ public:
     // Shaders
     std::string ForwardShadingVertexShaderFile, ForwardShadingFragmentShaderFile;
 
+    // PostProcessing
+    bool Pixelate;
+
     // Text renderer settings
     std::string FontFile;
     int FontSize;
@@ -66,6 +69,7 @@ inline SettingsData LoadSettingsFile(const std::string& path)
 
     settings.ForwardShadingVertexShaderFile = json.GetNested<std::string>("renderer.forwardSinglePass.shaders.vertex");
     settings.ForwardShadingFragmentShaderFile = json.GetNested<std::string>("renderer.forwardSinglePass.shaders.fragment");
+    settings.Pixelate = json.GetNested<bool>("renderer.postProcessing.pixelate");
 
     settings.FontFile = json.GetNested<std::string>("textRenderer.fontFile");
     settings.FontSize = json.GetNested<int>("textRenderer.fontSize");
