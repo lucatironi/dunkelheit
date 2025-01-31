@@ -215,7 +215,8 @@ int main()
         // ------
         Render(defaultShader);
 
-        RenderDebugInfo(textRenderer, textShader, fps);
+        if (Settings.ShowDebugInfo)
+            RenderDebugInfo(textRenderer, textShader, fps);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -264,9 +265,10 @@ void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, in
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
         Player.IsTorchOn = !Player.IsTorchOn;
+    if (key == GLFW_KEY_O && action == GLFW_PRESS)
+        Settings.ShowDebugInfo = !Settings.ShowDebugInfo;
 }
 
 // glfw: whenever the mouse moves, this callback is called
@@ -389,15 +391,12 @@ void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int f
     std::stringstream fpsText;
     fpsText << "FPS: " << fps;
     textRenderer.RenderText(fpsText.str(), textShader, 4.0f, Settings.WindowHeight - 20.0f, 1.0f, Settings.FontColor);
-    if (Settings.ShowDebugInfo)
-    {
-        std::stringstream windowSize;
-        windowSize << Settings.WindowWidth << "x" << Settings.WindowHeight;
-        textRenderer.RenderText(windowSize.str(), textShader, 4.0f, Settings.WindowHeight - 40.0f, 1.0f, Settings.FontColor);
-        std::stringstream pos;
-        pos << "pos x: " << (int)Camera.Position.x << ", z: " << (int)Camera.Position.z;
-        textRenderer.RenderText(pos.str(), textShader, 4.0f, Settings.WindowHeight - 60.0f, 1.0f, Settings.FontColor);
-    }
+    std::stringstream windowSize;
+    windowSize << Settings.WindowWidth << "x" << Settings.WindowHeight;
+    textRenderer.RenderText(windowSize.str(), textShader, 4.0f, Settings.WindowHeight - 40.0f, 1.0f, Settings.FontColor);
+    std::stringstream pos;
+    pos << "pos x: " << (int)Camera.Position.x << ", z: " << (int)Camera.Position.z;
+    textRenderer.RenderText(pos.str(), textShader, 4.0f, Settings.WindowHeight - 60.0f, 1.0f, Settings.FontColor);
 
     // restore previous blending state
     glBlendFunc(srcAlphaFunc, dstAlphaFunc);
