@@ -31,7 +31,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void SetupShaders(const Shader& shader);
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& frames, int& fps);
 void HandleCollisions(FPSCamera& camera, const Level& level);
-void Render(const std::vector<Entity*>& entities, const Shader& shader);
+void Render(const Shader& shader);
 void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int fps);
 
 void Shoot();
@@ -213,7 +213,7 @@ int main()
 
         // render
         // ------
-        Render(Entities, defaultShader);
+        Render(defaultShader);
 
         RenderDebugInfo(textRenderer, textShader, fps);
 
@@ -353,7 +353,7 @@ void HandleCollisions(FPSCamera& camera, const Level& level)
     }
 }
 
-void Render(const std::vector<Entity*>& entities, const Shader& shader)
+void Render(const Shader& shader)
 {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -365,7 +365,7 @@ void Render(const std::vector<Entity*>& entities, const Shader& shader)
     shader.SetFloat("time", CurrentTime);
     shader.SetBool("torchActivated", Player.IsTorchOn);
 
-    for (const auto& entity : entities)
+    for (const auto& entity : Entities)
     {
         if (entity->AlwaysOnTop)
             glClear(GL_DEPTH_BUFFER_BIT);
