@@ -32,9 +32,9 @@ public:
     void Update(const FPSCamera& camera)
     {
         // Calculate the weapon's position based on the camera's position and forward direction
-        glm::vec3 position = camera.Position + camera.Front * positionOffset.z
-                                             + camera.Up * positionOffset.y
-                                             + camera.Right * positionOffset.x;
+        position = camera.Position + camera.Front * positionOffset.z
+                                   + camera.Up * positionOffset.y
+                                   + camera.Right * positionOffset.x;
 
         translationMatrix = glm::translate(glm::mat4(1.0f), position);
         rotationMatrix = glm::mat4_cast(camera.GetRotation());
@@ -58,6 +58,7 @@ public:
 
 private:
     std::unique_ptr<Model> itemModel;
+    glm::vec3 position;
     glm::vec3 positionOffset;
     glm::vec3 rotationOffset;
     glm::mat4 translationMatrix;
