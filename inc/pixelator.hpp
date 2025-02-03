@@ -8,7 +8,8 @@
 class Pixelator
 {
 public:
-    Pixelator(const GLuint windowWidth, const GLuint windowHeight, const GLuint framebufferWidth, const GLuint framebufferHeight)
+    Pixelator(const GLuint windowWidth, const GLuint windowHeight,
+              const GLuint framebufferWidth, const GLuint framebufferHeight)
         : windowWidth(windowWidth), windowHeight(windowHeight),
           framebufferWidth(framebufferWidth), framebufferHeight(framebufferHeight)
     {
