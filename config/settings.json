@@ -83,6 +83,8 @@
             "assets/footstep1.wav",
             "assets/footstep2.wav",
             "assets/footstep3.wav"
-        ]
+        ],
+        "torchOnSoundFile": "assets/flashlight_on.ogg",
+        "torchOffSoundFile": "assets/flashlight_off.ogg"
     }
 }

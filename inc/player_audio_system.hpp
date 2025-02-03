@@ -20,11 +20,15 @@ struct PlayerState {
 class PlayerAudioSystem
 {
 public:
-    PlayerAudioSystem(irrklang::ISoundEngine* engine, const std::vector<std::string>& footstepSoundPaths)
+    PlayerAudioSystem(irrklang::ISoundEngine* engine,
+        const std::vector<std::string>& footstepSoundPaths,
+        const std::string& torchOnSoundFile, const std::string& torchOffSoundFile)
         : soundEngine(engine), lastStepTime(0.0f), stepInterval(0.6f)
     {
         for (const auto& path : footstepSoundPaths)
             footstepSounds.push_back(soundEngine->addSoundSourceFromFile(path.c_str()));
+        torchOnSound = soundEngine->addSoundSourceFromFile(torchOnSoundFile.c_str());
+        torchOffSound = soundEngine->addSoundSourceFromFile(torchOffSoundFile.c_str());
     }
 
     void Update(PlayerState& player, float elapsedTime)
@@ -42,9 +46,19 @@ public:
         player.PreviousPosition = player.Position;
     }
 
+    void ToggleTorch(PlayerState& player)
+    {
+        if (player.IsTorchOn)
+            soundEngine->play2D(torchOnSound);
+        else
+            soundEngine->play2D(torchOffSound);
+    }
+
 private:
     irrklang::ISoundEngine* soundEngine;
     std::vector<irrklang::ISoundSource*> footstepSounds;
+    irrklang::ISoundSource* torchOnSound;
+    irrklang::ISoundSource* torchOffSound;
     float lastStepTime;
     float stepInterval; // Time between steps
     const float movementThreshold = 0.002f; // Tunable threshold for detecting movement

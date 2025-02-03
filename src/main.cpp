@@ -41,6 +41,7 @@ SettingsData Settings;
 FPSCamera Camera;
 PlayerState Player;
 std::vector<Entity*> Entities;
+PlayerAudioSystem* PlayerAudio;
 
 float CurrentTime = 0.0f;
 bool FirstMouse = true;
@@ -170,7 +171,7 @@ int main()
     Player.PreviousPosition = Camera.Position;
     Player.IsMoving = false;
     Player.IsTorchOn = true;
-    PlayerAudioSystem playerAudioSystem(SoundEngine, Settings.FootstepsSoundFiles);
+    PlayerAudio = new PlayerAudioSystem(SoundEngine, Settings.FootstepsSoundFiles, Settings.TorchOnSoundFile, Settings.TorchOffSoundFile);
 
     Shader defaultShader(Settings.ForwardShadingVertexShaderFile, Settings.ForwardShadingFragmentShaderFile);
     SetupShaders(defaultShader);
@@ -212,7 +213,8 @@ int main()
         rightWeapon.Update(Camera);
 
         Player.Position = Camera.Position;
-        playerAudioSystem.Update(Player, CurrentTime);
+        PlayerAudio->Update(Player, CurrentTime);
+
 
         // render
         // ------
@@ -275,7 +277,10 @@ void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, in
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
+    {
         Player.IsTorchOn = !Player.IsTorchOn;
+        PlayerAudio->ToggleTorch(Player);
+    }
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
         Settings.ShowDebugInfo = !Settings.ShowDebugInfo;
     if (key == GLFW_KEY_P && action == GLFW_PRESS)

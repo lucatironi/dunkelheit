@@ -51,6 +51,7 @@ public:
     // Audio settings
     std::string AmbientMusicFile;
     std::vector<std::string> FootstepsSoundFiles;
+    std::string TorchOnSoundFile, TorchOffSoundFile;
 };
 
 inline SettingsData LoadSettingsFile(const std::string& path)
@@ -111,6 +112,8 @@ inline SettingsData LoadSettingsFile(const std::string& path)
 
     settings.AmbientMusicFile = json.GetNested<std::string>("audio.ambientMusicFile");
     settings.FootstepsSoundFiles = json.GetNested<std::vector<std::string>>("audio.footstepsSoundFiles");
+    settings.TorchOnSoundFile = json.GetNested<std::string>("audio.torchOnSoundFile");
+    settings.TorchOnSoundFile = json.GetNested<std::string>("audio.torchOnSoundFile");
 
     return settings;
 }
