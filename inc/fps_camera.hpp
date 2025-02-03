@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/ext/quaternion_geometric.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/constants.hpp>
@@ -39,6 +40,7 @@ public:
     glm::vec3 Position;
     glm::vec3 Velocity;
     glm::vec3 Front;
+    glm::vec3 TargetFront;
     glm::vec3 Up;
     glm::vec3 Right;
     glm::vec3 WorldUp;
@@ -147,16 +149,17 @@ private:
     // Euler Angles
     float yawAngle;
     float pitchAngle;
+    float cameraLerpFactor = 0.025f;
 
     // Updates the camera's vectors based on the current yaw and pitch angles.
     void updateCameraVectors()
     {
-        glm::vec3 front;
-        front.x = cos(glm::radians(yawAngle)) * cos(glm::radians(pitchAngle));
-        front.y = sin(glm::radians(pitchAngle));
-        front.z = sin(glm::radians(yawAngle)) * cos(glm::radians(pitchAngle));
-        Front = glm::normalize(front);
-
+        TargetFront.x = cos(glm::radians(yawAngle)) * cos(glm::radians(pitchAngle));
+        TargetFront.y = sin(glm::radians(pitchAngle));
+        TargetFront.z = sin(glm::radians(yawAngle)) * cos(glm::radians(pitchAngle));
+        TargetFront = glm::normalize(TargetFront);
+        // Smoothly interpolate camera direction toward the target
+        Front = glm::normalize(glm::mix(Front, TargetFront, cameraLerpFactor));
         // Recalculate Right and Up vectors.
         Right = glm::normalize(glm::cross(Front, WorldUp));
         Up = glm::normalize(glm::cross(Right, Front));
