@@ -196,7 +196,6 @@ int main()
     {
         // calculate deltaTime and FPS
         // ---------------------------
-        CurrentTime = glfwGetTime();
         CalculateFPS(lastTime, lastFPSTime, deltaTime, frames, fps);
 
         // input
@@ -233,8 +232,6 @@ int main()
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
-
-        lastTime = CurrentTime;
     }
 
     // optional: de-allocate all resources once they've outlived their purpose:
@@ -341,6 +338,7 @@ void SetupShaders(const Shader& shader)
 
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& frames, int& fps)
 {
+    CurrentTime = glfwGetTime();
     deltaTime = CurrentTime - lastTime;
     frames++;
     if ((CurrentTime - lastFPSTime) >= 1.0f)
@@ -349,6 +347,7 @@ void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& fr
         frames = 0;
         lastFPSTime = CurrentTime;
     }
+    lastTime = CurrentTime;
 }
 
 void HandleCollisions(FPSCamera& camera, const Level& level)
