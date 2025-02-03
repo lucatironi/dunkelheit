@@ -54,8 +54,9 @@
     },
     "lighting": {
         "torch": {
-            "color": [1.0, 1.0, 0.8],
-            "innerCutoff": 30.0,
+            "position": [0.75, 0.4, 0.3],
+            "color": [1.0, 1.0, 0.6],
+            "innerCutoff": 20.0,
             "outerCutoff": 45.0,
             "attenuation": {
                 "constant": 1.0,
@@ -65,7 +66,7 @@
         },
         "ambient": {
             "color":  [1.0, 1.0, 1.0],
-            "intensity": 0.001
+            "intensity": 0.01
         },
         "specular": {
             "shininess": 8.0,

@@ -41,6 +41,7 @@ public:
     glm::vec3 RightWeaponPositionOffset, RightWeaponRotationOffset, RightWeaponScale;
 
     // Lighting settings
+    glm::vec3 TorchPos;
     glm::vec3 TorchColor;
     float TorchInnerCutoff, TorchOuterCutoff;
     float TorchAttenuationConstant, TorchAttenuationLinear, TorchAttenuationQuadratic;
@@ -96,6 +97,7 @@ inline SettingsData LoadSettingsFile(const std::string& path)
     settings.RightWeaponRotationOffset = json.GetNested<glm::vec3>("weapons.right.rotationOffset");
     settings.RightWeaponScale = json.GetNested<glm::vec3>("weapons.right.scale");
 
+    settings.TorchPos = json.GetNested<glm::vec3>("lighting.torch.position");
     settings.TorchColor = json.GetNested<glm::vec3>("lighting.torch.color");
     settings.TorchInnerCutoff = json.GetNested<float>("lighting.torch.innerCutoff");
     settings.TorchOuterCutoff = json.GetNested<float>("lighting.torch.outerCutoff");

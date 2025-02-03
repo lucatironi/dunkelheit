@@ -41,6 +41,8 @@ SettingsData Settings;
 FPSCamera Camera;
 PlayerState Player;
 std::vector<Entity*> Entities;
+glm::vec3 TorchDir;
+glm::vec3 TorchPos;
 PlayerAudioSystem* PlayerAudio;
 
 float CurrentTime = 0.0f;
@@ -214,6 +216,10 @@ int main()
         Player.Position = Camera.Position;
         PlayerAudio->Update(Player, CurrentTime);
 
+        TorchPos = Camera.Position + Camera.Front * Settings.TorchPos.z
+                                   + Camera.Up * Settings.TorchPos.y
+                                   + Camera.Right * Settings.TorchPos.x;
+        TorchDir = Camera.TargetFront;
 
         // render
         // ------
@@ -378,7 +384,8 @@ void Render(const Shader& shader)
     shader.Use();
     shader.SetMat4("view", Camera.GetViewMatrix());
     shader.SetVec3("cameraPos", Camera.Position);
-    shader.SetVec3("cameraDir", Camera.Front);
+    shader.SetVec3("torchPos", TorchPos);
+    shader.SetVec3("torchDir", TorchDir);
     shader.SetFloat("time", CurrentTime);
     shader.SetBool("torchActivated", Player.IsTorchOn);
 

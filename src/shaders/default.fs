@@ -8,7 +8,8 @@ layout(location = 0) out vec4 FragColor;
 
 uniform float time;
 uniform vec3 cameraPos;
-uniform vec3 cameraDir;
+uniform vec3 torchPos;
+uniform vec3 torchDir;
 uniform bool torchActivated;
 uniform vec3 torchColor;
 uniform float torchInnerCutoff;
@@ -37,7 +38,7 @@ struct Light {
 uniform Light lights[MAX_LIGHTS];
 uniform int numLights;
 
-vec3 CalcBlinnPhong(vec3 viewDir, vec3 normal, vec3 lightDir, vec3 lightColor)
+vec3 CalcBlinnPhong(vec3 viewDir, vec3 normal, vec3 lightDir, vec3 lightColor, float intensity)
 {
     // Diffuse
     float diff = max(dot(normal, lightDir), 0.0);
@@ -45,7 +46,7 @@ vec3 CalcBlinnPhong(vec3 viewDir, vec3 normal, vec3 lightDir, vec3 lightColor)
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(viewDir, halfwayDir), 0.0), specularShininess);
 
-    return (ambientColor * ambientIntensity + diff * lightColor + spec * lightColor * specularIntensity);
+    return (ambientColor * ambientIntensity + diff * lightColor * intensity + spec * lightColor * specularIntensity * intensity);
 }
 
 float CalcAtt(float distance, float constant, float linear, float quadratic)
@@ -67,15 +68,15 @@ void main()
     vec3 torchLight;
     if (torchActivated)
     {
+        vec3 lightDir = normalize(torchPos - FragPos);
         // Spotlight Intensity
-        float theta = dot(viewDir, normalize(-cameraDir));
+        float theta = dot(lightDir, normalize(-torchDir));
         float epsilon = torchInnerCutoff - torchOuterCutoff;
         float intensity = clamp((theta - torchOuterCutoff) / epsilon, 0.0, 1.0);
 
-        torchLight = CalcBlinnPhong(viewDir, norm, viewDir, torchColor) *
-                     CalcAtt(torchDist, torchAttenuationConstant, torchAttenuationLinear, torchAttenuationQuadratic) *
-                     intensity *
-                     Albedo;
+        torchLight = CalcBlinnPhong(lightDir, norm, lightDir, torchColor, intensity) *
+                    CalcAtt(torchDist, torchAttenuationConstant, torchAttenuationLinear, torchAttenuationQuadratic) *
+                    Albedo;
     }
     else
     {
@@ -92,7 +93,7 @@ void main()
             continue;
         vec3 lightDir = normalize(lights[i].position - FragPos);
 
-        staticLights += CalcBlinnPhong(viewDir, norm, lightDir, lights[i].color) *
+        staticLights += CalcBlinnPhong(viewDir, norm, lightDir, lights[i].color, 1.0) *
                         CalcAtt(lightDist, attenuationConstant, attenuationLinear, attenuationQuadratic) *
                         flicker *
                         Albedo;
