@@ -22,13 +22,12 @@ class PlayerAudioSystem
 public:
     PlayerAudioSystem(irrklang::ISoundEngine* engine,
         const std::vector<std::string>& footstepSoundPaths,
-        const std::string& torchOnSoundFile, const std::string& torchOffSoundFile)
+        const std::string& torchToggleSoundFile)
         : soundEngine(engine), lastStepTime(0.0f), stepInterval(0.6f)
     {
         for (const auto& path : footstepSoundPaths)
             footstepSounds.push_back(soundEngine->addSoundSourceFromFile(path.c_str()));
-        torchOnSound = soundEngine->addSoundSourceFromFile(torchOnSoundFile.c_str());
-        torchOffSound = soundEngine->addSoundSourceFromFile(torchOffSoundFile.c_str());
+        torchToggleSound = soundEngine->addSoundSourceFromFile(torchToggleSoundFile.c_str());
     }
 
     void Update(PlayerState& player, float elapsedTime)
@@ -48,17 +47,13 @@ public:
 
     void ToggleTorch(PlayerState& player)
     {
-        if (player.IsTorchOn)
-            soundEngine->play2D(torchOnSound);
-        else
-            soundEngine->play2D(torchOffSound);
+        soundEngine->play2D(torchToggleSound);
     }
 
 private:
     irrklang::ISoundEngine* soundEngine;
     std::vector<irrklang::ISoundSource*> footstepSounds;
-    irrklang::ISoundSource* torchOnSound;
-    irrklang::ISoundSource* torchOffSound;
+    irrklang::ISoundSource* torchToggleSound;
     float lastStepTime;
     float stepInterval; // Time between steps
     const float movementThreshold = 0.002f; // Tunable threshold for detecting movement

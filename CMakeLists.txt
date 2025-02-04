@@ -36,6 +36,7 @@ set(HEADER_FILES
     inc/shader.hpp
     inc/text_renderer.hpp
     inc/texture_2D.hpp
+    inc/torch.hpp
     inc/working_directory.hpp
 )
 

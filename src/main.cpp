@@ -10,6 +10,7 @@
 #include "shader.hpp"
 #include "text_renderer.hpp"
 #include "texture_2D.hpp"
+#include "torch.hpp"
 #include "working_directory.hpp"
 
 #include <glad/glad.h>
@@ -41,8 +42,7 @@ SettingsData Settings;
 FPSCamera Camera;
 PlayerState Player;
 std::vector<Entity*> Entities;
-glm::vec3 TorchDir;
-glm::vec3 TorchPos;
+Torch TorchLight;
 PlayerAudioSystem* PlayerAudio;
 
 float CurrentTime = 0.0f;
@@ -158,6 +158,7 @@ int main()
     Camera.MovementSpeed = Settings.PlayerSpeed;
     Camera.HeadHeight = Settings.PlayerHeadHeight;
 
+    // load post processing
     Pixelator pixelator(Settings.WindowWidth, Settings.WindowHeight, Settings.WindowWidth / 4.0f, Settings.WindowHeight / 4.0f);
 
     // load Weapons
@@ -168,12 +169,14 @@ int main()
     Entities.push_back(&leftWeapon);
     Entities.push_back(&rightWeapon);
 
-    // initialize player state and footstep system
+    // initialize player state and audio system
     Player.Position = Camera.Position;
     Player.PreviousPosition = Camera.Position;
     Player.IsMoving = false;
     Player.IsTorchOn = true;
-    PlayerAudio = new PlayerAudioSystem(SoundEngine, Settings.FootstepsSoundFiles, Settings.TorchOnSoundFile, Settings.TorchOffSoundFile);
+    PlayerAudio = new PlayerAudioSystem(SoundEngine, Settings.FootstepsSoundFiles, Settings.TorchToggleSoundFile);
+
+    TorchLight.PositionOffset = Settings.TorchPos;
 
     Shader defaultShader(Settings.ForwardShadingVertexShaderFile, Settings.ForwardShadingFragmentShaderFile);
     SetupShaders(defaultShader);
@@ -212,14 +215,9 @@ int main()
         // ------
         leftWeapon.Update(Camera);
         rightWeapon.Update(Camera);
-
         Player.Position = Camera.Position;
         PlayerAudio->Update(Player, CurrentTime);
-
-        TorchPos = Camera.Position + Camera.Front * Settings.TorchPos.z
-                                   + Camera.Up * Settings.TorchPos.y
-                                   + Camera.Right * Settings.TorchPos.x;
-        TorchDir = Camera.TargetFront;
+        TorchLight.Update(Camera);
 
         // render
         // ------
@@ -384,8 +382,8 @@ void Render(const Shader& shader)
     shader.Use();
     shader.SetMat4("view", Camera.GetViewMatrix());
     shader.SetVec3("cameraPos", Camera.Position);
-    shader.SetVec3("torchPos", TorchPos);
-    shader.SetVec3("torchDir", TorchDir);
+    shader.SetVec3("torchPos", TorchLight.Position);
+    shader.SetVec3("torchDir", TorchLight.Direction);
     shader.SetFloat("time", CurrentTime);
     shader.SetBool("torchActivated", Player.IsTorchOn);
 
