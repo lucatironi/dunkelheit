@@ -20,7 +20,7 @@ public:
     {
         itemModel = std::make_unique<Model>(modelPath);
         if (texturePath != "")
-            itemModel->TextureOverride(texturePath, true);
+            itemModel->TextureOverride(texturePath);
 
         scaleMatrix    = glm::scale(glm::mat4(1.0f), scaleFactor);
         rotationMatrix = glm::mat4(1.0f); // Initialize with identity matrix

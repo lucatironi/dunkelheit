@@ -29,9 +29,9 @@ public:
             mesh.Draw(shader);
     }
 
-    void TextureOverride(const std::string& texturePath, bool alpha = false)
+    void TextureOverride(const std::string& texturePath)
     {
-        Texture2D texture2D(texturePath, alpha);
+        Texture2D texture2D(texturePath);
         Texture texture({ texture2D, "texture_diffuse" });
 
         for (auto& mesh : meshes)
@@ -41,6 +41,7 @@ public:
 private:
     std::vector<Mesh> meshes;
     std::string directory;
+    std::vector<Texture> cachedTextures;
 
     void loadModel(const std::string& path)
     {
@@ -104,33 +105,54 @@ private:
                 indices.emplace_back(face.mIndices[j]);
         }
 
-        // Process materials
+        // Process textures
         if (mesh->mMaterialIndex >= 0)
         {
             aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-            auto diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-            textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-
-            auto specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-            textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+            auto diffuseTextures = ExtractTextures(scene, material, aiTextureType_DIFFUSE, "texture_diffuse");
+            textures.insert(textures.end(), diffuseTextures.begin(), diffuseTextures.end());
+            auto specularTextures = ExtractTextures(scene, material, aiTextureType_SPECULAR, "texture_specular");
+            textures.insert(textures.end(), specularTextures.begin(), specularTextures.end());
+            auto normalTextures = ExtractTextures(scene, material, aiTextureType_HEIGHT, "texture_normal");
+            textures.insert(textures.end(), normalTextures.begin(), normalTextures.end());
         }
         return Mesh(std::move(vertices), std::move(indices), std::move(textures));
     }
 
     // Load material textures from Assimp
-    std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, const std::string& typeName)
+    std::vector<Texture> ExtractTextures(const aiScene* scene, aiMaterial* material, aiTextureType textureType, const std::string& typeName)
     {
         std::vector<Texture> textures;
-        for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+        for (unsigned int i = 0; i < material->GetTextureCount(textureType); ++i)
         {
-            aiString str;
-            mat->GetTexture(type, i, &str);
-            std::string texturePath = directory + "/" + std::string(str.C_Str());
+            aiString textureFilename;
+            material->GetTexture(textureType, i, &textureFilename);
 
-            // Load texture using Texture2D
-            Texture2D texture2D(texturePath);
-            textures.emplace_back(Texture{ texture2D, typeName });
+            // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
+            bool skip = false;
+            for (unsigned int j = 0; j < cachedTextures.size(); ++j)
+            {
+                if (std::strcmp(cachedTextures[j].path.data(), textureFilename.C_Str()) == 0)
+                {
+                    textures.emplace_back(cachedTextures[j]);
+                    skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
+                    break;
+                }
+            }
+
+            if (!skip) // if texture hasn't been loaded already, load it
+            {
+                Texture2D texture2D;
+                if (const auto& texture = scene->GetEmbeddedTexture(textureFilename.C_Str()))
+                    texture2D = Texture2D(reinterpret_cast<unsigned char*>(texture->pcData), texture->mWidth, texture->mHeight);
+                else
+                    texture2D = Texture2D(std::string(directory + "/" + std::string(textureFilename.C_Str())));
+
+                Texture tex = { texture2D, typeName, std::string(textureFilename.C_Str()) };
+                textures.push_back(tex);
+                cachedTextures.push_back(tex);
+            }
         }
         return textures;
     }

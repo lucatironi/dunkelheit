@@ -15,9 +15,11 @@ struct Vertex
     glm::vec2 TexCoords;
 };
 
-struct Texture {
+struct Texture
+{
     Texture2D texture;
     std::string type;
+    std::string path;
 };
 
 class Mesh
@@ -42,6 +44,15 @@ public:
     void AddTexture(Texture texture)
     {
         textures.push_back(texture);
+    }
+
+    std::vector<Texture> GetTextures() const { return textures; }
+
+    void Debug() const
+    {
+        std::cout << "Vertices: " << vertices.size() << ", Indices: " << indices.size() << ", Textures: " << textures.size() << std::endl;
+        for (const auto& texture : textures)
+            std::cout << "Texture: " << texture.path << ", type: " << texture.type << std::endl;
     }
 
 private:
@@ -86,6 +97,7 @@ private:
     {
         GLuint diffuseCount = 0;
         GLuint specularCount = 0;
+        GLuint normalCount = 0;
 
         for (size_t i = 0; i < textures.size(); ++i)
         {
@@ -96,6 +108,8 @@ private:
                 uniformName = "texture_diffuse" + std::to_string(diffuseCount++);
             else if (textures[i].type == "texture_specular")
                 uniformName = "texture_specular" + std::to_string(specularCount++);
+            else if (textures[i].type == "texture_normal")
+                uniformName = "texture_normal" + std::to_string(normalCount++);
             else
                 uniformName = textures[i].type; // Fallback for custom types
 

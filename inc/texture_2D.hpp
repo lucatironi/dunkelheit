@@ -24,24 +24,14 @@ public:
     GLuint WrapS, WrapT;
     GLuint FilterMin, FilterMax;
 
-    Texture2D(const std::string& path, bool alpha = false, const TextureParams& params = {})
+    Texture2D() = default;
+
+    Texture2D(const std::string& path, const TextureParams& params = {})
         : WrapS(params.wrapS), WrapT(params.wrapT),
           FilterMin(params.filterMin), FilterMax(params.filterMax)
     {
         glGenTextures(1, &ID);
-        if (alpha)
-        {
-            InternalFormat = GL_RGBA;
-            ImageFormat = GL_RGBA;
-        }
-        else
-        {
-            InternalFormat = GL_RGB;
-            ImageFormat = GL_RGB;
-        }
-
-        // Load image
-        unsigned char* image = loadImage(path.c_str());
+        unsigned char* image = loadImageFromPath(path.c_str());
         if (image)
         {
             generate(image);
@@ -53,6 +43,23 @@ public:
         }
     }
 
+    Texture2D(unsigned char* data, unsigned int w, unsigned int h, const TextureParams& params = {})
+        : WrapS(params.wrapS), WrapT(params.wrapT),
+          FilterMin(params.filterMin), FilterMax(params.filterMax)
+    {
+        glGenTextures(1, &ID);
+        unsigned char* image = loadImageFromData(data, w, h);
+        if (image)
+        {
+            generate(image);
+            stbi_image_free(image); // Free after texture generation
+        }
+        else
+        {
+            std::cerr << "ERROR::TEXTURE2D: Failed to load texture from data" << std::endl;
+        }
+    }
+
     void Bind() const
     {
         glBindTexture(GL_TEXTURE_2D, ID);
@@ -60,15 +67,22 @@ public:
 
 private:
     // Helper function to load the image data
-    unsigned char* loadImage(const char* path)
+    unsigned char* loadImageFromPath(const char* path)
     {
         int width, height, channels;
         unsigned char* image = stbi_load(path, &width, &height, &channels, 0);
         if (image)
-        {
-            Width = width;
-            Height = height;
-        }
+            setParams(width, height, channels);
+        return image;
+    }
+
+    unsigned char* loadImageFromData(unsigned char* data, unsigned int w, unsigned int h)
+    {
+        int size, width, height, channels;
+        size = (h == 0) ? w : w * h;
+        unsigned char* image = stbi_load_from_memory(data, size, &width, &height, &channels, 0);
+        if (image)
+            setParams(width, height, channels);
         return image;
     }
 
@@ -85,5 +99,22 @@ private:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, FilterMax);
         // Unbind texture
         glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    void setParams(int width, int height, int channels)
+    {
+        Width = width;
+        Height = height;
+
+        if (channels == 3)
+        {
+            InternalFormat = GL_RGB;
+            ImageFormat = GL_RGB;
+        }
+        else if (channels == 4)
+        {
+            InternalFormat = GL_RGBA;
+            ImageFormat = GL_RGBA;
+        }
     }
 };

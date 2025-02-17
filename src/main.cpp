@@ -146,7 +146,7 @@ int main()
     textShader.SetMat4("projection", orthoProjection);
 
     // load Level
-    Texture2D levelTexture(Settings.LevelTextureFile, true);
+    Texture2D levelTexture(Settings.LevelTextureFile);
     Level level(Settings.LevelMapFile, levelTexture);
     Entities.push_back(&level);
 
