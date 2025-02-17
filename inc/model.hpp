@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+static inline glm::vec3 AiToGlmVec3(const aiVector3D& vec) { return glm::vec3(vec.x, vec.y, vec.z); }
+
 class Model
 {
 public:
@@ -69,39 +71,31 @@ private:
             processNode(node->mChildren[i], scene);
     }
 
-    Mesh processMesh(aiMesh* mesh, const aiScene* scene)
+    Mesh processMesh(const aiMesh* mesh, const aiScene* scene)
     {
         std::vector<Vertex> vertices;
         std::vector<GLuint> indices;
         std::vector<Texture> textures;
 
         // Process vertices
-        for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+        for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
         {
-            Vertex vertex = {
-                glm::vec3(
-                    mesh->mVertices[i].x,
-                    mesh->mVertices[i].y,
-                    mesh->mVertices[i].z
-                ),
-                glm::vec3(
-                    mesh->mNormals[i].x,
-                    mesh->mNormals[i].y,
-                    mesh->mNormals[i].z
-                ),
-                mesh->mTextureCoords[0]
-                    ? glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y)
-                    : glm::vec2(0.0f, 0.0f)
-            };
-
-            vertices.emplace_back(vertex);
+            vertices.emplace_back(Vertex{
+                .Position    = AiToGlmVec3(mesh->mVertices[i]),
+                .Normal      = AiToGlmVec3(mesh->mNormals[i]),
+                .TexCoords   = mesh->mTextureCoords[0]
+                                ? glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y)
+                                : glm::vec2(0.0f, 0.0f),
+                .BoneIDs     = glm::ivec4(-1),
+                .BoneWeights = glm::vec4(0.0f) // Bone Weights are initialised in another loop
+            });
         }
 
         // Process indices
-        for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+        for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
         {
             const aiFace& face = mesh->mFaces[i];
-            for (unsigned int j = 0; j < face.mNumIndices; j++)
+            for (unsigned int j = 0; j < face.mNumIndices; ++j)
                 indices.emplace_back(face.mIndices[j]);
         }
 
