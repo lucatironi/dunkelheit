@@ -240,6 +240,7 @@ int main()
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
+    delete PlayerAudio;
     SoundEngine->drop();
 
     // glfw: terminate, clearing all previously allocated GLFW resources.

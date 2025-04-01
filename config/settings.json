@@ -45,11 +45,11 @@
             "scale": [1.0, 1.0, 1.0]
         },
         "right": {
-            "modelFile": "assets/blasterI.glb",
-            "textureFile": "assets/base_texture.png",
-            "positionOffset": [1.4, -1.0, 1.8],
-            "rotationOffset": [5.0, 185.0, 0.0],
-            "scale": [2.0, 2.0, 2.0]
+            "modelFile": "assets/flashlight.fbx",
+            "textureFile": "assets/flashlight.png",
+            "positionOffset": [1.0, -1.2, 1.2],
+            "rotationOffset": [10.0, -80.0, 0.0],
+            "scale": [5.0, 5.0, 5.0]
         }
     },
     "lighting": {
