@@ -179,6 +179,7 @@ int main()
 
     // play ambient music
     Audio.LoopSound(Settings.AmbientMusicFile, 0.5f);
+    Audio.AddEmitter(Settings.GizmoSoundFile, glm::vec3(23.0f, 1.5f, 139.0f));
 
     // game loop
     // -----------
@@ -204,6 +205,7 @@ int main()
 
         // update
         // ------
+        Audio.SetPlayerPosition(Camera.Position);
         leftWeapon.Update(Camera);
         rightWeapon.Update(Camera);
         Player.Position = Camera.Position;
