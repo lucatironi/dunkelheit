@@ -18,10 +18,12 @@ endif()
 add_subdirectory(deps)
 
 set(SOURCE_FILES
+    src/audio_engine.cpp
     src/main.cpp
 )
 
 set(HEADER_FILES
+    inc/audio_engine.hpp
     inc/cube_model.hpp
     inc/entity.hpp
     inc/fps_camera.hpp
@@ -79,31 +81,16 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 )
 
 # Link External Libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw glad glm assimp stb freetype nlohmann_json::nlohmann_json)
-
-# Set the IrrKlang variables
-set(IRRKLANG_DIR ${CMAKE_SOURCE_DIR}/deps/irrklang)
-
-# Include the IrrKlang headers
-target_include_directories(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/include)
-
-if (WIN32)
-    # Link IrrKlang Library
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/winx64/irrKlang.lib)
-    # Copy IrrKlang Library to Output Directory
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${IRRKLANG_DIR}/bin/winx64/irrKlang.dll
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/irrKlang.dll)
-elseif(APPLE)
-    # Link IrrKlang Library
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${IRRKLANG_DIR}/lib/macosx/libirrKlang.dylib)
-    # Copy IrrKlang Library to Output Directory
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${IRRKLANG_DIR}/bin/macosx/libirrKlang.dylib
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/libirrKlang.dylib)
-endif(WIN32)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    glfw
+    glad
+    glm
+    assimp
+    stb
+    freetype
+    nlohmann_json::nlohmann_json
+    miniaudio
+)
 
 # Final Output Message
 message(STATUS "Building project ${PROJECT_NAME}")

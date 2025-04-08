@@ -82,3 +82,15 @@ FetchContent_Declare(
     URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
 
 FetchContent_MakeAvailable(json)
+
+# miniaudio
+FetchContent_Declare(
+    miniaudio
+    GIT_REPOSITORY https://github.com/mackron/miniaudio.git
+    GIT_TAG 0.11.22
+    GIT_PROGRESS TRUE
+    GIT_SHALLOW TRUE)
+
+FetchContent_MakeAvailable(miniaudio)
+
+target_include_directories(miniaudio INTERFACE ${miniaudio_SOURCE_DIR})
