@@ -58,9 +58,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/nothings/stb.git
     GIT_TAG master
     GIT_PROGRESS TRUE
-    GIT_SHALLOW TRUE
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND "")
+    GIT_SHALLOW TRUE)
 
 FetchContent_MakeAvailable(stb)
 
