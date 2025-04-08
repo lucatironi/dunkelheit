@@ -85,6 +85,7 @@
             "assets/footstep2.wav",
             "assets/footstep3.wav"
         ],
-        "torchToggleSoundFile": "assets/flashlight_toggle.wav"
+        "torchToggleSoundFile": "assets/flashlight_toggle.wav",
+        "gizmoSoundFile": "assets/gizmo.wav"
     }
 }
