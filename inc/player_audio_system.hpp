@@ -29,6 +29,7 @@ public:
 
     void Update(PlayerState& player, float elapsedTime)
     {
+        audioEngine.SetPlayerPosition(player.Position);
         // Check if the player is moving
         float distanceMoved = glm::length(player.Position - player.PreviousPosition);
         player.IsMoving = distanceMoved > movementThreshold;

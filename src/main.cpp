@@ -205,7 +205,6 @@ int main()
 
         // update
         // ------
-        Audio.SetPlayerPosition(Camera.Position);
         leftWeapon.Update(Camera);
         rightWeapon.Update(Camera);
         Player.Position = Camera.Position;

@@ -30,33 +30,17 @@ bool AudioEngine::LoopSound(const std::string& path, float volume)
     if (!initialized)
         return false;
 
-    ma_sound* sound = nullptr;
-
-    // Check if sound is already loaded
-    if (sounds.find(path) == sounds.end())
-    {
-        // Load the sound if it's not in the cache
-        ma_sound* newSound = new ma_sound;
-        ma_uint32 flags = MA_SOUND_FLAG_LOOPING | MA_SOUND_FLAG_NO_SPATIALIZATION | MA_SOUND_FLAG_NO_PITCH;
-        ma_result result = ma_sound_init_from_file(&engine, path.c_str(), flags, nullptr, nullptr, newSound);
-        if (result != MA_SUCCESS)
-        {
-            std::cerr << "Failed to load sound: " << path << " (error code " << result << ")" << std::endl;
-            delete newSound;
-            return false;
-        }
-        sounds[path] = newSound;
-        sound = sounds[path];
-    }
+    ma_uint32 flags = MA_SOUND_FLAG_LOOPING | MA_SOUND_FLAG_NO_SPATIALIZATION | MA_SOUND_FLAG_NO_PITCH;
+    ma_sound* sound = initSound(path, flags);
+    if (!sound)
+        return false;
     else
     {
-        sound = sounds[path];
+        ma_sound_set_volume(sounds[path], volume);
+        ma_sound_start(sound);
+
+        return true;
     }
-
-    ma_sound_set_volume(sounds[path], volume);
-    ma_sound_start(sound);
-
-    return true;
 }
 
 bool AudioEngine::AddEmitter(const std::string& path, const glm::vec3& position)
@@ -64,41 +48,34 @@ bool AudioEngine::AddEmitter(const std::string& path, const glm::vec3& position)
     if (!initialized)
         return false;
 
-    ma_sound* sound = nullptr;
-
-    // Check if sound is already loaded
-    if (sounds.find(path) == sounds.end())
-    {
-        // Load the sound if it's not in the cache
-        ma_sound* newSound = new ma_sound;
-        ma_sound_flags flags = MA_SOUND_FLAG_LOOPING;
-        ma_result result = ma_sound_init_from_file(&engine, path.c_str(), flags, nullptr, nullptr, newSound);
-        if (result != MA_SUCCESS)
-        {
-            std::cerr << "Failed to load sound: " << path << " (error code " << result << ")" << std::endl;
-            delete newSound;
-            return false;
-        }
-        sounds[path] = newSound;
-        sound = sounds[path];
-    }
+    ma_uint32 flags = MA_SOUND_FLAG_LOOPING | MA_SOUND_FLAG_NO_PITCH;
+    ma_sound* sound = initSound(path, flags);
+    if (!sound)
+        return false;
     else
     {
-        sound = sounds[path];
+        ma_sound_set_position(sound, position.x, position.y, position.z);
+        ma_sound_start(sound);
+
+        return true;
     }
-
-    ma_sound_set_position(sounds[path], position.x, position.y, position.z);
-    ma_sound_start(sound);
-
-    return true;
 }
 
-void AudioEngine::StopSound(const std::string& path)
+bool AudioEngine::StopSound(const std::string& path)
 {
-    if (sounds.find(path) != sounds.end())
-        ma_sound_stop(sounds[path]);
-    else
+    if (!initialized)
+        return false;
+
+    if (sounds.find(path) == sounds.end())
+    {
         std::cerr << "Sound not found in cache: " << path << std::endl;
+        return false;
+    }
+    else {
+        ma_sound_stop(sounds[path]);
+    }
+
+    return true;
 }
 
 void AudioEngine::StopAll()
@@ -107,16 +84,50 @@ void AudioEngine::StopAll()
         ma_engine_stop(&engine);
 }
 
-void AudioEngine::SetSoundVolume(const std::string& path, float volume)
+bool AudioEngine::SetSoundVolume(const std::string& path, float volume)
 {
-    if (sounds.find(path) != sounds.end())
-        ma_sound_set_volume(sounds[path], volume);
-    else
+    if (!initialized)
+        return false;
+
+    if (sounds.find(path) == sounds.end())
+    {
         std::cerr << "Sound not found in cache: " << path << std::endl;
+        return false;
+    }
+    else {
+        ma_sound_set_volume(sounds[path], volume);
+    }
+
+    return true;
 }
 
 void AudioEngine::SetPlayerPosition(const glm::vec3& position)
 {
     if (initialized)
         ma_engine_listener_set_position(&engine, 0, position.x, position.y, position.z);
+}
+
+ma_sound* AudioEngine::initSound(const std::string& path, ma_uint32 flags)
+{
+    ma_sound* sound = nullptr;
+
+    // Check if sound is already loaded
+    if (sounds.find(path) == sounds.end())
+    {
+        // Load the sound if it's not in the cache
+        ma_sound* newSound = new ma_sound;
+        ma_result result = ma_sound_init_from_file(&engine, path.c_str(), flags, nullptr, nullptr, newSound);
+        if (result != MA_SUCCESS)
+        {
+            std::cerr << "Failed to load sound: " << path << " (error code " << result << ")" << std::endl;
+            delete newSound;
+            return sound;
+        }
+        sounds[path] = newSound;
+        sound = sounds[path];
+    }
+    else
+        sound = sounds[path];
+
+    return sound;
 }
