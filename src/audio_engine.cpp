@@ -37,7 +37,8 @@ bool AudioEngine::LoopSound(const std::string& path, float volume)
     {
         // Load the sound if it's not in the cache
         ma_sound* newSound = new ma_sound;
-        ma_result result = ma_sound_init_from_file(&engine, path.c_str(), MA_SOUND_FLAG_LOOPING, nullptr, nullptr, newSound);
+        ma_uint32 flags = MA_SOUND_FLAG_LOOPING | MA_SOUND_FLAG_NO_SPATIALIZATION | MA_SOUND_FLAG_NO_PITCH;
+        ma_result result = ma_sound_init_from_file(&engine, path.c_str(), flags, nullptr, nullptr, newSound);
         if (result != MA_SUCCESS)
         {
             std::cerr << "Failed to load sound: " << path << " (error code " << result << ")" << std::endl;
@@ -53,6 +54,40 @@ bool AudioEngine::LoopSound(const std::string& path, float volume)
     }
 
     ma_sound_set_volume(sounds[path], volume);
+    ma_sound_start(sound);
+
+    return true;
+}
+
+bool AudioEngine::AddEmitter(const std::string& path, const glm::vec3& position)
+{
+    if (!initialized)
+        return false;
+
+    ma_sound* sound = nullptr;
+
+    // Check if sound is already loaded
+    if (sounds.find(path) == sounds.end())
+    {
+        // Load the sound if it's not in the cache
+        ma_sound* newSound = new ma_sound;
+        ma_sound_flags flags = MA_SOUND_FLAG_LOOPING;
+        ma_result result = ma_sound_init_from_file(&engine, path.c_str(), flags, nullptr, nullptr, newSound);
+        if (result != MA_SUCCESS)
+        {
+            std::cerr << "Failed to load sound: " << path << " (error code " << result << ")" << std::endl;
+            delete newSound;
+            return false;
+        }
+        sounds[path] = newSound;
+        sound = sounds[path];
+    }
+    else
+    {
+        sound = sounds[path];
+    }
+
+    ma_sound_set_position(sounds[path], position.x, position.y, position.z);
     ma_sound_start(sound);
 
     return true;
@@ -78,4 +113,10 @@ void AudioEngine::SetSoundVolume(const std::string& path, float volume)
         ma_sound_set_volume(sounds[path], volume);
     else
         std::cerr << "Sound not found in cache: " << path << std::endl;
+}
+
+void AudioEngine::SetPlayerPosition(const glm::vec3& position)
+{
+    if (initialized)
+        ma_engine_listener_set_position(&engine, 0, position.x, position.y, position.z);
 }
