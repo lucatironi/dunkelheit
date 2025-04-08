@@ -74,7 +74,7 @@ private:
 
         // Texture setup
         std::vector<Texture> textures = {
-            { Texture2D(texturePath, false), "texture_diffuse" }
+            { Texture2D(texturePath), "texture_diffuse" }
         };
 
         // Create the mesh
