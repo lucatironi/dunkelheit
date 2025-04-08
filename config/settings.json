@@ -79,12 +79,12 @@
         }
     },
     "audio": {
-        "ambientMusicFile": "assets/music.ogg",
+        "ambientMusicFile": "assets/music.mp3",
         "footstepsSoundFiles": [
             "assets/footstep1.wav",
             "assets/footstep2.wav",
             "assets/footstep3.wav"
         ],
-        "torchToggleSoundFile": "assets/flashlight_toggle.ogg"
+        "torchToggleSoundFile": "assets/flashlight_toggle.wav"
     }
 }
