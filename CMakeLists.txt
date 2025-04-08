@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.5...4.0)
 
 # Project Setup
 project(dunkelheit LANGUAGES CXX)
