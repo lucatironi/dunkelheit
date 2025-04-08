@@ -1,10 +1,10 @@
 #pragma once
 
+#include "audio_engine.hpp"
 #include "fps_camera.hpp"
 #include "random_generator.hpp"
 
 #include <glm/glm.hpp>
-#include <irrKlang.h>
 
 #include <iostream>
 #include <string>
@@ -20,15 +20,12 @@ struct PlayerState {
 class PlayerAudioSystem
 {
 public:
-    PlayerAudioSystem(irrklang::ISoundEngine* engine,
+    PlayerAudioSystem(AudioEngine& engine,
         const std::vector<std::string>& footstepSoundPaths,
-        const std::string& torchToggleSoundFile)
-        : soundEngine(engine), lastStepTime(0.0f), stepInterval(0.6f)
-    {
-        for (const auto& path : footstepSoundPaths)
-            footstepSounds.push_back(soundEngine->addSoundSourceFromFile(path.c_str()));
-        torchToggleSound = soundEngine->addSoundSourceFromFile(torchToggleSoundFile.c_str());
-    }
+        const std::string& torchToggleSoundPath)
+        : audioEngine(engine), lastStepTime(0.0f), stepInterval(0.6f),
+        torchToggleSound(torchToggleSoundPath), footstepSounds(footstepSoundPaths)
+    {}
 
     void Update(PlayerState& player, float elapsedTime)
     {
@@ -47,13 +44,13 @@ public:
 
     void ToggleTorch(PlayerState& player)
     {
-        soundEngine->play2D(torchToggleSound);
+        audioEngine.PlaySound(torchToggleSound);
     }
 
 private:
-    irrklang::ISoundEngine* soundEngine;
-    std::vector<irrklang::ISoundSource*> footstepSounds;
-    irrklang::ISoundSource* torchToggleSound;
+    AudioEngine& audioEngine;
+    std::vector<std::string> footstepSounds;
+    std::string torchToggleSound;
     float lastStepTime;
     float stepInterval; // Time between steps
     const float movementThreshold = 0.002f; // Tunable threshold for detecting movement
@@ -63,8 +60,8 @@ private:
     {
         // Randomly select a footstep sound
         int randomIndex = random.GetRandomInRange(0, 2);
-        irrklang::ISoundSource* sound = footstepSounds[randomIndex];
-        sound->setDefaultVolume(static_cast<irrklang::ik_f32>(random.GetRandomInRange(3, 6) / 10.f)); // Randomize footsteps volume
-        soundEngine->play2D(sound);
+        float volume = random.GetRandomInRange(3, 6) / 10.f; // Randomize footsteps volume
+
+        audioEngine.PlaySound(footstepSounds[randomIndex], volume);
     }
 };

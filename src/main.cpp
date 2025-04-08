@@ -1,3 +1,4 @@
+#include "audio_engine.hpp"
 #include "entity.hpp"
 #include "fps_camera.hpp"
 #include "item.hpp"
@@ -16,7 +17,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <irrKlang.h>
 
 #include <cmath>
 #include <filesystem>
@@ -38,6 +38,7 @@ void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int f
 
 void Shoot();
 
+AudioEngine Audio;
 SettingsData Settings;
 FPSCamera Camera;
 PlayerState Player;
@@ -49,7 +50,6 @@ float CurrentTime = 0.0f;
 bool FirstMouse = true;
 float LastX, LastY;
 
-irrklang::ISoundEngine* SoundEngine;
 
 int main()
 {
@@ -125,15 +125,6 @@ int main()
         return -1;
     }
 
-    // irrklang: initalize sound engine
-    // ---------------------------------------
-    SoundEngine = irrklang::createIrrKlangDevice();
-    if (!SoundEngine)
-    {
-        std::cerr << "ERROR::IRRKLANG: Could not initialize irrklang sound engine" << std::endl;
-        return -1;
-    }
-
     // seed random generator
     RandomGenerator& random = RandomGenerator::GetInstance();
     random.SetSeed(1337);
@@ -174,7 +165,7 @@ int main()
     Player.PreviousPosition = Camera.Position;
     Player.IsMoving = false;
     Player.IsTorchOn = true;
-    PlayerAudio = new PlayerAudioSystem(SoundEngine, Settings.FootstepsSoundFiles, Settings.TorchToggleSoundFile);
+    PlayerAudio = new PlayerAudioSystem(Audio, Settings.FootstepsSoundFiles, Settings.TorchToggleSoundFile);
 
     TorchLight.PositionOffset = Settings.TorchPos;
 
@@ -187,7 +178,7 @@ int main()
     glEnable(GL_CULL_FACE);
 
     // play ambient music
-    SoundEngine->play2D(Settings.AmbientMusicFile.c_str(), true);
+    Audio.LoopSound(Settings.AmbientMusicFile, 0.5f);
 
     // game loop
     // -----------
@@ -240,7 +231,6 @@ int main()
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
-    SoundEngine->drop();
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
@@ -279,8 +269,8 @@ void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, in
         glfwSetWindowShouldClose(window, true);
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
     {
-        Player.IsTorchOn = !Player.IsTorchOn;
         PlayerAudio->ToggleTorch(Player);
+        Player.IsTorchOn = !Player.IsTorchOn;
     }
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
         Settings.ShowDebugInfo = !Settings.ShowDebugInfo;
