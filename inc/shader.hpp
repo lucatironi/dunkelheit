@@ -9,6 +9,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 class Shader
 {
@@ -75,6 +76,7 @@ public:
     void SetMat2(const std::string& name, const glm::mat2& mat) const { setUniform(name, mat); }
     void SetMat3(const std::string& name, const glm::mat3& mat) const { setUniform(name, mat); }
     void SetMat4(const std::string& name, const glm::mat4& mat) const { setUniform(name, mat); }
+    void SetMat4v(const std::string& name, std::vector<glm::mat4>& matrices) const { setUniform(name, matrices); }
 
 private:
     mutable std::unordered_map<std::string, GLint> uniformLocations;
@@ -131,6 +133,7 @@ private:
     void setUniformImpl(GLint location, const glm::mat2& mat) const { glUniformMatrix2fv(location, 1, GL_FALSE, glm::value_ptr(mat)); }
     void setUniformImpl(GLint location, const glm::mat3& mat) const { glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(mat)); }
     void setUniformImpl(GLint location, const glm::mat4& mat) const { glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat)); }
+    void setUniformImpl(GLint location, const std::vector<glm::mat4>& matrices) const { glUniformMatrix4fv(location, (GLsizei)matrices.size(), GL_FALSE, glm::value_ptr(matrices[0])); }
 
     // Utility function to check compile/link errors
     void checkCompileErrors(GLuint shader, const std::string& type) const
