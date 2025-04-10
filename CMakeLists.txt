@@ -23,7 +23,9 @@ set(SOURCE_FILES
 )
 
 set(HEADER_FILES
+    inc/animated_model.hpp
     inc/audio_engine.hpp
+    inc/basic_model.hpp
     inc/cube_model.hpp
     inc/entity.hpp
     inc/fps_camera.hpp
@@ -32,6 +34,7 @@ set(HEADER_FILES
     inc/level.hpp
     inc/mesh.hpp
     inc/model.hpp
+    inc/model_loader.hpp
     inc/object.hpp
     inc/pixelator.hpp
     inc/player_audio_system.hpp
