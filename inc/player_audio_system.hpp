@@ -45,7 +45,7 @@ public:
 
     void ToggleTorch(PlayerState& player)
     {
-        audioEngine.PlaySound(torchToggleSound);
+        audioEngine.PlayOneShotSound(torchToggleSound);
     }
 
 private:
@@ -63,6 +63,6 @@ private:
         int randomIndex = random.GetRandomInRange(0, 2);
         float volume = random.GetRandomInRange(3, 6) / 10.f; // Randomize footsteps volume
 
-        audioEngine.PlaySound(footstepSounds[randomIndex], volume);
+        audioEngine.PlayOneShotSound(footstepSounds[randomIndex], volume);
     }
 };

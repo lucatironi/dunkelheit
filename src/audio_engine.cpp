@@ -19,7 +19,7 @@ AudioEngine::~AudioEngine()
         ma_engine_uninit(&engine);
 }
 
-void AudioEngine::PlaySound(const std::string& path, float volume)
+void AudioEngine::PlayOneShotSound(const std::string& path, float volume)
 {
     if (initialized)
         ma_engine_play_sound(&engine, path.c_str(), nullptr);

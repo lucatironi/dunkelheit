@@ -13,7 +13,7 @@ public:
     AudioEngine();
     ~AudioEngine();
 
-    void PlaySound(const std::string& path, float volume = 1.0f);
+    void PlayOneShotSound(const std::string& path, float volume = 1.0f);
     bool LoopSound(const std::string& path, float volume = 1.0f);
     bool AddEmitter(const std::string& path, const glm::vec3& position);
     bool StopSound(const std::string& path);
