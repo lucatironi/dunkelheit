@@ -90,6 +90,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     freetype
     nlohmann_json::nlohmann_json
     miniaudio
+    ozz_animation_offline
+    ozz_animation
 )
 
 # Final Output Message
