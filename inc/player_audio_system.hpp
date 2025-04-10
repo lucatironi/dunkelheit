@@ -1,12 +1,10 @@
 #pragma once
 
 #include "audio_engine.hpp"
-#include "fps_camera.hpp"
 #include "random_generator.hpp"
 
 #include <glm/glm.hpp>
 
-#include <iostream>
 #include <string>
 #include <vector>
 
