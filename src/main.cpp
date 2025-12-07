@@ -13,7 +13,7 @@
 #include "torch.hpp"
 #include "working_directory.hpp"
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
@@ -118,11 +118,15 @@ int main()
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    int version = gladLoadGL(glfwGetProcAddress);
+    if (version == 0)
     {
         std::cerr << "ERROR::GLAD: Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
+    // Successfully loaded OpenGL
+    std::cout << "Loaded OpenGL " << GLAD_VERSION_MAJOR(version) << "." << GLAD_VERSION_MINOR(version) << std::endl;
 
     // seed random generator
     RandomGenerator& random = RandomGenerator::GetInstance();

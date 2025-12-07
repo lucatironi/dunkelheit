@@ -3,7 +3,7 @@
 #include "entity.hpp"
 #include "cube_model.hpp"
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <glm/glm.hpp>
 
 class Object : public Entity

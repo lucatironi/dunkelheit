@@ -18,17 +18,20 @@ FetchContent_MakeAvailable(glfw)
 FetchContent_Declare(
     glad
     GIT_REPOSITORY https://github.com/Dav1dde/glad.git
-    GIT_TAG v0.1.36
+    GIT_TAG v2.0.8
     GIT_PROGRESS TRUE
-    GIT_SHALLOW TRUE)
+    GIT_SHALLOW TRUE
+    SOURCE_SUBDIR cmake)
 
 FetchContent_MakeAvailable(glad)
+
+glad_add_library(glad STATIC REPRODUCIBLE LOADER API gl:core=4.1)
 
 # glm
 FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG 1.0.1
+    GIT_TAG 1.0.2
     GIT_PROGRESS TRUE
     GIT_SHALLOW TRUE)
 
@@ -38,7 +41,7 @@ FetchContent_MakeAvailable(glm)
 FetchContent_Declare(
     assimp
     GIT_REPOSITORY https://github.com/assimp/assimp.git
-    GIT_TAG v5.4.2
+    GIT_TAG v5.4.3
     GIT_PROGRESS TRUE
     GIT_SHALLOW TRUE)
 
@@ -69,7 +72,7 @@ target_include_directories(stb INTERFACE ${stb_SOURCE_DIR})
 FetchContent_Declare(
     freetype
     GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype
-    GIT_TAG VER-2-13-2
+    GIT_TAG VER-2-14-1
     GIT_PROGRESS TRUE)
 
 FetchContent_MakeAvailable(freetype)
@@ -85,7 +88,7 @@ FetchContent_MakeAvailable(json)
 FetchContent_Declare(
     miniaudio
     GIT_REPOSITORY https://github.com/mackron/miniaudio.git
-    GIT_TAG 0.11.22
+    GIT_TAG 0.11.23
     GIT_PROGRESS TRUE
     GIT_SHALLOW TRUE)
 

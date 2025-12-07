@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.5...4.0)
+cmake_minimum_required(VERSION 4.0)
 
 # Project Setup
-project(dunkelheit LANGUAGES CXX)
+project(dunkelheit LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_COMPILER_LAUNCHER ccache)

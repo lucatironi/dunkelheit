@@ -4,7 +4,7 @@
 #include "shader.hpp"
 #include "texture_2D.hpp"
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <glm/glm.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
