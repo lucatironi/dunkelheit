@@ -3,8 +3,9 @@
         "title": "Dunkelheit",
         "width": 1280,
         "height": 720,
+        "pixelScale": 4.0,
         "FOV": 75.0,
-        "fullScreen": true,
+        "fullScreen": false,
         "showDebugInfo": true
     },
     "renderer": {

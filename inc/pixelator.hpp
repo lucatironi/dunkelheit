@@ -8,10 +8,10 @@
 class Pixelator
 {
 public:
-    Pixelator(const GLuint windowWidth, const GLuint windowHeight,
-              const GLuint framebufferWidth, const GLuint framebufferHeight)
-        : windowWidth(windowWidth), windowHeight(windowHeight),
-          framebufferWidth(framebufferWidth), framebufferHeight(framebufferHeight)
+    Pixelator(const GLuint lowResWidth, const GLuint lowResHeight,
+              const GLuint screenWidth, const GLuint screenHeight)
+        : lowResWidth(lowResWidth), lowResHeight(lowResHeight),
+          screenWidth(screenWidth), screenHeight(screenHeight)
     {
         setupBuffers();
     }
@@ -25,35 +25,40 @@ public:
 
     void BeginRender()
     {
+        // 1. Bind and clear the OFF-SCREEN, LOW-RESOLUTION FBO
         glBindFramebuffer(GL_FRAMEBUFFER, FBO);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, framebufferWidth, framebufferHeight);
+
+        // 2. Set viewport to the LOW-RESOLUTION size for rendering
+        glViewport(0, 0, lowResWidth, lowResHeight);
     }
 
     void EndRender()
     {
-        // copy off-screen framebuffer content into the screen framebuffer (also called "default framebuffer")
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);   // write into default framebuffer
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO); // read from off-screen framebuffer
-
-        // read from location "GL_COLOR_ATTACHMENT0" from the currently bound GL_READ_FRAMEBUFFER
+        // 1. Set the blit source/destination buffers
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);   // Destination: default screen FBO
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO); // Source: off-screen low-res FBO
         glReadBuffer(GL_COLOR_ATTACHMENT0);
 
-        // copy:
+        // 2. Blit (Copy and Stretch)
         glBlitFramebuffer(
-            0, 0, framebufferWidth, framebufferHeight, // source area: we rendered into framebufferwidth X framebufferheight
-            0, 0, windowWidth,      windowHeight,      // destination area: copy only the area in which we rendered
-            GL_COLOR_BUFFER_BIT,                       // buffer bitfield: copy the color only (from location "GL_COLOR_ATTACHMENT0")
-            GL_NEAREST);                               // filtering parameter
+            // Source (Low-Res FBO)
+            0, 0, lowResWidth, lowResHeight,
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0); // Binds both READ and WRITE framebuffer to default framebuffer
+            // Destination (High-Res Screen)
+            0, 0, screenWidth, screenHeight,
 
-        glViewport(0, 0, windowWidth, windowHeight);
+            GL_COLOR_BUFFER_BIT,
+            GL_NEAREST); // GL_NEAREST ensures the blocky, pixelated look
+
+        // 3. Unbind FBO and restore viewport
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // Binds both READ and WRITE to default
+        glViewport(0, 0, screenWidth, screenHeight);
     }
 
 private:
-    GLuint windowWidth, windowHeight;
-    GLuint framebufferWidth, framebufferHeight;
+    GLuint lowResWidth, lowResHeight;  // The size of the internal FBO (e.g., 512x288)
+    GLuint screenWidth, screenHeight;  // The size of the screen's Framebuffer (e.g., 2048x1152)
     GLuint FBO, colorRBO, depthRBO;
 
     void setupBuffers()
@@ -64,13 +69,13 @@ private:
         glGenRenderbuffers(1, &depthRBO);
 
         glBindRenderbuffer(GL_RENDERBUFFER, colorRBO);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, framebufferWidth, framebufferHeight);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, lowResWidth, lowResHeight);
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             std::cout << "ERROR::PIXELATOR: Failed to initialize color colorRBO" << std::endl;
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
         glBindRenderbuffer(GL_RENDERBUFFER, depthRBO);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, framebufferWidth, framebufferHeight);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, lowResWidth, lowResHeight);
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             std::cout << "ERROR::PIXELATOR: Failed to initialize depth depthRBO" << std::endl;
         glBindRenderbuffer(GL_RENDERBUFFER, 0);

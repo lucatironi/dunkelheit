@@ -77,7 +77,6 @@ int main()
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GL_FALSE);
 #endif
 
     // glfw window creation
@@ -93,9 +92,14 @@ int main()
     else
     {
         window = glfwCreateWindow(Settings.WindowWidth, Settings.WindowHeight, Settings.WindowTitle.c_str(), nullptr, nullptr);
-        glfwGetWindowSize(window, &Settings.WindowWidth, &Settings.WindowHeight);
         glfwGetWindowPos(window, &Settings.WindowPositionX, &Settings.WindowPositionY);
     }
+
+    int framebufferW, framebufferH;
+    glfwGetFramebufferSize(window, &framebufferW, &framebufferH);
+
+    Settings.FrameBufferWidth = framebufferW;
+    Settings.FrameBufferHeight = framebufferH;
 
     if (window == nullptr)
     {
@@ -153,7 +157,12 @@ int main()
     Camera.HeadHeight = Settings.PlayerHeadHeight;
 
     // load post processing
-    Pixelator pixelator(Settings.WindowWidth, Settings.WindowHeight, Settings.WindowWidth / 4.0f, Settings.WindowHeight / 4.0f);
+    Pixelator pixelator(
+        (GLuint)(Settings.FrameBufferWidth / Settings.PixelScale),
+        (GLuint)(Settings.FrameBufferHeight / Settings.PixelScale),
+        Settings.FrameBufferWidth,
+        Settings.FrameBufferHeight
+    );
 
     // load Weapons
     Item leftWeapon(Settings.LeftWeaponModelFile, Settings.LeftWeaponTextureFile,

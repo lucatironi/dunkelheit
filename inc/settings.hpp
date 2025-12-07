@@ -12,7 +12,9 @@ public:
     // Window settings
     std::string WindowTitle;
     int WindowWidth, WindowHeight;
+    int FrameBufferWidth, FrameBufferHeight;
     int WindowPositionX, WindowPositionY;
+    float PixelScale;
     float FOV;
     bool FullScreen, ShowDebugInfo;
 
@@ -66,6 +68,7 @@ inline SettingsData LoadSettingsFile(const std::string& path)
     settings.WindowTitle = json.GetNested<std::string>("window.title");
     settings.WindowWidth = json.GetNested<int>("window.width");
     settings.WindowHeight = json.GetNested<int>("window.height");
+    settings.PixelScale = json.GetNested<float>("window.pixelScale");
     settings.FOV = json.GetNested<float>("window.FOV");
     settings.FullScreen = json.GetNested<bool>("window.fullScreen");
     settings.ShowDebugInfo = json.GetNested<bool>("window.showDebugInfo");
