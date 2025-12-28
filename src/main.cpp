@@ -80,7 +80,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    // glfw window creation
+    // glfw: window creation
     // --------------------
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     GLFWwindow* window = nullptr;
@@ -147,7 +147,6 @@ int main()
     // load GameScene
     Scene = new GameScene(Settings);
 
-
     // load camera
     Camera.Constrained = true;
     Camera.FOV = Settings.FOV;
@@ -211,7 +210,7 @@ int main()
 
         // update
         // ------
-        Scene->Update(Camera);
+        Scene->Update(deltaTime, Camera);
         Player.Position = Camera.Position;
         PlayerAudio->Update(Player, CurrentTime);
         TorchLight.Update(Camera);

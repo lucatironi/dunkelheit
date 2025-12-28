@@ -38,8 +38,7 @@
         "speed": 5.0
     },
     "enemy": {
-        "modelFile": "assets/bloodwraith.glb",
-        "textureFile": "assets/bloodwraith.png"
+        "modelFile": "assets/bloodwraith.glb"
     },
     "weapons": {
         "left": {

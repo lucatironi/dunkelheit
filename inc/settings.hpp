@@ -32,7 +32,7 @@ public:
 
     // Level settings
     std::string LevelMapFile, LevelTextureFile;
-    std::string EnemyModelFile, EnemyTextureFile;
+    std::string EnemyModelFile;
 
     // Player settings
     float PlayerSpeed, PlayerCollisionRadius, PlayerHeadHeight;
@@ -88,7 +88,6 @@ inline SettingsData LoadSettingsFile(const std::string& path)
     settings.LevelTextureFile = json.GetNested<std::string>("level.textureFile");
 
     settings.EnemyModelFile = json.GetNested<std::string>("enemy.modelFile");
-    settings.EnemyTextureFile = json.GetNested<std::string>("enemy.textureFile");
 
     settings.PlayerSpeed = json.GetNested<float>("player.speed");
     settings.PlayerCollisionRadius = json.GetNested<float>("player.collisionRadius");

@@ -25,8 +25,7 @@ public:
         AlwaysOnTop = true;
     }
 
-    // Update the weapon's position based on the camera's position and orientation
-    void Update(const FPSCamera& camera)
+    void Update(const float deltaTime, const FPSCamera& camera)
     {
         updateModelMatrix(camera);
     }

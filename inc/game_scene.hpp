@@ -36,7 +36,7 @@ public:
     void AddEnemy(glm::vec3 position)
     {
         position.y = 0.0f;
-        enemies.emplace_back(settings.EnemyModelFile, settings.EnemyTextureFile, position, 90.0f, glm::vec3(2.5f));
+        enemies.emplace_back(settings.EnemyModelFile, position, 90.0f, glm::vec3(2.5f));
         refreshRenderList();
     }
 
@@ -56,13 +56,13 @@ public:
         level->SetLights(shader);
     }
 
-    void Update(FPSCamera& camera)
+    void Update(float deltaTime, FPSCamera& camera)
     {
         handleCollisions(camera);
         for (auto& enemy : enemies)
-            enemy.Update();
+            enemy.Update(deltaTime, camera);
         for (auto& item : items)
-            item.Update(camera);
+            item.Update(deltaTime, camera);
     }
 
     void Draw(const Shader& shader)
