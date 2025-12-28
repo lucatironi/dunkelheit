@@ -106,28 +106,20 @@ public:
         return neighbors;
     }
 
-    void AddLight(const glm::vec3& position, const glm::vec3& color)
-    {
-        if (lights.size() < MAX_LIGHTS)
-            lights.push_back({ position, color });
-        else
-            std::cerr << "Warning: Maximum number of lights exceeded!" << std::endl;
-    }
-
-    int NumLights() const
-    {
-        return static_cast<int>(lights.size());
-    }
-
     void SetLights(const Shader& shader)
     {
         shader.Use();
-        for (size_t i = 0; i < NumLights(); ++i)
+        for (size_t i = 0; i < numLights(); ++i)
         {
             shader.SetVec3("lights[" + std::to_string(i) + "].position", lights[i].position);
             shader.SetVec3("lights[" + std::to_string(i) + "].color", lights[i].color);
         }
-        shader.SetInt("numLights", NumLights());
+        shader.SetInt("numLights", numLights());
+    }
+
+    std::vector<glm::vec3> GetEnemyPositions() const
+    {
+        return enemyPositions;
     }
 
 private:
@@ -141,6 +133,7 @@ private:
     std::vector<Tile> tiles;
     std::vector<GLfloat> vertices;
     std::vector<Light> lights;
+    std::vector<glm::vec3> enemyPositions;
     Tile nullTile;
 
     RandomGenerator& random = RandomGenerator::GetInstance();
@@ -224,6 +217,24 @@ private:
             pushQuad(pF, pB, pC, pG, nR, random.GetWeightedRandomInRange(8, 11));
     }
 
+    void addLight(const glm::vec3& position, const glm::vec3& color)
+    {
+        if (lights.size() < MAX_LIGHTS)
+            lights.push_back({ position, color });
+        else
+            std::cerr << "Warning: Maximum number of lights exceeded!" << std::endl;
+    }
+
+    void addEnemy(const glm::vec3& position)
+    {
+        enemyPositions.push_back({ position });
+    }
+
+    int numLights() const
+    {
+        return static_cast<int>(lights.size());
+    }
+
     void loadLevel(const std::string& path)
     {
         // Load level data from the image
@@ -268,10 +279,11 @@ private:
             addWall(x, z);
             break;
         case COLOR_ENEMY:
+            addEnemy(position + (quadSize / 2.0f));
             addBlock(x, z);
             break;
         case COLOR_LIGHT:
-            AddLight(position + (quadSize / 2.0f), DEFAULT_LIGHT_COLOR);
+            addLight(position + (quadSize / 2.0f), DEFAULT_LIGHT_COLOR);
             addBlock(x, z);
             break;
         default:

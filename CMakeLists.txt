@@ -27,14 +27,16 @@ set(HEADER_FILES
     inc/audio_engine.hpp
     inc/basic_model.hpp
     inc/cube_model.hpp
+    inc/enemy.hpp
     inc/entity.hpp
     inc/fps_camera.hpp
+    inc/game_scene.hpp
     inc/item.hpp
     inc/json_file.hpp
     inc/level.hpp
     inc/mesh.hpp
-    inc/model.hpp
     inc/model_loader.hpp
+    inc/model.hpp
     inc/object.hpp
     inc/pixelator.hpp
     inc/player_audio_system.hpp

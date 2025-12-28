@@ -37,6 +37,10 @@
         "collisionRadius": 0.6,
         "speed": 5.0
     },
+    "enemy": {
+        "modelFile": "assets/bloodwraith.glb",
+        "textureFile": "assets/bloodwraith.png"
+    },
     "weapons": {
         "left": {
             "modelFile": "assets/left_hand.glb",

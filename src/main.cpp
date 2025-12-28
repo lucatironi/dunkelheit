@@ -1,6 +1,7 @@
 #include "audio_engine.hpp"
 #include "entity.hpp"
 #include "fps_camera.hpp"
+#include "game_scene.hpp"
 #include "item.hpp"
 #include "level.hpp"
 #include "pixelator.hpp"
@@ -41,9 +42,9 @@ AudioEngine Audio;
 SettingsData Settings;
 FPSCamera Camera;
 PlayerState Player;
-std::vector<Entity*> Entities;
 Torch TorchLight;
 PlayerAudioSystem* PlayerAudio;
+GameScene* Scene;
 
 float CurrentTime = 0.0f;
 bool FirstMouse = true;
@@ -143,16 +144,15 @@ int main()
     textShader.Use();
     textShader.SetMat4("projection", orthoProjection);
 
-    // load Level
-    Texture2D levelTexture(Settings.LevelTextureFile);
-    Level level(Settings.LevelMapFile, levelTexture);
-    Entities.push_back(&level);
+    // load GameScene
+    Scene = new GameScene(Settings);
+
 
     // load camera
     Camera.Constrained = true;
     Camera.FOV = Settings.FOV;
     Camera.AspectRatio = static_cast<GLfloat>(Settings.WindowWidth) / static_cast<GLfloat>(Settings.WindowHeight);
-    Camera.Position = level.StartingPosition;
+    Camera.Position = Scene->GetStartingPosition();
     Camera.MovementSpeed = Settings.PlayerSpeed;
     Camera.HeadHeight = Settings.PlayerHeadHeight;
 
@@ -164,13 +164,11 @@ int main()
         Settings.FrameBufferHeight
     );
 
-    // load Weapons
-    Item leftWeapon(Settings.LeftWeaponModelFile, Settings.LeftWeaponTextureFile,
+    // load items
+    Scene->AddItem(Settings.LeftWeaponModelFile, Settings.LeftWeaponTextureFile,
         Settings.LeftWeaponPositionOffset, Settings.LeftWeaponRotationOffset, Settings.LeftWeaponScale);
-    Item rightWeapon(Settings.RightWeaponModelFile, Settings.RightWeaponTextureFile,
+    Scene->AddItem(Settings.RightWeaponModelFile, Settings.RightWeaponTextureFile,
         Settings.RightWeaponPositionOffset, Settings.RightWeaponRotationOffset, Settings.RightWeaponScale);
-    Entities.push_back(&leftWeapon);
-    Entities.push_back(&rightWeapon);
 
     // initialize player state and audio system
     Player.Position = Camera.Position;
@@ -183,7 +181,7 @@ int main()
 
     Shader defaultShader(Settings.ForwardShadingVertexShaderFile, Settings.ForwardShadingFragmentShaderFile);
     SetupShaders(defaultShader);
-    level.SetLights(defaultShader);
+    Scene->SetLights(defaultShader);
 
     // setup OpenGL
     glEnable(GL_DEPTH_TEST);
@@ -211,14 +209,9 @@ int main()
         // -----
         ProcessInput(window, deltaTime);
 
-        // collision detection
-        // -------------------
-        HandleCollisions(Camera, level);
-
         // update
         // ------
-        leftWeapon.Update(Camera);
-        rightWeapon.Update(Camera);
+        Scene->Update(Camera);
         Player.Position = Camera.Position;
         PlayerAudio->Update(Player, CurrentTime);
         TorchLight.Update(Camera);
@@ -244,6 +237,8 @@ int main()
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
+    delete Scene;
+    delete PlayerAudio;
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
@@ -357,26 +352,6 @@ void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& fr
     lastTime = CurrentTime;
 }
 
-void HandleCollisions(FPSCamera& camera, const Level& level)
-{
-    for (const auto& tile : level.GetNeighboringTiles(Camera.Position))
-    {
-        if (tile.key == TileKey::COLOR_WALL || tile.key == TileKey::COLOR_EMPTY)
-        {
-            glm::vec3 nearestPoint;
-            nearestPoint.x = glm::clamp(Camera.Position.x, tile.aabb.min.x, tile.aabb.max.x);
-            nearestPoint.z = glm::clamp(Camera.Position.z, tile.aabb.min.z, tile.aabb.max.z);
-            glm::vec3 rayToNearest = nearestPoint - Camera.Position;
-            rayToNearest.y = 0.0f; // y component is irrelevant
-            float overlap = Settings.PlayerCollisionRadius - glm::length(rayToNearest);
-            if (std::isnan(overlap))
-                overlap = 0.0f;
-            if (overlap > 0.0f)
-                Camera.Position -= glm::normalize(rayToNearest) * overlap;
-        }
-    }
-}
-
 void Render(const Shader& shader)
 {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -390,12 +365,7 @@ void Render(const Shader& shader)
     shader.SetFloat("time", CurrentTime);
     shader.SetBool("torchActivated", Player.IsTorchOn);
 
-    for (const auto& entity : Entities)
-    {
-        if (entity->AlwaysOnTop)
-            glClear(GL_DEPTH_BUFFER_BIT);
-        entity->Draw(shader);
-    }
+    Scene->Draw(shader);
 }
 
 void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int fps)
