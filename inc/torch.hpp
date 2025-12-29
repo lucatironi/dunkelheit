@@ -12,7 +12,7 @@ public:
     glm::vec3 Direction;
 
     Torch(const glm::vec3& offset = glm::vec3(0.0f))
-        : PositionOffset(offset)
+          : PositionOffset(offset)
     {}
 
     void Update(const FPSCamera& camera)
@@ -22,7 +22,4 @@ public:
                                    + camera.Right * PositionOffset.x;
         Direction = camera.TargetFront;
     }
-
-private:
-
 };

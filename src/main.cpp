@@ -146,6 +146,11 @@ int main()
 
     // load GameScene
     Scene = new GameScene(Settings);
+    // load items
+    Scene->AddItem(Settings.LeftWeaponModelFile, Settings.LeftWeaponTextureFile,
+        Settings.LeftWeaponPositionOffset, Settings.LeftWeaponRotationOffset, Settings.LeftWeaponScale);
+    Scene->AddItem(Settings.RightWeaponModelFile, Settings.RightWeaponTextureFile,
+        Settings.RightWeaponPositionOffset, Settings.RightWeaponRotationOffset, Settings.RightWeaponScale);
 
     // load camera
     Camera.Constrained = true;
@@ -162,12 +167,6 @@ int main()
         Settings.FrameBufferWidth,
         Settings.FrameBufferHeight
     );
-
-    // load items
-    Scene->AddItem(Settings.LeftWeaponModelFile, Settings.LeftWeaponTextureFile,
-        Settings.LeftWeaponPositionOffset, Settings.LeftWeaponRotationOffset, Settings.LeftWeaponScale);
-    Scene->AddItem(Settings.RightWeaponModelFile, Settings.RightWeaponTextureFile,
-        Settings.RightWeaponPositionOffset, Settings.RightWeaponRotationOffset, Settings.RightWeaponScale);
 
     // initialize player state and audio system
     Player.Position = Camera.Position;
@@ -357,7 +356,7 @@ void Render(const Shader& shader)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     shader.Use();
-    shader.SetMat4("view", Camera.GetViewMatrix());
+    shader.SetMat4("viewMatrix", Camera.GetViewMatrix());
     shader.SetVec3("cameraPos", Camera.Position);
     shader.SetVec3("torchPos", TorchLight.Position);
     shader.SetVec3("torchDir", TorchLight.Direction);
