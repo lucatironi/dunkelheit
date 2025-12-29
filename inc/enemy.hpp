@@ -22,7 +22,8 @@ public:
         enemyModel = std::make_unique<AnimatedModel>();
         ModelLoader& gltf = ModelLoader::GetInstance();
         gltf.LoadFromFile(modelPath, *enemyModel);
-        enemyModel->SetCurrentAnimation(0);
+        enemyModel->SetCurrentAnimation(1);
+        blobShadow = std::make_unique<PlaneModel>("assets/blob_shadow.png");
 
         currentRotation = glm::angleAxis(glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
         updateModelMatrix();
