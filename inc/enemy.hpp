@@ -4,6 +4,7 @@
 #include "entity.hpp"
 #include "fps_camera.hpp"
 #include "model_loader.hpp"
+#include "plane_model.hpp"
 
 #include <glad/gl.h>
 #include <glm/glm.hpp>
@@ -53,11 +54,35 @@ public:
 
     void Draw(const Shader& shader) const override
     {
+        // 1. Draw the Enemy Model as usual
         shader.Use();
         shader.SetMat4("modelMatrix", modelMatrix);
         shader.SetMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(modelMatrix))));
         enemyModel->SetBoneTransformations(shader);
         enemyModel->Draw(shader);
+
+        // 2. Prepare for Transparent Shadow
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        // Disable depth writing so shadows don't clip each other or the floor
+        glDepthMask(GL_FALSE);
+
+        // Calculate shadow position (slightly above the floor to avoid z-fighting)
+        // We ignore the enemy's current Y and put it at ground level (e.g., 0.01)
+        glm::vec3 shadowPos = glm::vec3(position.x, 0.01f, position.z);
+
+        // Scale the shadow based on the enemy's base scale
+        // Note: We don't use the enemy's rotation for the shadow (retro style)
+        glm::mat4 shadowModelMatrix = glm::translate(glm::mat4(1.0f), shadowPos);
+        shadowModelMatrix = glm::scale(shadowModelMatrix, glm::vec3(1.5f)); // Make shadow slightly wider than enemy
+
+        shader.SetMat4("modelMatrix", shadowModelMatrix);
+        blobShadow->Draw(shader);
+
+        // Re-enable depth writing for the next object in the frame
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
     }
 
 private:
@@ -67,6 +92,7 @@ private:
     float angleY;
     glm::quat currentRotation;
     glm::mat4 modelMatrix;
+    std::unique_ptr<PlaneModel> blobShadow;
 
     void updateModelMatrix()
     {

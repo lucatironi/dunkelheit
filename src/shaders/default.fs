@@ -62,7 +62,9 @@ void main()
 
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(cameraPos - FragPos);
-    vec3 Albedo = texture(texture_diffuse0, TexCoords).rgb;
+    vec4 texColor = texture(texture_diffuse0, TexCoords);
+    vec3 Albedo = texColor.rgb;
+    float alpha = texColor.a; // Extract the alpha channel
 
     // Torchlight contribution
     vec3 torchLight;
@@ -100,7 +102,23 @@ void main()
     }
 
     // Combine torchlight and static lights
-    vec3 result = torchLight + staticLights;
+    vec3 combinedLight = torchLight + staticLights;
 
-    FragColor = vec4(result, 1.0);
+    vec3 glowKey = vec3(1.0, 0.0, 1.0); // magenta
+    bool isEye = distance(Albedo, glowKey) < 0.4;
+    vec3 eyeColor = vec3(1.0, 0.5, 0.0);
+
+    vec3 finalColor;
+    if (isEye)
+    {
+        // Ignore lighting entirely!
+        finalColor = eyeColor * flicker;
+    }
+    else
+    {
+        // Use the standard lit result for the rest of the body
+        finalColor = combinedLight;
+    }
+
+    FragColor = vec4(finalColor, alpha);
 }

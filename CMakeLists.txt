@@ -39,6 +39,7 @@ set(HEADER_FILES
     inc/model.hpp
     inc/object.hpp
     inc/pixelator.hpp
+    inc/plane_model.hpp
     inc/player_audio_system.hpp
     inc/random_generator.hpp
     inc/settings.hpp
