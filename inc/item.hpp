@@ -33,7 +33,8 @@ public:
     void Draw(const Shader& shader) const override
     {
         shader.Use();
-        shader.SetMat4("model", modelMatrix);
+        shader.SetMat4("modelMatrix", modelMatrix);
+        shader.SetMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(modelMatrix))));
 
         itemModel->Draw(shader);
     }

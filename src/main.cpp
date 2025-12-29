@@ -142,7 +142,7 @@ int main()
     Shader textShader(Settings.TextVertexShaderFile, Settings.TextFragmentShaderFile);
     glm::mat4 orthoProjection = glm::ortho(0.0f, static_cast<float>(Settings.WindowWidth), 0.0f, static_cast<float>(Settings.WindowHeight));
     textShader.Use();
-    textShader.SetMat4("projection", orthoProjection);
+    textShader.SetMat4("projectionMatrix", orthoProjection);
 
     // load GameScene
     Scene = new GameScene(Settings);
@@ -319,7 +319,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int /* mods
 void SetupShaders(const Shader& shader)
 {
     shader.Use();
-    shader.SetMat4("projection", Camera.GetProjectionMatrix());
+    shader.SetMat4("projectionMatrix", Camera.GetProjectionMatrix());
     shader.SetInt("texture_diffuse0", 0);
     shader.SetInt("texture_specular0", 1);
     shader.SetVec3("torchColor", Settings.TorchColor);

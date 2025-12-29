@@ -18,7 +18,9 @@ public:
     void Draw(const Shader& shader) const override
     {
         shader.Use();
-        shader.SetMat4("model", glm::translate(glm::mat4(1.0f), position));
+        glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), position);
+        shader.SetMat4("modelMatrix", modelMatrix);
+        shader.SetMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(modelMatrix))));
         model->Draw(shader);
     }
 

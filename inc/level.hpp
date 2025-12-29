@@ -66,7 +66,8 @@ public:
     void Draw(const Shader& shader) const override
     {
         shader.Use();
-        shader.SetMat4("model", glm::mat4(1.0f));
+        shader.SetMat4("modelMatrix", glm::mat4(1.0f));
+        shader.SetMat3("normalMatrix", glm::mat3(1.0f));
 
         glActiveTexture(GL_TEXTURE0);
         texture.Bind();
