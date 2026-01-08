@@ -5,6 +5,7 @@
 #include "ozz/animation/offline/raw_animation.h"
 #include "ozz/animation/offline/raw_skeleton.h"
 #include "ozz/animation/offline/animation_builder.h"
+#include "ozz/animation/offline/animation_optimizer.h"
 #include "ozz/animation/offline/skeleton_builder.h"
 
 #include <assimp/Importer.hpp>
@@ -54,7 +55,7 @@ public:
     bool LoadFromFile(const std::string& path, AnimatedModel& model)
     {
         Assimp::Importer importer;
-        importer.SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, 1.0f);
+        importer.SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, 0.01f);
         const aiScene* pScene = importer.ReadFile(path,
             aiProcessPreset_TargetRealtime_Fast | aiProcess_GlobalScale | aiProcess_LimitBoneWeights | aiProcess_FlipUVs);
 
@@ -66,19 +67,19 @@ public:
         std::vector<Joint> joints;
         std::map<std::string, int> boneMap;
 
-        // Extract skeleton from gltfModel and set model.skeleton
+        // Extract skeleton and set model.skeleton
         if (!ExtractSkeleton(pScene, joints, boneMap, model))
         {
             std::cerr << "Error extracting skeleton from model \"" << path << "\"" << std::endl;
             return false;
         }
-        // Extract animations from gltfModel and populate model.animations
+        // Extract animations and populate model.animations
         if (!ExtractAnimations(pScene, joints, boneMap, model))
         {
             std::cerr << "Error extracting animations from model \"" << path << "\"" << std::endl;
             return false;
         }
-        // Extract meshes from gltfModel and populate model.meshes
+        // Extract meshes and populate model.meshes
         if (!ExtractMeshes(pScene, joints, boneMap, model))
         {
             std::cerr << "Error extracting meshes from model \"" << path << "\"" << std::endl;
@@ -215,6 +216,13 @@ private:
             if (!rawAnimation.Validate())
             {
                 std::cerr << "Failed to validate Ozz Animation: " << aiAnim->mName.C_Str() << std::endl;
+                continue;
+            }
+
+            ozz::animation::offline::AnimationOptimizer optimizer;
+            ozz::animation::offline::RawAnimation optimizedRaw;
+            if (!optimizer(rawAnimation, model.GetSkeleton(), &optimizedRaw)) {
+                std::cerr << "Failed to optimize animation: " << rawAnimation.name << std::endl;
                 continue;
             }
 
