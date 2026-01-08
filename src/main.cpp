@@ -38,7 +38,6 @@ void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int f
 
 void Shoot();
 
-AudioEngine Audio;
 SettingsData Settings;
 FPSCamera Camera;
 PlayerState Player;
@@ -173,7 +172,7 @@ int main()
     Player.PreviousPosition = Camera.Position;
     Player.IsMoving = false;
     Player.IsTorchOn = true;
-    PlayerAudio = new PlayerAudioSystem(Audio, Settings.FootstepsSoundFiles, Settings.TorchToggleSoundFile);
+    PlayerAudio = new PlayerAudioSystem(Settings.FootstepsSoundFiles, Settings.TorchToggleSoundFile);
 
     TorchLight.PositionOffset = Settings.TorchPos;
 
@@ -186,8 +185,8 @@ int main()
     glEnable(GL_CULL_FACE);
 
     // play ambient music
-    Audio.LoopSound(Settings.AmbientMusicFile, 0.5f);
-    Audio.AddEmitter(Settings.GizmoSoundFile, glm::vec3(23.0f, 1.5f, 139.0f));
+    AudioEngine::GetInstance().LoopSound(Settings.AmbientMusicFile, 0.5f);
+    AudioEngine::GetInstance().AddEmitter(Settings.GizmoSoundFile, glm::vec3(23.0f, 1.5f, 139.0f));
 
     // game loop
     // -----------
@@ -211,6 +210,7 @@ int main()
         // ------
         Scene->Update(deltaTime, Camera);
         Player.Position = Camera.Position;
+        Player.Forward = Camera.Front;
         PlayerAudio->Update(Player, CurrentTime);
         TorchLight.Update(Camera);
 
