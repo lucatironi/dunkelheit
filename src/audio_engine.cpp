@@ -15,8 +15,25 @@ AudioEngine::AudioEngine()
 
 AudioEngine::~AudioEngine()
 {
-    if (initialized)
+    if (initialized) {
+        // Clean up cached sounds
+        for (auto const& [path, sound] : sounds)
+        {
+            ma_sound_uninit(sound);
+            delete sound;
+        }
+
+        // Clean up emitter instances
+        for (ma_sound* sound : emitterSounds)
+        {
+            if (sound) {
+                ma_sound_uninit(sound);
+                delete sound;
+            }
+        }
+
         ma_engine_uninit(&engine);
+    }
 }
 
 void AudioEngine::PlayOneShotSound(const std::string& path, float volume)
@@ -43,21 +60,53 @@ bool AudioEngine::LoopSound(const std::string& path, float volume)
     }
 }
 
-bool AudioEngine::AddEmitter(const std::string& path, const glm::vec3& position)
+ma_sound* AudioEngine::AddEmitter(const std::string& path, const glm::vec3& position)
 {
     if (!initialized)
-        return false;
+        return nullptr;
 
-    ma_uint32 flags = MA_SOUND_FLAG_LOOPING | MA_SOUND_FLAG_NO_PITCH;
-    ma_sound* sound = initSound(path, flags);
-    if (!sound)
-        return false;
-    else
+    ma_uint32 flags = MA_SOUND_FLAG_LOOPING;
+
+    ma_sound* pSound = new ma_sound;
+    ma_result result = ma_sound_init_from_file(&engine, path.c_str(), flags, nullptr, nullptr, pSound);
+
+    if (result != MA_SUCCESS)
     {
-        ma_sound_set_position(sound, position.x, position.y, position.z);
-        ma_sound_start(sound);
+        delete pSound;
+        return nullptr;
+    }
 
-        return true;
+    ma_sound_set_position(pSound, position.x, position.y, position.z);
+    ma_sound_set_attenuation_model(pSound, ma_attenuation_model_linear);
+    ma_sound_set_min_distance(pSound, 1.0f);
+    ma_sound_set_max_distance(pSound, 10.0f); // Silence at 25m
+
+    ma_sound_start(pSound);
+
+    // Track it for global cleanup/stop
+    emitterSounds.push_back(pSound);
+
+    return pSound;
+}
+
+void AudioEngine::RemoveEmitter(ma_sound* pSound)
+{
+    if (!pSound)
+        return;
+
+    // 1. Find the sound in our vector
+    auto it = std::find(emitterSounds.begin(), emitterSounds.end(), pSound);
+    if (it != emitterSounds.end())
+    {
+        // 2. Stop and Uninitialize miniaudio object
+        ma_sound_stop(pSound);
+        ma_sound_uninit(pSound);
+
+        // 3. Delete the memory
+        delete pSound;
+
+        // 4. Remove from tracking list
+        emitterSounds.erase(it);
     }
 }
 
@@ -71,7 +120,8 @@ bool AudioEngine::StopSound(const std::string& path)
         std::cerr << "Sound not found in cache: " << path << std::endl;
         return false;
     }
-    else {
+    else
+    {
         ma_sound_stop(sounds[path]);
     }
 
@@ -94,17 +144,22 @@ bool AudioEngine::SetSoundVolume(const std::string& path, float volume)
         std::cerr << "Sound not found in cache: " << path << std::endl;
         return false;
     }
-    else {
+    else
+    {
         ma_sound_set_volume(sounds[path], volume);
     }
 
     return true;
 }
 
-void AudioEngine::SetPlayerPosition(const glm::vec3& position)
+void AudioEngine::SetPlayerPosition(const glm::vec3& position, const glm::vec3& forward)
 {
     if (initialized)
+    {
         ma_engine_listener_set_position(&engine, 0, position.x, position.y, position.z);
+        // This tells miniaudio which way the player is looking
+        ma_engine_listener_set_direction(&engine, 0, forward.x, forward.y, forward.z);
+    }
 }
 
 ma_sound* AudioEngine::initSound(const std::string& path, ma_uint32 flags)
