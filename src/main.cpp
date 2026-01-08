@@ -379,15 +379,16 @@ void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int f
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    std::stringstream fpsText;
-    fpsText << "FPS: " << fps;
-    textRenderer.RenderText(fpsText.str(), textShader, 4.0f, Settings.WindowHeight - 20.0f, 1.0f, Settings.FontColor);
-    std::stringstream windowSize;
-    windowSize << Settings.WindowWidth << "x" << Settings.WindowHeight;
-    textRenderer.RenderText(windowSize.str(), textShader, 4.0f, Settings.WindowHeight - 40.0f, 1.0f, Settings.FontColor);
-    std::stringstream pos;
-    pos << "pos x: " << (int)Camera.Position.x << ", z: " << (int)Camera.Position.z;
-    textRenderer.RenderText(pos.str(), textShader, 4.0f, Settings.WindowHeight - 60.0f, 1.0f, Settings.FontColor);
+    textRenderer.BeginBatch();
+
+    std::string fpsStr = "FPS: " + std::to_string(fps);
+    textRenderer.AddText(fpsStr, 4.0f, Settings.WindowHeight - 20.0f, 1.0f);
+    std::string winStr = std::to_string(Settings.WindowWidth) + "x" + std::to_string(Settings.WindowHeight);
+    textRenderer.AddText(winStr, 4.0f, Settings.WindowHeight - 40.0f, 1.0f);
+    std::string posStr = "pos x: " + std::to_string((int)Camera.Position.x) + ", z: " + std::to_string((int)Camera.Position.z);
+    textRenderer.AddText(posStr, 4.0f, Settings.WindowHeight - 60.0f, 1.0f);
+
+    textRenderer.FlushBatch(textShader, Settings.FontColor);
 
     // restore previous blending state
     glBlendFunc(srcAlphaFunc, dstAlphaFunc);
