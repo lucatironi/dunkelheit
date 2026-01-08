@@ -11,6 +11,7 @@
 struct PlayerState {
     glm::vec3 Position;
     glm::vec3 PreviousPosition;
+    glm::vec3 Forward;
     bool IsMoving = false;
     bool IsTorchOn = false;
 };
@@ -18,16 +19,13 @@ struct PlayerState {
 class PlayerAudioSystem
 {
 public:
-    PlayerAudioSystem(AudioEngine& engine,
-        const std::vector<std::string>& footstepSoundPaths,
-        const std::string& torchToggleSoundPath)
-        : audioEngine(engine), lastStepTime(0.0f), stepInterval(0.6f),
-        torchToggleSound(torchToggleSoundPath), footstepSounds(footstepSoundPaths)
+    PlayerAudioSystem(const std::vector<std::string>& footstepSoundPaths, const std::string& torchToggleSoundPath)
+        : lastStepTime(0.0f), stepInterval(0.6f), torchToggleSound(torchToggleSoundPath), footstepSounds(footstepSoundPaths)
     {}
 
     void Update(PlayerState& player, float elapsedTime)
     {
-        audioEngine.SetPlayerPosition(player.Position);
+        AudioEngine::GetInstance().SetPlayerPosition(player.Position, player.Forward);
         // Check if the player is moving
         float distanceMoved = glm::length(player.Position - player.PreviousPosition);
         player.IsMoving = distanceMoved > movementThreshold;
@@ -43,11 +41,10 @@ public:
 
     void ToggleTorch(PlayerState& player)
     {
-        audioEngine.PlayOneShotSound(torchToggleSound);
+        AudioEngine::GetInstance().PlayOneShotSound(torchToggleSound);
     }
 
 private:
-    AudioEngine& audioEngine;
     std::vector<std::string> footstepSounds;
     std::string torchToggleSound;
     float lastStepTime;
@@ -61,6 +58,6 @@ private:
         int randomIndex = random.GetRandomInRange(0, 2);
         float volume = random.GetRandomInRange(3, 6) / 10.f; // Randomize footsteps volume
 
-        audioEngine.PlayOneShotSound(footstepSounds[randomIndex], volume);
+        AudioEngine::GetInstance().PlayOneShotSound(footstepSounds[randomIndex], volume);
     }
 };
