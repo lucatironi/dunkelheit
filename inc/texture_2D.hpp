@@ -11,7 +11,7 @@ struct TextureParams
 {
     GLuint wrapS = GL_CLAMP_TO_EDGE;
     GLuint wrapT = GL_CLAMP_TO_EDGE;
-    GLuint filterMin = GL_NEAREST_MIPMAP_LINEAR;
+    GLuint filterMin = GL_NEAREST;
     GLuint filterMax = GL_NEAREST;
 };
 

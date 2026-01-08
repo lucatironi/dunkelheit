@@ -16,7 +16,7 @@
             }
         },
         "postProcessing": {
-            "pixelate": true
+            "pixelate": false
         }
     },
     "textRenderer": {
@@ -38,7 +38,7 @@
         "speed": 5.0
     },
     "enemy": {
-        "modelFile": "assets/bloodwraith.glb"
+        "modelFile": "assets/monster.glb"
     },
     "weapons": {
         "left": {

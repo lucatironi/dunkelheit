@@ -29,20 +29,20 @@ public:
     void AddItem(std::string& modelPath, std::string& texturePath,
          glm::vec3 posOffset, glm::vec3 rotOffset, glm::vec3 scaleFactor)
     {
-        items.emplace_back(modelPath, texturePath, posOffset, rotOffset, scaleFactor);
+        items.push_back(std::make_unique<Item>(modelPath, texturePath, posOffset, rotOffset, scaleFactor));
         refreshRenderList();
     }
 
     void AddEnemy(glm::vec3 position)
     {
         position.y = 0.0f;
-        enemies.emplace_back(settings.EnemyModelFile, position, 90.0f, glm::vec3(2.5f));
+        enemies.push_back(std::make_unique<Enemy>(settings.EnemyModelFile, position, 0.0f, glm::vec3(0.5f)));
         refreshRenderList();
     }
 
     void AddObject(glm::vec3 position)
     {
-        objects.emplace_back(position);
+        objects.push_back(std::make_unique<Object>(position));
         refreshRenderList();
     }
 
@@ -60,9 +60,9 @@ public:
     {
         handleCollisions(camera);
         for (auto& enemy : enemies)
-            enemy.Update(deltaTime, camera);
+            enemy->Update(deltaTime, camera);
         for (auto& item : items)
-            item.Update(deltaTime, camera);
+            item->Update(deltaTime, camera);
     }
 
     void Draw(const Shader& shader)
@@ -78,9 +78,9 @@ public:
 
 private:
     Level* level;
-    std::vector<Item> items;
-    std::vector<Enemy> enemies;
-    std::vector<Object> objects;
+    std::vector<std::unique_ptr<Enemy>> enemies;
+    std::vector<std::unique_ptr<Object>> objects;
+    std::vector<std::unique_ptr<Item>> items;
     std::vector<Entity*> renderList;
     SettingsData settings;
 
@@ -91,13 +91,13 @@ private:
         renderList.push_back(level);
 
         for (auto& enemy : enemies)
-            renderList.push_back(&enemy);
+            renderList.push_back(enemy.get());
 
         for (auto& object : objects)
-            renderList.push_back(&object);
+            renderList.push_back(object.get());
 
         for (auto& item : items)
-            renderList.push_back(&item);
+            renderList.push_back(item.get());
 
         // Move AlwaysOnTop entities to the end of the vector
         std::stable_partition(renderList.begin(), renderList.end(), [](Entity* entity)

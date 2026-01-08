@@ -32,7 +32,6 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
 void SetupShaders(const Shader& shader);
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& frames, int& fps);
-void HandleCollisions(FPSCamera& camera, const Level& level);
 void Render(const Shader& shader);
 void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int fps);
 
@@ -170,6 +169,7 @@ int main()
     // initialize player state and audio system
     Player.Position = Camera.Position;
     Player.PreviousPosition = Camera.Position;
+    Player.Forward = Camera.Front;
     Player.IsMoving = false;
     Player.IsTorchOn = true;
     PlayerAudio = new PlayerAudioSystem(Settings.FootstepsSoundFiles, Settings.TorchToggleSoundFile);
