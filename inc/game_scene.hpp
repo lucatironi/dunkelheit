@@ -60,9 +60,23 @@ public:
     {
         handleCollisions(camera);
         for (auto& enemy : enemies)
-            enemy->Update(deltaTime, camera);
+            enemy->Update(deltaTime, camera, *level);
         for (auto& item : items)
             item->Update(deltaTime, camera);
+
+        for (auto& a : enemies)
+        {
+            for (auto& b : enemies)
+            {
+                if (&a == &b) continue;
+                float dist = glm::distance(a->GetPosition(), b->GetPosition());
+                if (dist < 1.5f)
+                {
+                    glm::vec3 escape = glm::normalize(a->GetPosition() - b->GetPosition());
+                    a->SetPosition(a->GetPosition() + (escape * 0.1f)); // Small push away
+                }
+            }
+        }
     }
 
     void Draw(const Shader& shader)

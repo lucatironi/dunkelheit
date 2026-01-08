@@ -4,6 +4,7 @@
 #include "audio_engine.hpp"
 #include "entity.hpp"
 #include "fps_camera.hpp"
+#include "level.hpp"
 #include "model_loader.hpp"
 #include "plane_model.hpp"
 
@@ -13,6 +14,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 enum class EnemyState {
     IDLE,
@@ -34,6 +36,7 @@ public:
         enemyModel->PlayAnimation("1_idle", 0.5f);
         blobShadow = std::make_unique<PlaneModel>("assets/blob_shadow.png");
         sound = AudioEngine::GetInstance().AddEmitter("assets/gizmo.wav", position);
+        pathTimer = (float)(rand() % 100) / 200.0f; // Randomize start offset so enemies don't pathfind on the same frame
 
         currentRotation = glm::angleAxis(glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
         updateModelMatrix();
@@ -45,14 +48,36 @@ public:
             ma_sound_stop(sound);
     }
 
-    void Update(const float deltaTime, const FPSCamera& camera)
+    void Update(const float deltaTime, const FPSCamera& camera, class Level& level)
     {
         float distToPlayer = glm::distance(position, camera.Position);
 
-        // State Transition Logic
+        // 1. Pathfinding Logic: Deciding where to go
+        pathTimer += deltaTime;
+        if (pathTimer >= 0.5f) {
+            pathTimer = 0.0f;
+
+            // If we can see the player, clear the path and go straight.
+            // Otherwise, calculate the A* path.
+            if (level.HasLineOfSight(position, camera.Position))
+            {
+                currentPath.clear();
+                targetDestination = camera.Position;
+            }
+            else
+            {
+                currentPath = level.FindPath(position, camera.Position);
+                if (!currentPath.empty())
+                {
+                    targetDestination = currentPath[0];
+                }
+            }
+        }
+
+        // 2. State Machine Logic
         switch (currentState) {
             case EnemyState::IDLE:
-                if (distToPlayer < 7.0f)
+                if (distToPlayer < 10.0f)
                 {
                     currentState = EnemyState::CRAWL;
                     enemyModel->PlayAnimation("6_crawl_run", 0.5f);
@@ -60,14 +85,25 @@ public:
                 break;
 
             case EnemyState::CRAWL:
-                handleMovement(deltaTime, camera.Position, 3.5f);
+                // Move toward the current waypoint or target destination
+                handleMovement(deltaTime, targetDestination, 3.5f);
+
+                // If we reached a waypoint, move to the next one
+                if (!currentPath.empty() && glm::distance(position, targetDestination) < 0.5f)
+                {
+                    currentPath.erase(currentPath.begin());
+                    if (!currentPath.empty())
+                    {
+                        targetDestination = currentPath[0];
+                    }
+                }
 
                 if (distToPlayer < 3.0f)
                 {
                     currentState = EnemyState::SCREAM;
                     enemyModel->PlayAnimation("3_scream", 0.5f);
                 }
-                else if (distToPlayer > 10.0f)
+                else if (distToPlayer > 12.0f)
                 {
                     currentState = EnemyState::IDLE;
                     enemyModel->PlayAnimation("1_idle", 0.5f);
@@ -75,10 +111,7 @@ public:
                 break;
 
             case EnemyState::SCREAM:
-                // Face the player while attacking
                 handleMovement(deltaTime, camera.Position, 0.0f);
-
-                // Logic: If animation finished or player moved away, resume chase
                 if (distToPlayer > 3.5f)
                 {
                     currentState = EnemyState::CRAWL;
@@ -127,6 +160,9 @@ public:
         glDisable(GL_BLEND);
     }
 
+    glm::vec3 GetPosition() const { return position; }
+    void SetPosition(const glm::vec3& pos) { position = pos; }
+
 private:
     std::unique_ptr<AnimatedModel> enemyModel;
     glm::vec3 position;
@@ -137,21 +173,24 @@ private:
     std::unique_ptr<PlaneModel> blobShadow;
     EnemyState currentState;
     ma_sound* sound = nullptr;
+    std::vector<glm::vec3> currentPath;
+    glm::vec3 targetDestination; // The specific point the enemy is currently walking toward
+    float pathTimer = 0.0f;
 
-    void handleMovement(float deltaTime, glm::vec3 targetPos, float speed) {
+    void handleMovement(float deltaTime, glm::vec3 target, float speed) {
         glm::quat correction = glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        float turnSpeed = 2.0f;
+        float turnSpeed = 4.0f;
 
-        glm::vec3 direction = targetPos - position;
+        glm::vec3 direction = target - position;
         direction.y = 0.0f;
 
-        if (glm::length(direction) > 0.1f) {
+        if (glm::length(direction) > 0.01f) {
             direction = glm::normalize(direction);
 
-            // Move toward player
+            // 1. Position update
             position += direction * speed * deltaTime;
 
-            // Rotation
+            // 2. Rotation update (Face the current waypoint)
             glm::quat lookRot = glm::quatLookAt(direction, glm::vec3(0.0f, 1.0f, 0.0f));
             glm::quat targetRot = lookRot * correction;
             currentRotation = glm::slerp(currentRotation, targetRot, turnSpeed * deltaTime);

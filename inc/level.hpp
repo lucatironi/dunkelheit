@@ -8,7 +8,9 @@
 #include <glad/gl.h>
 #include <glm/glm.hpp>
 
+#include <queue>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 struct Light
@@ -37,6 +39,18 @@ struct Tile
 {
     int key;
     AABB aabb;
+};
+
+struct PathNode
+{
+    int x, z;
+    float gCost = std::numeric_limits<float>::infinity(); // Cost from start
+    float hCost = 0; // Heuristic (distance to player)
+    PathNode* parent = nullptr;
+
+    float fCost() const { return gCost + hCost; }
+
+    bool operator>(const PathNode& other) const { return fCost() > other.fCost(); }
 };
 
 constexpr float DEFAULT_TILE_FRACTION = 128.0f / 512.0f; // tile size / tilemap size
@@ -121,6 +135,86 @@ public:
     std::vector<glm::vec3> GetEnemyPositions() const
     {
         return enemyPositions;
+    }
+
+    std::vector<glm::vec3> FindPath(glm::vec3 startWorld, glm::vec3 targetWorld)
+    {
+        int startX = static_cast<int>(startWorld.x / quadSize);
+        int startZ = static_cast<int>(startWorld.z / quadSize);
+        int targetX = static_cast<int>(targetWorld.x / quadSize);
+        int targetZ = static_cast<int>(targetWorld.z / quadSize);
+
+        // Boundary & Validity Checks
+        if (startX < 0 || startX >= levelWidth || startZ < 0 || startZ >= levelDepth) return {};
+        if (targetX < 0 || targetX >= levelWidth || targetZ < 0 || targetZ >= levelDepth) return {};
+        if (tiles[targetZ * levelWidth + targetX].key == COLOR_WALL) return {};
+
+        // Helper for unique ID
+        auto getID = [&](int x, int z) { return z * levelWidth + x; };
+
+        // Open set: stores <fCost, ID>
+        std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int>>, std::greater<>> openSet;
+
+        // Use maps to store costs and parents (ID -> value)
+        std::unordered_map<int, float> gCost;
+        std::unordered_map<int, int> parent;
+
+        int startID = getID(startX, startZ);
+        gCost[startID] = 0.0f;
+        openSet.push({0.0f, startID});
+
+        while (!openSet.empty())
+        {
+            int currentID = openSet.top().second;
+            openSet.pop();
+
+            int curX = currentID % levelWidth;
+            int curZ = currentID / levelWidth;
+
+            // Found the target!
+            if (curX == targetX && curZ == targetZ)
+            {
+                return retracePath(parent, startID, getID(targetX, targetZ));
+            }
+
+            // Neighbors (Up, Down, Left, Right)
+            int dx[] = {0, 0, 1, -1};
+            int dz[] = {1, -1, 0, 0};
+
+            for (int i = 0; i < 4; i++)
+            {
+                int nx = curX + dx[i];
+                int nz = curZ + dz[i];
+
+                if (nx < 0 || nx >= levelWidth || nz < 0 || nz >= levelDepth) continue;
+                if (tiles[nz * levelWidth + nx].key == COLOR_WALL) continue;
+
+                int neighborID = getID(nx, nz);
+                float tentativeGCost = gCost[currentID] + 1.0f;
+
+                if (gCost.find(neighborID) == gCost.end() || tentativeGCost < gCost[neighborID])
+                {
+                    gCost[neighborID] = tentativeGCost;
+                    parent[neighborID] = currentID;
+                    float hCost = abs(targetX - nx) + abs(targetZ - nz); // Manhattan distance
+                    openSet.push({tentativeGCost + hCost, neighborID});
+                }
+            }
+        }
+        return {}; // No path found
+    }
+
+    bool HasLineOfSight(glm::vec3 start, glm::vec3 end)
+    {
+        glm::vec3 dir = glm::normalize(end - start);
+        float dist = glm::distance(start, end);
+        // Simple raycast: step along the line and check for walls
+        for (float i = 0.0f; i < dist; i += quadSize * 0.5f)
+        {
+            glm::vec3 checkPos = start + dir * i;
+            if (GetTile(checkPos).key == COLOR_WALL) return false;
+        }
+        return true;
     }
 
 private:
@@ -234,6 +328,22 @@ private:
     int numLights() const
     {
         return static_cast<int>(lights.size());
+    }
+
+    std::vector<glm::vec3> retracePath(std::unordered_map<int, int>& parent, int startID, int endID)
+    {
+        std::vector<glm::vec3> path;
+        int curr = endID;
+        while (curr != startID)
+        {
+            int x = curr % levelWidth;
+            int z = curr / levelWidth;
+            // Target the center of the tile
+            path.push_back(glm::vec3(x * quadSize + (quadSize / 2.0f), 0.0f, z * quadSize + (quadSize / 2.0f)));
+            curr = parent[curr];
+        }
+        std::reverse(path.begin(), path.end());
+        return path;
     }
 
     void loadLevel(const std::string& path)
