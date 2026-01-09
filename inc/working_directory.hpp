@@ -70,9 +70,7 @@ private:
         char path[PATH_MAX];
         ssize_t count = readlink("/proc/self/exe", path, PATH_MAX);
         if (count == -1)
-        {
             throw std::runtime_error("Failed to resolve executable path.");
-        }
         std::string exePath = std::string(path, count);
         size_t lastSlash = exePath.find_last_of("/");
         return exePath.substr(0, lastSlash) + "/Resources";

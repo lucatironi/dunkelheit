@@ -38,9 +38,7 @@ public:
             stbi_image_free(image); // Free after texture generation
         }
         else
-        {
             std::cerr << "ERROR::TEXTURE2D: Failed to load texture: " << path << std::endl;
-        }
     }
 
     Texture2D(unsigned char* data, unsigned int w, unsigned int h, const TextureParams& params = {})
@@ -55,9 +53,7 @@ public:
             stbi_image_free(image); // Free after texture generation
         }
         else
-        {
             std::cerr << "ERROR::TEXTURE2D: Failed to load texture from data" << std::endl;
-        }
     }
 
     void Bind() const

@@ -82,7 +82,8 @@ int main()
     // --------------------
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     GLFWwindow* window = nullptr;
-    if (Settings.FullScreen) {
+    if (Settings.FullScreen)
+    {
         const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
         window = glfwCreateWindow(mode->width, mode->height, Settings.WindowTitle.c_str(), monitor, nullptr);
         Settings.WindowWidth = mode->width;

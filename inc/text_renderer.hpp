@@ -154,7 +154,8 @@ private:
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
         // 1. First pass: Determine total atlas dimensions
-        for (unsigned char c = 0; c < 128; c++) {
+        for (unsigned char c = 0; c < 128; c++)
+        {
             if (FT_Load_Char(face, c, FT_LOAD_RENDER)) continue;
             atlasWidth += face->glyph->bitmap.width;
             atlasHeight = std::max(atlasHeight, (int)face->glyph->bitmap.rows);
@@ -167,7 +168,8 @@ private:
 
         // 3. Second pass: Fill the atlas and store UVs
         int xOffset = 0;
-        for (unsigned char c = 0; c < 128; c++) {
+        for (unsigned char c = 0; c < 128; c++)
+        {
             if (FT_Load_Char(face, c, FT_LOAD_RENDER)) continue;
 
             // Upload individual glyph into the atlas

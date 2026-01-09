@@ -15,7 +15,8 @@ AudioEngine::AudioEngine()
 
 AudioEngine::~AudioEngine()
 {
-    if (initialized) {
+    if (initialized)
+    {
         // Clean up cached sounds
         for (auto const& [path, sound] : sounds)
         {
@@ -26,7 +27,8 @@ AudioEngine::~AudioEngine()
         // Clean up emitter instances
         for (ma_sound* sound : emitterSounds)
         {
-            if (sound) {
+            if (sound)
+            {
                 ma_sound_uninit(sound);
                 delete sound;
             }
@@ -48,16 +50,17 @@ bool AudioEngine::LoopSound(const std::string& path, float volume)
         return false;
 
     ma_uint32 flags = MA_SOUND_FLAG_LOOPING | MA_SOUND_FLAG_NO_SPATIALIZATION | MA_SOUND_FLAG_NO_PITCH;
-    ma_sound* sound = initSound(path, flags);
-    if (!sound)
-        return false;
-    else
+    ma_sound* pSound = initSound(path, flags);
+
+    if (pSound)
     {
         ma_sound_set_volume(sounds[path], volume);
-        ma_sound_start(sound);
+        ma_sound_start(pSound);
 
         return true;
     }
+    else
+        return false;
 }
 
 ma_sound* AudioEngine::AddEmitter(const std::string& path, const glm::vec3& position)
@@ -121,9 +124,7 @@ bool AudioEngine::StopSound(const std::string& path)
         return false;
     }
     else
-    {
         ma_sound_stop(sounds[path]);
-    }
 
     return true;
 }
@@ -145,9 +146,7 @@ bool AudioEngine::SetSoundVolume(const std::string& path, float volume)
         return false;
     }
     else
-    {
         ma_sound_set_volume(sounds[path], volume);
-    }
 
     return true;
 }
@@ -164,7 +163,7 @@ void AudioEngine::SetPlayerPosition(const glm::vec3& position, const glm::vec3& 
 
 ma_sound* AudioEngine::initSound(const std::string& path, ma_uint32 flags)
 {
-    ma_sound* sound = nullptr;
+    ma_sound* pSound = nullptr;
 
     // Check if sound is already loaded
     if (sounds.find(path) == sounds.end())
@@ -176,13 +175,13 @@ ma_sound* AudioEngine::initSound(const std::string& path, ma_uint32 flags)
         {
             std::cerr << "Failed to load sound: " << path << " (error code " << result << ")" << std::endl;
             delete newSound;
-            return sound;
+            return pSound;
         }
         sounds[path] = newSound;
-        sound = sounds[path];
+        pSound = sounds[path];
     }
     else
-        sound = sounds[path];
+        pSound = sounds[path];
 
-    return sound;
+    return pSound;
 }
