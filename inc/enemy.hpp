@@ -160,6 +160,14 @@ public:
         glDisable(GL_BLEND);
     }
 
+    void ToggleSound(const bool pause)
+    {
+        if (pause)
+            ma_sound_stop(sound);
+        else
+            ma_sound_start(sound);
+    }
+
     glm::vec3 GetPosition() const { return position; }
     void SetPosition(const glm::vec3& pos) { position = pos; }
 

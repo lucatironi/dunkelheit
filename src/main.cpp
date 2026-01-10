@@ -4,6 +4,7 @@
 #include "game_scene.hpp"
 #include "item.hpp"
 #include "level.hpp"
+#include "main_menu.hpp"
 #include "pixelator.hpp"
 #include "player_audio_system.hpp"
 #include "random_generator.hpp"
@@ -34,6 +35,7 @@ void SetupShaders(const Shader& shader);
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& frames, int& fps);
 void Render(const Shader& shader);
 void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int fps);
+void RestartLevel();
 
 void Shoot();
 
@@ -43,6 +45,7 @@ PlayerState Player;
 Torch TorchLight;
 PlayerAudioSystem* PlayerAudio;
 GameScene* Scene;
+MainMenu* Menu;
 
 float CurrentTime = 0.0f;
 bool FirstMouse = true;
@@ -143,6 +146,12 @@ int main()
     textShader.Use();
     textShader.SetMat4("projectionMatrix", orthoProjection);
 
+    // main menu
+    Menu = new MainMenu();
+    Menu->AddItem("RESUME",  [&](){ Menu->Active = false; Scene->ToggleSounds(false); });
+    Menu->AddItem("RESTART", [&](){ RestartLevel(); });
+    Menu->AddItem("QUIT",    [&](){ glfwSetWindowShouldClose(window, true); });
+
     // load GameScene
     Scene = new GameScene(Settings);
     // load items
@@ -203,17 +212,19 @@ int main()
         // ---------------------------
         CalculateFPS(lastTime, lastFPSTime, deltaTime, frames, fps);
 
-        // input
-        // -----
-        ProcessInput(window, deltaTime);
-
         // update
         // ------
-        Scene->Update(deltaTime, Camera);
-        Player.Position = Camera.Position;
-        Player.Forward = Camera.Front;
-        PlayerAudio->Update(Player, CurrentTime);
-        TorchLight.Update(Camera);
+        // Only process movement and game world if menu is closed
+        if (!Menu->Active)
+        {
+            ProcessInput(window, deltaTime);
+
+            Scene->Update(deltaTime, Camera);
+            Player.Position = Camera.Position;
+            Player.Forward = Camera.Front;
+            PlayerAudio->Update(Player, CurrentTime);
+            TorchLight.Update(Camera);
+        }
 
         // render
         // ------
@@ -228,6 +239,10 @@ int main()
         if (Settings.ShowDebugInfo)
             RenderDebugInfo(textRenderer, textShader, fps);
 
+        // Render Menu last (so it's on top of everything)
+        if (Menu->Active)
+            Menu->Render(textRenderer, textShader, Settings.WindowWidth, Settings.WindowHeight);
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -238,6 +253,7 @@ int main()
     // ------------------------------------------------------------------------
     delete Scene;
     delete PlayerAudio;
+    delete Menu;
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
@@ -272,16 +288,34 @@ void FramebufferSizeCallback(GLFWwindow* /* window */, int width, int height)
 // -----------------------------------------------------------------
 void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, int /* mods */)
 {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+    if (action != GLFW_PRESS) return;
+
+    // 1. Global Toggle
+    if (key == GLFW_KEY_ESCAPE)
+    {
+        Menu->Active = !Menu->Active;
+        Scene->ToggleSounds(Menu->Active);
+        return;
+    }
+
+    // 2. Menu Input (If active)
+    if (Menu->Active)
+    {
+        if (key == GLFW_KEY_UP)    Menu->NavigateUp();
+        if (key == GLFW_KEY_DOWN)  Menu->NavigateDown();
+        if (key == GLFW_KEY_ENTER) Menu->Confirm();
+        return; // BLOCK game input
+    }
+
+    // 3. Game Input (Only if menu is NOT active)
+    if (key == GLFW_KEY_F)
     {
         PlayerAudio->ToggleTorch(Player);
         Player.IsTorchOn = !Player.IsTorchOn;
     }
-    if (key == GLFW_KEY_O && action == GLFW_PRESS)
+    if (key == GLFW_KEY_O)
         Settings.ShowDebugInfo = !Settings.ShowDebugInfo;
-    if (key == GLFW_KEY_P && action == GLFW_PRESS)
+    if (key == GLFW_KEY_P)
         Settings.Pixelate = !Settings.Pixelate;
 }
 
@@ -289,23 +323,26 @@ void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, in
 // -------------------------------------------------------
 void CursorPosCallback(GLFWwindow* /* window */, double xposIn, double yposIn)
 {
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
-
-    if (FirstMouse)
+    if (!Menu->Active)
     {
+        float xpos = static_cast<float>(xposIn);
+        float ypos = static_cast<float>(yposIn);
+
+        if (FirstMouse)
+        {
+            LastX = xpos;
+            LastY = ypos;
+            FirstMouse = false;
+        }
+
+        float xoffset = xpos - LastX;
+        float yoffset = LastY - ypos; // reversed since y-coordinates go from bottom to top
+
         LastX = xpos;
         LastY = ypos;
-        FirstMouse = false;
+
+        Camera.ProcessMouseMovement(xoffset, yoffset);
     }
-
-    float xoffset = xpos - LastX;
-    float yoffset = LastY - ypos; // reversed since y-coordinates go from bottom to top
-
-    LastX = xpos;
-    LastY = ypos;
-
-    Camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 // glfw: whenever a mouse button is clicked, this callback is called
@@ -363,6 +400,7 @@ void Render(const Shader& shader)
     shader.SetVec3("torchDir", TorchLight.Direction);
     shader.SetFloat("time", CurrentTime);
     shader.SetBool("torchActivated", Player.IsTorchOn);
+    shader.SetBool("menuActive", Menu->Active);
 
     Scene->Draw(shader);
 }
@@ -396,6 +434,11 @@ void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int f
     if (!blendEnabled)
         glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+}
+
+void RestartLevel()
+{
+    std::cout << "Restart" << std::endl;
 }
 
 void Shoot()

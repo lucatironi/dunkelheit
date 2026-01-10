@@ -6,6 +6,7 @@ in vec2 TexCoords;
 
 layout(location = 0) out vec4 FragColor;
 
+uniform bool menuActive;
 uniform float time;
 uniform vec3 cameraPos;
 uniform vec3 torchPos;
@@ -140,6 +141,21 @@ void main()
 
     // --- 4. VOLUMETRIC TORCH BEAM ---
     finalWithFog += torchColor * airGlow * (1.0 - fogFactor) * 0.2;
+
+    if (menuActive)
+    {
+        float gray = dot(finalWithFog, vec3(0.3, 0.59, 0.11));
+        finalWithFog = mix(finalWithFog, vec3(gray), 0.5);
+
+        // 2. Tint it "Cold" (Blue/Cyan)
+        finalWithFog *= vec3(0.7, 0.8, 1.0);
+
+        // 3. Scanlines
+        float scale = 4.0;
+        float scanline = sin(gl_FragCoord.y / scale) * 0.15 + 0.85;
+
+        finalWithFog *= scanline;
+    }
 
     FragColor = vec4(finalWithFog, alpha);
 }

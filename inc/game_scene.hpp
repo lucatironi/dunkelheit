@@ -90,6 +90,12 @@ public:
         }
     }
 
+    void ToggleSounds(const bool pause)
+    {
+        for (auto& enemy : enemies)
+            enemy->ToggleSound(pause);
+    }
+
 private:
     Level* level;
     std::vector<std::unique_ptr<Enemy>> enemies;

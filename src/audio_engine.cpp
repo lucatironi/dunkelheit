@@ -82,7 +82,7 @@ ma_sound* AudioEngine::AddEmitter(const std::string& path, const glm::vec3& posi
     ma_sound_set_position(pSound, position.x, position.y, position.z);
     ma_sound_set_attenuation_model(pSound, ma_attenuation_model_linear);
     ma_sound_set_min_distance(pSound, 1.0f);
-    ma_sound_set_max_distance(pSound, 10.0f); // Silence at 25m
+    ma_sound_set_max_distance(pSound, 10.0f);
 
     ma_sound_start(pSound);
 
