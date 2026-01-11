@@ -1,6 +1,7 @@
 #pragma once
 
 #include "audio_engine.hpp"
+#include "fps_camera.hpp"
 #include "random_generator.hpp"
 
 #include <glm/glm.hpp>
@@ -11,9 +12,17 @@
 struct PlayerState {
     glm::vec3 Position;
     glm::vec3 PreviousPosition;
-    glm::vec3 Forward;
+    glm::vec3 Front;
     bool IsMoving = false;
     bool IsTorchOn = false;
+
+    void Init(const FPSCamera& camera) {
+        Position = camera.Position;
+        PreviousPosition = camera.Position;
+        Front = camera.Front;
+        IsMoving = false;
+        IsTorchOn = true;
+    }
 };
 
 class PlayerAudioSystem
@@ -25,7 +34,7 @@ public:
 
     void Update(PlayerState& player, float elapsedTime)
     {
-        AudioEngine::GetInstance().SetPlayerPosition(player.Position, player.Forward);
+        AudioEngine::GetInstance().SetPlayerPosition(player.Position, player.Front);
         // Check if the player is moving
         float distanceMoved = glm::length(player.Position - player.PreviousPosition);
         player.IsMoving = distanceMoved > movementThreshold;

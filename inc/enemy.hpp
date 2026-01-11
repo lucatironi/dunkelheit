@@ -27,8 +27,8 @@ enum class EnemyState {
 class Enemy : public Entity
 {
 public:
-    Enemy(const std::string& modelPath, const glm::vec3 position, const float angleY, const glm::vec3 scaleFactor)
-          : position(position), scaleFactor(scaleFactor), angleY(angleY), currentState(EnemyState::IDLE)
+    Enemy(const std::string& modelPath, const glm::vec3 position, const float initialAngleY, const glm::vec3 scaleFactor)
+          : currentPosition(position), initialPosition(position), scaleFactor(scaleFactor), initialAngleY(initialAngleY), currentState(EnemyState::IDLE)
     {
         enemyModel = std::make_unique<AnimatedModel>();
         ModelLoader& gltf = ModelLoader::GetInstance();
@@ -38,7 +38,7 @@ public:
         sound = AudioEngine::GetInstance().AddEmitter("assets/gizmo.wav", position);
         pathTimer = (float)(rand() % 100) / 200.0f; // Randomize start offset so enemies don't pathfind on the same frame
 
-        currentRotation = glm::angleAxis(glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+        currentRotation = glm::angleAxis(glm::radians(initialAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
         updateModelMatrix();
     }
 
@@ -50,7 +50,7 @@ public:
 
     void Update(const float deltaTime, const FPSCamera& camera, class Level& level)
     {
-        float distToPlayer = glm::distance(position, camera.Position);
+        float distToPlayer = glm::distance(currentPosition, camera.Position);
 
         // 1. Pathfinding Logic: Deciding where to go
         pathTimer += deltaTime;
@@ -59,18 +59,16 @@ public:
 
             // If we can see the player, clear the path and go straight.
             // Otherwise, calculate the A* path.
-            if (level.HasLineOfSight(position, camera.Position))
+            if (level.HasLineOfSight(currentPosition, camera.Position))
             {
                 currentPath.clear();
                 targetDestination = camera.Position;
             }
             else
             {
-                currentPath = level.FindPath(position, camera.Position);
+                currentPath = level.FindPath(currentPosition, camera.Position);
                 if (!currentPath.empty())
-                {
                     targetDestination = currentPath[0];
-                }
             }
         }
 
@@ -89,13 +87,11 @@ public:
                 handleMovement(deltaTime, targetDestination, 3.5f);
 
                 // If we reached a waypoint, move to the next one
-                if (!currentPath.empty() && glm::distance(position, targetDestination) < 0.5f)
+                if (!currentPath.empty() && glm::distance(currentPosition, targetDestination) < 0.5f)
                 {
                     currentPath.erase(currentPath.begin());
                     if (!currentPath.empty())
-                    {
                         targetDestination = currentPath[0];
-                    }
                 }
 
                 if (distToPlayer < 3.0f)
@@ -124,7 +120,7 @@ public:
         enemyModel->UpdateAnimation(deltaTime);
 
         if (sound)
-            ma_sound_set_position(sound, position.x, position.y, position.z);
+            ma_sound_set_position(sound, currentPosition.x, currentPosition.y, currentPosition.z);
     }
 
     void Draw(const Shader& shader) const override
@@ -145,12 +141,10 @@ public:
 
         // Calculate shadow position (slightly above the floor to avoid z-fighting)
         // We ignore the enemy's current Y and put it at ground level (e.g., 0.01)
-        glm::vec3 shadowPos = glm::vec3(position.x, 0.01f, position.z);
+        glm::vec3 shadowPos = glm::vec3(currentPosition.x, 0.01f, currentPosition.z);
 
-        // Scale the shadow based on the enemy's base scale
-        // Note: We don't use the enemy's rotation for the shadow (retro style)
         glm::mat4 shadowModelMatrix = glm::translate(glm::mat4(1.0f), shadowPos);
-        shadowModelMatrix = glm::scale(shadowModelMatrix, glm::vec3(1.5f)); // Make shadow slightly wider than enemy
+        shadowModelMatrix = glm::scale(shadowModelMatrix, glm::vec3(2.0f));
 
         shader.SetMat4("modelMatrix", shadowModelMatrix);
         blobShadow->Draw(shader);
@@ -168,14 +162,21 @@ public:
             ma_sound_start(sound);
     }
 
-    glm::vec3 GetPosition() const { return position; }
-    void SetPosition(const glm::vec3& pos) { position = pos; }
+    void Reset()
+    {
+        currentPosition = initialPosition;
+        currentRotation = glm::angleAxis(glm::radians(initialAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+
+    glm::vec3 GetPosition() const { return currentPosition; }
+    void SetPosition(const glm::vec3& pos) { currentPosition = pos; }
 
 private:
     std::unique_ptr<AnimatedModel> enemyModel;
-    glm::vec3 position;
+    glm::vec3 initialPosition;
+    float initialAngleY;
     glm::vec3 scaleFactor;
-    float angleY;
+    glm::vec3 currentPosition;
     glm::quat currentRotation;
     glm::mat4 modelMatrix;
     std::unique_ptr<PlaneModel> blobShadow;
@@ -189,14 +190,14 @@ private:
         glm::quat correction = glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         float turnSpeed = 4.0f;
 
-        glm::vec3 direction = target - position;
+        glm::vec3 direction = target - currentPosition;
         direction.y = 0.0f;
 
         if (glm::length(direction) > 0.01f) {
             direction = glm::normalize(direction);
 
             // 1. Position update
-            position += direction * speed * deltaTime;
+            currentPosition += direction * speed * deltaTime;
 
             // 2. Rotation update (Face the current waypoint)
             glm::quat lookRot = glm::quatLookAt(direction, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -207,7 +208,7 @@ private:
 
     void updateModelMatrix()
     {
-        glm::mat4 T = glm::translate(glm::mat4(1.0f), position);
+        glm::mat4 T = glm::translate(glm::mat4(1.0f), currentPosition);
         glm::mat4 R = glm::mat4_cast(currentRotation);
         glm::mat4 S = glm::scale(glm::mat4(1.0f), scaleFactor);
 

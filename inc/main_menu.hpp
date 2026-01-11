@@ -19,7 +19,7 @@ public:
 
     void AddItem(const std::string& label, std::function<void()> action)
     {
-        items.push_back({label, action});
+        items.push_back({ label, action });
     }
 
     void NavigateUp()
@@ -35,6 +35,11 @@ public:
     void Confirm()
     {
         if (items[selectedIndex].action) items[selectedIndex].action();
+    }
+
+    void Reset()
+    {
+        selectedIndex = 0;
     }
 
     void Render(TextRenderer& textRenderer, const Shader& shader, int screenW, int screenH) {

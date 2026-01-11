@@ -145,6 +145,16 @@ public:
         updateCameraVectors();
     }
 
+    void Reset(const glm::vec3& pos)
+    {
+        Position = pos;
+        Front = DEFAULT_FRONT;
+        yawAngle = DEFAULT_YAW;
+        pitchAngle = DEFAULT_PITCH;
+
+        updateCameraVectors();
+    }
+
 private:
     // Euler Angles
     float yawAngle;

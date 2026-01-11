@@ -35,7 +35,7 @@ void SetupShaders(const Shader& shader);
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& frames, int& fps);
 void Render(const Shader& shader);
 void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int fps);
-void RestartLevel();
+void Restart();
 
 void Shoot();
 
@@ -149,7 +149,7 @@ int main()
     // main menu
     Menu = new MainMenu();
     Menu->AddItem("RESUME",  [&](){ Menu->Active = false; Scene->ToggleSounds(false); });
-    Menu->AddItem("RESTART", [&](){ RestartLevel(); });
+    Menu->AddItem("RESTART", [&](){ Restart(); });
     Menu->AddItem("QUIT",    [&](){ glfwSetWindowShouldClose(window, true); });
 
     // load GameScene
@@ -177,11 +177,7 @@ int main()
     );
 
     // initialize player state and audio system
-    Player.Position = Camera.Position;
-    Player.PreviousPosition = Camera.Position;
-    Player.Forward = Camera.Front;
-    Player.IsMoving = false;
-    Player.IsTorchOn = true;
+    Player.Init(Camera);
     PlayerAudio = new PlayerAudioSystem(Settings.FootstepsSoundFiles, Settings.TorchToggleSoundFile);
 
     TorchLight.PositionOffset = Settings.TorchPos;
@@ -221,7 +217,7 @@ int main()
 
             Scene->Update(deltaTime, Camera);
             Player.Position = Camera.Position;
-            Player.Forward = Camera.Front;
+            Player.Front = Camera.Front;
             PlayerAudio->Update(Player, CurrentTime);
             TorchLight.Update(Camera);
         }
@@ -436,9 +432,17 @@ void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int f
     glEnable(GL_DEPTH_TEST);
 }
 
-void RestartLevel()
+void Restart()
 {
     std::cout << "Restart" << std::endl;
+    Scene->Reset();
+    Camera.Reset(Scene->GetStartingPosition());
+    Player.Init(Camera);
+    TorchLight.Direction = Camera.Front;
+
+    Menu->Active = false;
+    Menu->Reset();
+    Scene->ToggleSounds(false);
 }
 
 void Shoot()

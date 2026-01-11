@@ -26,6 +26,12 @@ public:
         delete level;
     }
 
+    void Reset()
+    {
+        for (auto& enemy : enemies)
+            enemy->Reset();
+    }
+
     void AddItem(std::string& modelPath, std::string& texturePath,
          glm::vec3 posOffset, glm::vec3 rotOffset, glm::vec3 scaleFactor)
     {
