@@ -37,6 +37,12 @@ public:
         if (items[selectedIndex].action) items[selectedIndex].action();
     }
 
+    void Clear()
+    {
+        items.clear();
+        selectedIndex = 0;
+    }
+
     void Reset()
     {
         selectedIndex = 0;

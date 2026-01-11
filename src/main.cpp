@@ -35,6 +35,7 @@ void SetupShaders(const Shader& shader);
 void CalculateFPS(float& lastTime, float& lastFPSTime, float& deltaTime, int& frames, int& fps);
 void Render(const Shader& shader);
 void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int fps);
+void SetupMenu(GLFWwindow* window);
 void Restart();
 
 void Shoot();
@@ -51,6 +52,7 @@ float CurrentTime = 0.0f;
 bool FirstMouse = true;
 float LastX, LastY;
 
+bool GameStarted = false;
 
 int main()
 {
@@ -148,9 +150,8 @@ int main()
 
     // main menu
     Menu = new MainMenu();
-    Menu->AddItem("RESUME",  [&](){ Menu->Active = false; Scene->ToggleSounds(false); });
-    Menu->AddItem("RESTART", [&](){ Restart(); });
-    Menu->AddItem("QUIT",    [&](){ glfwSetWindowShouldClose(window, true); });
+    Menu->Active = true;
+    SetupMenu(window);
 
     // load GameScene
     Scene = new GameScene(Settings);
@@ -290,7 +291,15 @@ void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, in
     if (key == GLFW_KEY_ESCAPE)
     {
         Menu->Active = !Menu->Active;
-        Scene->ToggleSounds(Menu->Active);
+        if (Menu->Active)
+        {
+            SetupMenu(window); // Refresh items (Switch Start -> Resume)
+            Scene->ToggleSounds(true);
+        }
+        else
+        {
+            Scene->ToggleSounds(false);
+        }
         return;
     }
 
@@ -430,6 +439,30 @@ void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int f
     if (!blendEnabled)
         glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+}
+
+void SetupMenu(GLFWwindow* window)
+{
+    Menu->Clear();
+
+    if (!GameStarted)
+    {
+        // Initial State
+        Menu->AddItem("START", [=]() {
+            GameStarted = true;
+            Menu->Active = false;
+            Scene->ToggleSounds(false);
+            SetupMenu(window); // Optional: Re-setup immediately so next time it shows Resume
+        });
+        Menu->AddItem("QUIT", [=]() { glfwSetWindowShouldClose(window, true); });
+    }
+    else
+    {
+        // Game is paused
+        Menu->AddItem("RESUME",  [=]() { Menu->Active = false; Scene->ToggleSounds(false); });
+        Menu->AddItem("RESTART", [=]() { Restart(); });
+        Menu->AddItem("QUIT",    [=]() { glfwSetWindowShouldClose(window, true); });
+    }
 }
 
 void Restart()
