@@ -33,7 +33,7 @@ public:
         enemyModel = std::make_unique<AnimatedModel>();
         ModelLoader& gltf = ModelLoader::GetInstance();
         gltf.LoadFromFile(modelPath, *enemyModel);
-        enemyModel->PlayAnimation("1_idle", 0.5f);
+        enemyModel->PlayAnimation("2_idle", 0.5f);
         blobShadow = std::make_unique<PlaneModel>("assets/blob_shadow.png");
         sound = AudioEngine::GetInstance().AddEmitter("assets/gizmo.wav", position);
         pathTimer = (float)(rand() % 100) / 200.0f; // Randomize start offset so enemies don't pathfind on the same frame
@@ -75,11 +75,17 @@ public:
         // 2. State Machine Logic
         switch (currentState) {
             case EnemyState::IDLE:
-                if (distToPlayer < 10.0f)
+                if (distToPlayer < 15.0f && distToPlayer > 10.0f)
+                {
+                    handleMovement(deltaTime, camera.Position, 0.0f);
+                    enemyModel->PlayAnimation("1_idle", 0.5f);
+                }
+                else if (distToPlayer < 10.0f)
                 {
                     currentState = EnemyState::CRAWL;
                     enemyModel->PlayAnimation("6_crawl_run", 0.5f);
                 }
+
                 break;
 
             case EnemyState::CRAWL:

@@ -5,6 +5,7 @@
 #include "item.hpp"
 #include "level.hpp"
 #include "object.hpp"
+#include "random_generator.hpp"
 #include "settings.hpp"
 #include "texture_2D.hpp"
 
@@ -41,8 +42,9 @@ public:
 
     void AddEnemy(glm::vec3 position)
     {
+        float angle = static_cast<float>(random.GetRandomInRange(0, 360));
         position.y = 0.0f;
-        enemies.push_back(std::make_unique<Enemy>(settings.EnemyModelFile, position, 0.0f, glm::vec3(0.5f)));
+        enemies.push_back(std::make_unique<Enemy>(settings.EnemyModelFile, position, angle, glm::vec3(0.5f)));
         refreshRenderList();
     }
 
@@ -109,6 +111,7 @@ private:
     std::vector<std::unique_ptr<Item>> items;
     std::vector<Entity*> renderList;
     SettingsData settings;
+    RandomGenerator& random = RandomGenerator::GetInstance();
 
     void refreshRenderList()
     {
