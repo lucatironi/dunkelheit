@@ -1,5 +1,6 @@
 #pragma once
 
+#include "audio_engine.hpp"
 #include "shader.hpp"
 #include "text_renderer.hpp"
 
@@ -17,6 +18,10 @@ public:
 
     bool Active = false;
 
+    MainMenu(const std::string& menuItemClickSoundPath)
+        : menuItemClickSoundPath(menuItemClickSoundPath)
+    {}
+
     void AddItem(const std::string& label, std::function<void()> action)
     {
         items.push_back({ label, action });
@@ -25,16 +30,19 @@ public:
     void NavigateUp()
     {
         selectedIndex = (selectedIndex - 1 + (int)items.size()) % (int)items.size();
+        AudioEngine::GetInstance().PlayOneShotSound(menuItemClickSoundPath);
     }
 
     void NavigateDown()
     {
         selectedIndex = (selectedIndex + 1) % (int)items.size();
+        AudioEngine::GetInstance().PlayOneShotSound(menuItemClickSoundPath);
     }
 
     void Confirm()
     {
-        if (items[selectedIndex].action) items[selectedIndex].action();
+        if (items[selectedIndex].action)
+            items[selectedIndex].action();
     }
 
     void Clear()
@@ -82,4 +90,5 @@ public:
 private:
     int selectedIndex = 0;
     std::vector<MenuItem> items;
+    std::string menuItemClickSoundPath;
 };

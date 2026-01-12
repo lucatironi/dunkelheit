@@ -149,7 +149,7 @@ int main()
     textShader.SetMat4("projectionMatrix", orthoProjection);
 
     // main menu
-    Menu = new MainMenu();
+    Menu = new MainMenu(Settings.MenuItemClickSoundFile);
     Menu->Active = true;
     SetupMenu(window);
 
@@ -293,11 +293,13 @@ void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, in
         Menu->Active = !Menu->Active;
         if (Menu->Active)
         {
-            SetupMenu(window); // Refresh items (Switch Start -> Resume)
+            AudioEngine::GetInstance().PlayOneShotSound(Settings.MenuOpenSoundFile);
             Scene->ToggleSounds(true);
+            SetupMenu(window); // Refresh items (Switch Start -> Resume)
         }
         else
         {
+            AudioEngine::GetInstance().PlayOneShotSound(Settings.MenuCloseSoundFile);
             Scene->ToggleSounds(false);
         }
         return;
@@ -449,19 +451,31 @@ void SetupMenu(GLFWwindow* window)
     {
         // Initial State
         Menu->AddItem("START", [=]() {
+            AudioEngine::GetInstance().PlayOneShotSound(Settings.GameStartSoundFile);
             GameStarted = true;
             Menu->Active = false;
             Scene->ToggleSounds(false);
-            SetupMenu(window); // Optional: Re-setup immediately so next time it shows Resume
+            SetupMenu(window); // Re-setup immediately so next time it shows Resume
         });
-        Menu->AddItem("QUIT", [=]() { glfwSetWindowShouldClose(window, true); });
+        Menu->AddItem("QUIT", [=]() {
+            glfwSetWindowShouldClose(window, true);
+        });
     }
     else
     {
         // Game is paused
-        Menu->AddItem("RESUME",  [=]() { Menu->Active = false; Scene->ToggleSounds(false); });
-        Menu->AddItem("RESTART", [=]() { Restart(); });
-        Menu->AddItem("QUIT",    [=]() { glfwSetWindowShouldClose(window, true); });
+        Menu->AddItem("RESUME", [=]() {
+            AudioEngine::GetInstance().PlayOneShotSound(Settings.MenuCloseSoundFile);
+            Menu->Active = false;
+            Scene->ToggleSounds(false);
+        });
+        Menu->AddItem("RESTART", [=]() {
+            AudioEngine::GetInstance().PlayOneShotSound(Settings.GameStartSoundFile);
+            Restart();
+        });
+        Menu->AddItem("QUIT", [=]() {
+            glfwSetWindowShouldClose(window, true);
+        });
     }
 }
 

@@ -90,6 +90,10 @@
             "assets/footstep3.wav"
         ],
         "torchToggleSoundFile": "assets/flashlight_toggle.wav",
-        "gizmoSoundFile": "assets/gizmo.wav"
+        "gizmoSoundFile": "assets/gizmo.wav",
+        "gameStartSoundFile": "assets/start_game.wav",
+        "menuOpenSoundFile": "assets/click2.wav",
+        "menuCloseSoundFile": "assets/click3.wav",
+        "menuItemClickSoundFile": "assets/click1.wav"
     }
 }

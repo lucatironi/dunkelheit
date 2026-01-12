@@ -34,6 +34,7 @@ set(HEADER_FILES
     inc/item.hpp
     inc/json_file.hpp
     inc/level.hpp
+    inc/main_menu.hpp
     inc/mesh.hpp
     inc/model_loader.hpp
     inc/model.hpp
