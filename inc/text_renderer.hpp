@@ -1,5 +1,7 @@
 #pragma once
 
+#include "shader.hpp"
+
 #include <glad/gl.h>
 #include <glm/glm.hpp>
 #include <ft2build.h>
@@ -7,7 +9,6 @@
 
 #include <map>
 #include <vector>
-#include <iostream>
 #include <string>
 #include <algorithm>
 

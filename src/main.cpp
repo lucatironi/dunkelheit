@@ -1,9 +1,6 @@
 #include "audio_engine.hpp"
-#include "entity.hpp"
 #include "fps_camera.hpp"
 #include "game_scene.hpp"
-#include "item.hpp"
-#include "level.hpp"
 #include "main_menu.hpp"
 #include "pixelator.hpp"
 #include "player_audio_system.hpp"
@@ -11,7 +8,6 @@
 #include "settings.hpp"
 #include "shader.hpp"
 #include "text_renderer.hpp"
-#include "texture_2D.hpp"
 #include "torch.hpp"
 #include "working_directory.hpp"
 
@@ -19,11 +15,9 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <string>
-#include <vector>
 
 void ProcessInput(GLFWwindow* window, float deltaTime);
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);

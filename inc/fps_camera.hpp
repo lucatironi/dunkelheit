@@ -1,12 +1,9 @@
 #pragma once
 
-#include "glm/ext/quaternion_geometric.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/quaternion.hpp>
-
-#include <vector>
 
 // Enumerates camera movement directions.
 enum MovementDirection
@@ -26,7 +23,7 @@ public:
     static constexpr float DEFAULT_YAW = -90.0f;
     static constexpr float DEFAULT_PITCH = 0.0f;
     static constexpr float DEFAULT_SPEED = 5.0f;
-    static constexpr float DEFAULT_SENSITIVITY = 0.1f;
+    static constexpr float DEFAULT_SENSITIVITY = 0.15f;
     static constexpr float DEFAULT_HEAD_HEIGHT = 1.75f;
     static constexpr float DEFAULT_FOV = 75.0f;
     static constexpr float DEFAULT_ASPECT_RATIO = 16.0f / 9.0f;
@@ -159,7 +156,7 @@ private:
     // Euler Angles
     float yawAngle;
     float pitchAngle;
-    float cameraLerpFactor = 0.025f;
+    float cameraLerpFactor = 0.05f;
 
     // Updates the camera's vectors based on the current yaw and pitch angles.
     void updateCameraVectors()

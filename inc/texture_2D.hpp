@@ -12,7 +12,7 @@ struct TextureParams
     GLuint wrapS = GL_CLAMP_TO_EDGE;
     GLuint wrapT = GL_CLAMP_TO_EDGE;
     GLuint filterMin = GL_NEAREST;
-    GLuint filterMax = GL_NEAREST;
+    GLuint filterMag = GL_NEAREST;
 };
 
 class Texture2D
@@ -22,13 +22,13 @@ public:
     GLuint Width, Height;
     GLuint InternalFormat, ImageFormat;
     GLuint WrapS, WrapT;
-    GLuint FilterMin, FilterMax;
+    GLuint FilterMin, FilterMag;
 
     Texture2D() = default;
 
     Texture2D(const std::string& path, const TextureParams& params = {})
         : WrapS(params.wrapS), WrapT(params.wrapT),
-          FilterMin(params.filterMin), FilterMax(params.filterMax)
+          FilterMin(params.filterMin), FilterMag(params.filterMag)
     {
         glGenTextures(1, &ID);
         unsigned char* image = loadImageFromPath(path.c_str());
@@ -43,7 +43,7 @@ public:
 
     Texture2D(unsigned char* data, unsigned int w, unsigned int h, const TextureParams& params = {})
         : WrapS(params.wrapS), WrapT(params.wrapT),
-          FilterMin(params.filterMin), FilterMax(params.filterMax)
+          FilterMin(params.filterMin), FilterMag(params.filterMag)
     {
         glGenTextures(1, &ID);
         unsigned char* image = loadImageFromData(data, w, h);
@@ -87,12 +87,12 @@ private:
         // Create Texture
         glBindTexture(GL_TEXTURE_2D, ID);
         glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat, Width, Height, 0, ImageFormat, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
         // Set Texture wrap and filter modes
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrapS);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrapT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, FilterMin);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, FilterMax);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, FilterMag);
+        glGenerateMipmap(GL_TEXTURE_2D);
         // Unbind texture
         glBindTexture(GL_TEXTURE_2D, 0);
     }
