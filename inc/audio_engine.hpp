@@ -20,6 +20,7 @@ public:
     void operator=(const AudioEngine&) = delete;
 
     void PlayOneShotSound(const std::string& path, float volume = 1.0f);
+    void PlayOneShotSound(const std::string& path, const glm::vec3& position, float volume = 1.0f);
     bool LoopSound(const std::string& path, float volume = 1.0f);
     ma_sound* AddEmitter(const std::string& path, const glm::vec3& position);
     void RemoveEmitter(ma_sound* sound);

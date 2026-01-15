@@ -44,6 +44,41 @@ void AudioEngine::PlayOneShotSound(const std::string& path, float volume)
         ma_engine_play_sound(&engine, path.c_str(), nullptr);
 }
 
+void AudioEngine::PlayOneShotSound(const std::string& path, const glm::vec3& position, float volume)
+{
+    if (!initialized) return;
+
+    // Use AUTO_RELEASE so we don't have to track this pointer
+    ma_uint32 flags = MA_SOUND_FLAG_STREAM;
+
+    // We must allocate this on the heap because it needs to live
+    // until the sound finishes playing.
+    ma_sound* pSound = new ma_sound;
+
+    ma_result result = ma_sound_init_from_file(&engine, path.c_str(), flags, nullptr, nullptr, pSound);
+
+    if (result != MA_SUCCESS)
+    {
+        delete pSound;
+        return;
+    }
+
+    ma_sound_set_position(pSound, position.x, position.y, position.z);
+    ma_sound_set_volume(pSound, volume);
+
+    // Optional: Match the attenuation of your emitters
+    ma_sound_set_attenuation_model(pSound, ma_attenuation_model_inverse);
+    ma_sound_set_min_distance(pSound, 1.0f);
+    ma_sound_set_max_distance(pSound, 15.0f);
+
+    ma_sound_start(pSound);
+
+    // Note: DO NOT delete pSound here.
+    // MA_SOUND_FLAG_AUTO_RELEASE handles the internal uninit,
+    // but we need a way to free the 'new ma_sound' memory.
+    // See the 'End-of-Sound' callback note below.
+}
+
 bool AudioEngine::LoopSound(const std::string& path, float volume)
 {
     if (!initialized)

@@ -18,6 +18,7 @@
 
 enum class EnemyState {
     IDLE,
+    STARTLED,
     CRAWL,
     RUN,
     SCREAM,
@@ -33,12 +34,9 @@ public:
         enemyModel = std::make_unique<AnimatedModel>();
         ModelLoader& gltf = ModelLoader::GetInstance();
         gltf.LoadFromFile(modelPath, *enemyModel);
-        enemyModel->PlayAnimation("2_idle", 0.5f);
         blobShadow = std::make_unique<PlaneModel>("assets/blob_shadow.png");
-        sound = AudioEngine::GetInstance().AddEmitter("assets/gizmo.wav", position);
-        pathTimer = (float)(rand() % 100) / 200.0f; // Randomize start offset so enemies don't pathfind on the same frame
 
-        currentRotation = glm::angleAxis(glm::radians(initialAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
+        Reset();
         updateModelMatrix();
     }
 
@@ -50,6 +48,7 @@ public:
 
     void Update(const float deltaTime, const FPSCamera& camera, class Level& level)
     {
+        EnemyState previousState = currentState;
         float distToPlayer = glm::distance(currentPosition, camera.Position);
 
         // 1. Pathfinding Logic: Deciding where to go
@@ -72,61 +71,20 @@ public:
             }
         }
 
-        // 2. State Machine Logic
-        switch (currentState) {
-            case EnemyState::IDLE:
-                if (distToPlayer < 15.0f && distToPlayer > 10.0f)
-                {
-                    handleMovement(deltaTime, camera.Position, 0.0f);
-                    enemyModel->PlayAnimation("1_idle", 0.5f);
-                }
-                else if (distToPlayer < 10.0f)
-                {
-                    currentState = EnemyState::CRAWL;
-                    enemyModel->PlayAnimation("6_crawl_run", 0.5f);
-                }
+        // 2. Transition Logic (Simplified)
+        updateStateTransitions(distToPlayer);
 
-                break;
-
-            case EnemyState::CRAWL:
-                // Move toward the current waypoint or target destination
-                handleMovement(deltaTime, targetDestination, 3.5f);
-
-                // If we reached a waypoint, move to the next one
-                if (!currentPath.empty() && glm::distance(currentPosition, targetDestination) < 0.5f)
-                {
-                    currentPath.erase(currentPath.begin());
-                    if (!currentPath.empty())
-                        targetDestination = currentPath[0];
-                }
-
-                if (distToPlayer < 3.0f)
-                {
-                    currentState = EnemyState::SCREAM;
-                    enemyModel->PlayAnimation("3_scream", 0.5f);
-                }
-                else if (distToPlayer > 12.0f)
-                {
-                    currentState = EnemyState::IDLE;
-                    enemyModel->PlayAnimation("1_idle", 0.5f);
-                }
-                break;
-
-            case EnemyState::SCREAM:
-                handleMovement(deltaTime, camera.Position, 0.0f);
-                if (distToPlayer > 3.5f)
-                {
-                    currentState = EnemyState::CRAWL;
-                    enemyModel->PlayAnimation("6_crawl_run", 0.5f);
-                }
-                break;
+        // 3. ON STATE CHANGE: Trigger One-Shots
+        if (currentState != previousState)
+        {
+            onStateEnter(currentState);
         }
+
+        // 4. CONTINUOUS STATE LOGIC (Movement & Timed Audio)
+        handleStateLogic(deltaTime, camera.Position);
 
         updateModelMatrix();
         enemyModel->UpdateAnimation(deltaTime);
-
-        if (sound)
-            ma_sound_set_position(sound, currentPosition.x, currentPosition.y, currentPosition.z);
     }
 
     void Draw(const Shader& shader) const override
@@ -170,8 +128,13 @@ public:
 
     void Reset()
     {
+        enemyModel->PlayAnimation("2_idle", 0.5f);
+        setState(EnemyState::IDLE);
         currentPosition = initialPosition;
         currentRotation = glm::angleAxis(glm::radians(initialAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        pathTimer = (float)(rand() % 100) / 200.0f; // Randomize start offset so enemies don't pathfind on the same frame
+        nextIdleSoundTimer = (float)(rand() % 10 + 5);
     }
 
     glm::vec3 GetPosition() const { return currentPosition; }
@@ -191,15 +154,125 @@ private:
     std::vector<glm::vec3> currentPath;
     glm::vec3 targetDestination; // The specific point the enemy is currently walking toward
     float pathTimer = 0.0f;
+    float nextIdleSoundTimer = 0.0f;
+    float footstepTimer = 0.0f;
 
-    void handleMovement(float deltaTime, glm::vec3 target, float speed) {
+    void updateStateTransitions(float distToPlayer)
+    {
+        switch (currentState)
+        {
+            case EnemyState::IDLE:
+                if (distToPlayer < 10.0f) setState(EnemyState::CRAWL);
+                break;
+            case EnemyState::STARTLED:
+                if (distToPlayer < 10.0f) setState(EnemyState::RUN);
+                break;
+            case EnemyState::CRAWL:
+                if (distToPlayer < 3.0f) setState(EnemyState::SCREAM);
+                else if (distToPlayer > 12.0f) setState(EnemyState::STARTLED);
+                break;
+            case EnemyState::RUN:
+                if (distToPlayer < 3.0f) setState(EnemyState::ATTACK);
+                break;
+            case EnemyState::SCREAM:
+                if (distToPlayer > 3.5f) setState(EnemyState::CRAWL);
+                break;
+            case EnemyState::ATTACK:
+                if (distToPlayer > 3.5f) setState(EnemyState::RUN);
+                break;
+        }
+    }
+
+    void setState(EnemyState newState)
+    {
+        currentState = newState;
+    }
+
+    void onStateEnter(EnemyState state)
+    {
+        auto& audio = AudioEngine::GetInstance();
+        switch (state)
+        {
+            case EnemyState::IDLE:
+                enemyModel->PlayAnimation("1_idle", 0.5f);
+                break;
+            case EnemyState::STARTLED:
+                enemyModel->PlayAnimation("3_idle", 0.5f);
+                break;
+            case EnemyState::CRAWL:
+                enemyModel->PlayAnimation("5_crouch_walk", 0.5f);
+                break;
+            case EnemyState::RUN:
+                enemyModel->PlayAnimation("7_crawl_run", 0.5f);
+                break;
+            case EnemyState::SCREAM:
+                enemyModel->PlayAnimation("4_scream", 0.2f);
+                audio.PlayOneShotSound("assets/monster_scream.wav", currentPosition, 1.0f);
+                break;
+            case EnemyState::ATTACK:
+                enemyModel->PlayAnimation("9_attack", 0.2f);
+                // audio.PlayOneShotSound("assets/monster_bite.wav", 1.0f);
+                break;
+        }
+    }
+
+    void handleStateLogic(float deltaTime, glm::vec3 playerPos)
+    {
+        auto& audio = AudioEngine::GetInstance();
+        float speed = 0.0f;
+
+        // 1. Determine Movement Speed based on State
+        switch (currentState)
+        {
+            case EnemyState::IDLE:
+            case EnemyState::STARTLED:
+            case EnemyState::SCREAM:
+            case EnemyState::ATTACK: speed = 0.0f; break;
+            case EnemyState::CRAWL:  speed = 2.0f; break;
+            case EnemyState::RUN:    speed = 3.5f; break;
+        }
+
+        // 2. Execute Movement (Passing playerPos for IDLE/SCREAM to face player)
+        if (speed > 0.0f)
+        {
+            handleMovement(deltaTime, targetDestination, speed);
+
+            // Footstep logic
+            footstepTimer -= deltaTime;
+            if (footstepTimer <= 0.0f)
+            {
+                audio.PlayOneShotSound("assets/footstep1.wav", currentPosition, 0.2f);
+                footstepTimer = (currentState == EnemyState::RUN) ? 0.25f : 0.5f;
+            }
+        }
+        else
+        {
+            // Stand still but rotate to face player
+            handleMovement(deltaTime, playerPos, 0.0f);
+
+            // Randomized Idle Audio (Only when not screaming/attacking)
+            if (currentState == EnemyState::IDLE || currentState == EnemyState::STARTLED)
+            {
+                nextIdleSoundTimer -= deltaTime;
+                if (nextIdleSoundTimer <= 0.0f)
+                {
+                    audio.PlayOneShotSound("assets/monster_scream.wav", currentPosition, 0.4f);
+                    nextIdleSoundTimer = (float)(rand() % 10 + 10); // 10-20 seconds
+                }
+            }
+        }
+    }
+
+    void handleMovement(float deltaTime, glm::vec3 target, float speed)
+    {
         glm::quat correction = glm::angleAxis(glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         float turnSpeed = 4.0f;
 
         glm::vec3 direction = target - currentPosition;
         direction.y = 0.0f;
 
-        if (glm::length(direction) > 0.01f) {
+        if (glm::length(direction) > 0.01f)
+        {
             direction = glm::normalize(direction);
 
             // 1. Position update
