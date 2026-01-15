@@ -61,6 +61,8 @@ public:
     std::string MenuOpenSoundFile;
     std::string MenuCloseSoundFile;
     std::string MenuItemClickSoundFile;
+    std::string MonsterBreathingSoundFile;
+    std::string MonsterScreamSoundFile;
 };
 
 inline SettingsData LoadSettingsFile(const std::string& path)
@@ -131,6 +133,8 @@ inline SettingsData LoadSettingsFile(const std::string& path)
     settings.MenuOpenSoundFile = json.GetNested<std::string>("audio.menuOpenSoundFile");
     settings.MenuCloseSoundFile = json.GetNested<std::string>("audio.menuCloseSoundFile");
     settings.MenuItemClickSoundFile = json.GetNested<std::string>("audio.menuItemClickSoundFile");
+    settings.MonsterBreathingSoundFile = json.GetNested<std::string>("audio.monsterBreathingSoundFile");
+    settings.MonsterScreamSoundFile = json.GetNested<std::string>("audio.monsterScreamSoundFile");
 
     return settings;
 }

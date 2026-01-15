@@ -42,23 +42,23 @@
     },
     "weapons": {
         "left": {
-            "modelFile": "assets/left_hand.glb",
+            "modelFile": "assets/flashlight1.glb",
             "textureFile": "assets/base_texture.png",
-            "positionOffset": [-1.0, -1.2, 1.2],
-            "rotationOffset": [-60.0, 30.0, 0.0],
-            "scale": [1.0, 1.0, 1.0]
+            "positionOffset": [-1.6, -1.0, 1.8],
+            "rotationOffset": [5.0, -5.0, -10.0],
+            "scale": [3.0, 3.0, 3.0]
         },
         "right": {
-            "modelFile": "assets/blasterI.glb",
+            "modelFile": "assets/knife.glb",
             "textureFile": "assets/base_texture.png",
-            "positionOffset": [1.4, -1.0, 1.8],
-            "rotationOffset": [5.0, 185.0, 0.0],
-            "scale": [2.0, 2.0, 2.0]
+            "positionOffset": [1.6, -1.2, 3.0],
+            "rotationOffset": [160.0, 80.0, -30.0],
+            "scale": [0.1, 0.1, 0.1]
         }
     },
     "lighting": {
         "torch": {
-            "position": [0.75, 0.4, 0.3],
+            "position": [-0.75, 0.4, -1.3],
             "color": [1.0, 1.0, 0.6],
             "innerCutoff": 20.0,
             "outerCutoff": 45.0,
@@ -94,6 +94,8 @@
         "gameStartSoundFile": "assets/start_game.wav",
         "menuOpenSoundFile": "assets/click2.wav",
         "menuCloseSoundFile": "assets/click3.wav",
-        "menuItemClickSoundFile": "assets/click1.wav"
+        "menuItemClickSoundFile": "assets/click1.wav",
+        "monsterBreathingSoundFile": "assets/monster_breathing.wav",
+        "monsterScreamSoundFile": "assets/monster_scream.wav"
     }
 }
