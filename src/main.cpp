@@ -93,12 +93,7 @@ int main()
         window = glfwCreateWindow(Settings.WindowWidth, Settings.WindowHeight, Settings.WindowTitle.c_str(), nullptr, nullptr);
         glfwGetWindowPos(window, &Settings.WindowPositionX, &Settings.WindowPositionY);
     }
-
-    int framebufferW, framebufferH;
-    glfwGetFramebufferSize(window, &framebufferW, &framebufferH);
-
-    Settings.FrameBufferWidth = framebufferW;
-    Settings.FrameBufferHeight = framebufferH;
+    glfwGetFramebufferSize(window, &Settings.FrameBufferWidth, &Settings.FrameBufferHeight);
 
     if (window == nullptr)
     {
@@ -144,7 +139,6 @@ int main()
 
     // main menu
     Menu = new MainMenu(Settings.MenuItemClickSoundFile);
-    Menu->Active = true;
     SetupMenu(window);
 
     // load GameScene
@@ -238,6 +232,8 @@ int main()
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        if (!GameStarted) Menu->Active = true;
     }
 
     // optional: de-allocate all resources once they've outlived their purpose:
@@ -284,6 +280,8 @@ void KeyCallback(GLFWwindow* window, int key, int /* scancode */, int action, in
     // 1. Global Toggle
     if (key == GLFW_KEY_ESCAPE)
     {
+        if (!GameStarted) return;
+
         Menu->Active = !Menu->Active;
         if (Menu->Active)
         {
@@ -425,8 +423,10 @@ void RenderDebugInfo(TextRenderer& textRenderer, Shader& textShader, const int f
     textRenderer.AddText(fpsStr, 4.0f, Settings.WindowHeight - 20.0f, 1.0f);
     std::string winStr = std::to_string(Settings.WindowWidth) + "x" + std::to_string(Settings.WindowHeight);
     textRenderer.AddText(winStr, 4.0f, Settings.WindowHeight - 40.0f, 1.0f);
+    std::string fbStr = std::to_string(Settings.FrameBufferWidth) + "x" + std::to_string(Settings.FrameBufferHeight);
+    textRenderer.AddText(fbStr, 4.0f, Settings.WindowHeight - 60.0f, 1.0f);
     std::string posStr = "pos x: " + std::to_string((int)Camera.Position.x) + ", z: " + std::to_string((int)Camera.Position.z);
-    textRenderer.AddText(posStr, 4.0f, Settings.WindowHeight - 60.0f, 1.0f);
+    textRenderer.AddText(posStr, 4.0f, Settings.WindowHeight - 80.0f, 1.0f);
 
     textRenderer.FlushBatch(textShader, Settings.FontColor);
 
