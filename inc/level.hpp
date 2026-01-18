@@ -132,6 +132,11 @@ public:
         shader.SetInt("numLights", numLights());
     }
 
+    std::vector<glm::vec3> GetLightPositions() const
+    {
+        return lightPositions;
+    }
+
     std::vector<glm::vec3> GetEnemyPositions() const
     {
         return enemyPositions;
@@ -228,6 +233,7 @@ private:
     std::vector<Tile> tiles;
     std::vector<GLfloat> vertices;
     std::vector<Light> lights;
+    std::vector<glm::vec3> lightPositions;
     std::vector<glm::vec3> enemyPositions;
     Tile nullTile;
 
@@ -315,7 +321,10 @@ private:
     void addLight(const glm::vec3& position, const glm::vec3& color)
     {
         if (lights.size() < MAX_LIGHTS)
+        {
             lights.push_back({ position, color });
+            lightPositions.push_back({ position });
+        }
         else
             std::cerr << "Warning: Maximum number of lights exceeded!" << std::endl;
     }

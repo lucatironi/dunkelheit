@@ -20,6 +20,9 @@ public:
 
         for (const auto& position : level->GetEnemyPositions())
             AddEnemy(position);
+
+        for (const auto& position : level->GetLightPositions())
+            AddObject(position);
     }
 
     ~GameScene()
@@ -69,6 +72,8 @@ public:
         handleCollisions(camera);
         for (auto& enemy : enemies)
             enemy->Update(deltaTime, camera, *level);
+        for (auto& object : objects)
+            object->Update(deltaTime, camera);
         for (auto& item : items)
             item->Update(deltaTime, camera);
 
@@ -77,6 +82,7 @@ public:
             for (auto& b : enemies)
             {
                 if (&a == &b) continue;
+
                 float dist = glm::distance(a->GetPosition(), b->GetPosition());
                 if (dist < 1.5f)
                 {
